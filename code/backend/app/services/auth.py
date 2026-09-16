@@ -15,8 +15,16 @@ import os
 from datetime import datetime, timedelta, timezone
 
 import jwt
+from dotenv import load_dotenv
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
+
+# Loaded here too (not just in app/main.py): this module reads
+# GOOGLE_CLIENT_ID/JWT_SECRET from the environment below, at import
+# time, and it's imported transitively by several routers - relying on
+# main.py's own load_dotenv() running first is fragile to import
+# reordering (it broke exactly this way once already).
+load_dotenv()
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 JWT_SECRET = os.getenv("JWT_SECRET", "dev-only-insecure-secret-change-me")

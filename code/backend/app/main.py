@@ -11,18 +11,23 @@ Run with:
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
-from . import models  # noqa: F401  (import registers models on Base.metadata)
-from .database import Base, engine
-from .routers import auth as auth_router
-from .routers import candidates as candidates_router
-from .routers import github as github_router
-from .routers import resume as resume_router
-from .routers import score as score_router
-
+# Must run before any local import: app/services/auth.py (imported
+# transitively by the router imports below) reads GOOGLE_CLIENT_ID and
+# JWT_SECRET from the environment at module import time, so .env has to
+# be loaded first or those come back empty even though .env is correct.
 load_dotenv()
+
+from fastapi import FastAPI  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+
+from . import models  # noqa: E402,F401  (import registers models on Base.metadata)
+from .database import Base, engine  # noqa: E402
+from .routers import auth as auth_router  # noqa: E402
+from .routers import candidates as candidates_router  # noqa: E402
+from .routers import github as github_router  # noqa: E402
+from .routers import resume as resume_router  # noqa: E402
+from .routers import score as score_router  # noqa: E402
 
 
 @asynccontextmanager
