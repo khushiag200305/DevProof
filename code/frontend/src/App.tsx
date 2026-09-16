@@ -32,6 +32,22 @@ interface FingerprintResult {
   error?: string;
 }
 
+interface SkillScore {
+  skill: string;
+  score: number;
+  classification: string;
+  reasons: string[];
+  interview_question?: string;
+}
+
+interface ScoreResult {
+  status: string;
+  username?: string;
+  repos_analyzed?: number;
+  skill_scores?: SkillScore[];
+  error?: string;
+}
+
 function extractUsername(link: string): string {
   const match = link.match(/github\.com\/([A-Za-z0-9_-]+)/i);
   return match ? match[1] : link;
@@ -45,6 +61,8 @@ function App() {
   const [loadingRepos, setLoadingRepos] = useState(false);
   const [fingerprints, setFingerprints] = useState<Record<string, FingerprintResult>>({});
   const [fingerprinting, setFingerprinting] = useState<string | null>(null);
+  const [scoreResult, setScoreResult] = useState<ScoreResult | null>(null);
+  const [scoring, setScoring] = useState(false);
 
   const fetchRepoEvidence = async (githubLink: string) => {
     const username = extractUsername(githubLink);
@@ -73,12 +91,35 @@ function App() {
     }
   };
 
+  const runScoring = async () => {
+    if (!repoEvidence || repoEvidence.status !== "ok" || !result?.extracted_skills) return;
+    setScoring(true);
+    setScoreResult(null);
+    try {
+      const response = await fetch("http://127.0.0.1:8000/score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: repoEvidence.username,
+          skills: result.extracted_skills,
+        }),
+      });
+      const data = await response.json();
+      setScoreResult(data);
+    } catch (err) {
+      setScoreResult({ status: "error", error: String(err) });
+    } finally {
+      setScoring(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!file) return;
     setLoading(true);
     setResult(null);
     setRepoEvidence(null);
     setFingerprints({});
+    setScoreResult(null);
 
     const formData = new FormData();
     formData.append("file", file);
@@ -99,6 +140,12 @@ function App() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const classificationColor = (classification: string) => {
+    if (classification === "Strong Evidence") return "text-green-700";
+    if (classification === "Good Evidence") return "text-amber-600";
+    return "text-red-600";
   };
 
   return (
@@ -228,6 +275,47 @@ function App() {
               <p className="text-slate-400 text-xs">No public repositories found.</p>
             )}
           </div>
+        </div>
+      )}
+
+      {repoEvidence && repoEvidence.status === "ok" && result?.extracted_skills && (
+        <div className="mt-6 w-full max-w-md">
+          <button
+            onClick={runScoring}
+            disabled={scoring}
+            className="w-full bg-green-700 text-white rounded-md py-2 disabled:opacity-40"
+          >
+            {scoring ? "Scoring..." : "Run Evidence Scoring"}
+          </button>
+
+          {scoreResult && scoreResult.status === "ok" && scoreResult.skill_scores && (
+            <div className="mt-4 bg-white rounded-lg shadow p-6 text-sm space-y-4">
+              {scoreResult.skill_scores.map((s) => (
+                <div key={s.skill} className="border-b border-slate-100 pb-3">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium text-slate-800">{s.skill}</span>
+                    <span className={`font-semibold ${classificationColor(s.classification)}`}>
+                      {s.classification} ({s.score}/100)
+                    </span>
+                  </div>
+                  <ul className="mt-1 text-xs text-slate-500 list-disc list-inside">
+                    {s.reasons.map((r, i) => (
+                      <li key={i}>{r}</li>
+                    ))}
+                  </ul>
+                  {s.interview_question && (
+                    <p className="mt-1 text-xs text-blue-700 italic">
+                      Suggested question: {s.interview_question}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {scoreResult && scoreResult.status === "error" && (
+            <p className="mt-4 text-red-600 text-sm">{scoreResult.error}</p>
+          )}
         </div>
       )}
 
