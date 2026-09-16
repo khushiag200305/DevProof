@@ -11,6 +11,7 @@ Run with:
 """
 import httpx
 import re
+import base64
 import pymupdf as fitz  # PyMuPDF (modern import name; fitz is deprecated)
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
@@ -141,6 +142,76 @@ async def fetch_github_repos(username: str) -> list[dict]:
     ]
 
 
+# Per-technology detection rules: which files to look for, and (for
+# text-based files) which keywords inside them count as evidence.
+# Mirrors the "concrete signals" concept from Section 3.3 of the proposal.
+FINGERPRINT_RULES = {
+    "Docker": {"files": ["Dockerfile", "docker-compose.yml", "docker-compose.yaml"]},
+    "React": {"files": ["package.json"], "keywords": ["\"react\"", "\"react-dom\""]},
+    "Express": {"files": ["package.json"], "keywords": ["\"express\""]},
+    "Node.js": {"files": ["package.json"], "keywords": []},
+    "Flask": {"files": ["requirements.txt", "pyproject.toml"], "keywords": ["flask"]},
+    "FastAPI": {"files": ["requirements.txt", "pyproject.toml"], "keywords": ["fastapi"]},
+    "Django": {"files": ["requirements.txt", "pyproject.toml"], "keywords": ["django"]},
+}
+
+
+async def fetch_repo_root_files(owner: str, repo: str, client: httpx.AsyncClient) -> list[str]:
+    """List filenames in a repository's root directory."""
+    url = f"https://api.github.com/repos/{owner}/{repo}/contents"
+    response = await client.get(url, headers={"Accept": "application/vnd.github+json"}, timeout=10.0)
+    if response.status_code != 200:
+        return []
+    items = response.json()
+    return [item["name"] for item in items if item.get("type") == "file"]
+
+
+async def fetch_file_content(owner: str, repo: str, path: str, client: httpx.AsyncClient) -> str:
+    """Fetch and decode a single file's text content from a repo."""
+    url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
+    response = await client.get(url, headers={"Accept": "application/vnd.github+json"}, timeout=10.0)
+    if response.status_code != 200:
+        return ""
+    data = response.json()
+    if data.get("encoding") == "base64":
+        return base64.b64decode(data["content"]).decode("utf-8", errors="ignore")
+    return ""
+
+
+async def fingerprint_repo(owner: str, repo: str) -> dict:
+    """
+    Check a single repository for concrete evidence of each technology
+    in FINGERPRINT_RULES: presence of a marker file, and (where relevant)
+    a matching keyword inside that file's content.
+
+    Returns a dict of technology -> list of evidence strings found.
+    An empty list means no evidence was found for that technology.
+    """
+    evidence: dict[str, list[str]] = {tech: [] for tech in FINGERPRINT_RULES}
+
+    async with httpx.AsyncClient() as client:
+        root_files = await fetch_repo_root_files(owner, repo, client)
+
+        for tech, rule in FINGERPRINT_RULES.items():
+            matching_files = [f for f in rule["files"] if f in root_files]
+            if not matching_files:
+                continue
+
+            keywords = rule.get("keywords", [])
+            if not keywords:
+                # File presence alone is sufficient evidence (e.g. Dockerfile).
+                evidence[tech].append(f"{matching_files[0]} present")
+                continue
+
+            for filename in matching_files:
+                content = await fetch_file_content(owner, repo, filename, client)
+                lower_content = content.lower()
+                for keyword in keywords:
+                    if keyword.lower() in lower_content:
+                        evidence[tech].append(f"'{keyword}' found in {filename}")
+
+    return evidence
+
 @app.get("/health")
 def health_check():
     """Basic liveness check used by CI and manual smoke testing."""
@@ -202,4 +273,23 @@ async def get_github_repos(username: str):
         "status": "ok",
         "repo_count": len(repos),
         "repos": repos,
+    }
+@app.get("/github/{username}/{repo}/fingerprint")
+async def get_repo_fingerprint(username: str, repo: str):
+    """
+    Runs technology fingerprinting on a single repository: checks for
+    marker files (Dockerfile, package.json, requirements.txt) and, where
+    relevant, keyword matches inside them, per FINGERPRINT_RULES.
+    """
+    try:
+        evidence = await fingerprint_repo(username, repo)
+    except httpx.RequestError as exc:
+        return {"status": "error", "error": f"Network error contacting GitHub: {exc}"}
+
+    detected = {tech: items for tech, items in evidence.items() if items}
+    return {
+        "username": username,
+        "repo": repo,
+        "status": "ok",
+        "detected_technologies": detected,
     }

@@ -26,6 +26,12 @@ interface RepoEvidence {
   error?: string;
 }
 
+interface FingerprintResult {
+  status: string;
+  detected_technologies?: Record<string, string[]>;
+  error?: string;
+}
+
 function extractUsername(link: string): string {
   const match = link.match(/github\.com\/([A-Za-z0-9_-]+)/i);
   return match ? match[1] : link;
@@ -37,6 +43,8 @@ function App() {
   const [repoEvidence, setRepoEvidence] = useState<RepoEvidence | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingRepos, setLoadingRepos] = useState(false);
+  const [fingerprints, setFingerprints] = useState<Record<string, FingerprintResult>>({});
+  const [fingerprinting, setFingerprinting] = useState<string | null>(null);
 
   const fetchRepoEvidence = async (githubLink: string) => {
     const username = extractUsername(githubLink);
@@ -52,11 +60,25 @@ function App() {
     }
   };
 
+  const checkFingerprint = async (username: string, repoName: string) => {
+    setFingerprinting(repoName);
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:8000/github/${username}/${repoName}/fingerprint`
+      );
+      const data = await response.json();
+      setFingerprints((prev) => ({ ...prev, [repoName]: data }));
+    } finally {
+      setFingerprinting(null);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!file) return;
     setLoading(true);
     setResult(null);
     setRepoEvidence(null);
+    setFingerprints({});
 
     const formData = new FormData();
     formData.append("file", file);
@@ -158,27 +180,51 @@ function App() {
             @{repoEvidence.username}'s public repos ({repoEvidence.repo_count})
           </p>
           <div className="mt-3 space-y-2">
-            {repoEvidence.repos?.map((repo) => (
-              <div key={repo.name} className="border-b border-slate-100 pb-2">
-                <a
-                  href={repo.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-blue-600 underline font-medium"
-                >
-                  {repo.name}
-                </a>
-                <div className="text-xs text-slate-500 flex gap-2 flex-wrap mt-1">
-                  <span>{repo.language ?? "No language detected"}</span>
-                  {repo.is_fork && (
-                    <span className="text-amber-600">Fork</span>
+            {repoEvidence.repos && repoEvidence.repos.length > 0 ? (
+              repoEvidence.repos.map((repo) => (
+                <div key={repo.name} className="border-b border-slate-100 pb-2">
+                  <a
+                    href={repo.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-blue-600 underline font-medium"
+                  >
+                    {repo.name}
+                  </a>
+                  <div className="text-xs text-slate-500 flex gap-2 flex-wrap mt-1">
+                    <span>{repo.language ?? "No language detected"}</span>
+                    {repo.is_fork && <span className="text-amber-600">Fork</span>}
+                    <span>⭐ {repo.stars}</span>
+                    <span>Updated {new Date(repo.updated_at).toLocaleDateString()}</span>
+                  </div>
+
+                  <button
+                    onClick={() => checkFingerprint(repoEvidence.username, repo.name)}
+                    disabled={fingerprinting === repo.name}
+                    className="mt-1 text-xs text-slate-500 underline"
+                  >
+                    {fingerprinting === repo.name ? "Checking..." : "Check tech fingerprint"}
+                  </button>
+
+                  {fingerprints[repo.name] && (
+                    <div className="mt-1 text-xs">
+                      {fingerprints[repo.name].detected_technologies &&
+                      Object.keys(fingerprints[repo.name].detected_technologies!).length > 0 ? (
+                        Object.entries(fingerprints[repo.name].detected_technologies!).map(
+                          ([tech, items]) => (
+                            <div key={tech} className="text-green-700">
+                              ✓ {tech}: {items.join(", ")}
+                            </div>
+                          )
+                        )
+                      ) : (
+                        <span className="text-slate-400">No fingerprint matches found</span>
+                      )}
+                    </div>
                   )}
-                  <span>⭐ {repo.stars}</span>
-                  <span>Updated {new Date(repo.updated_at).toLocaleDateString()}</span>
                 </div>
-              </div>
-            ))}
-            {repoEvidence.repos?.length === 0 && (
+              ))
+            ) : (
               <p className="text-slate-400 text-xs">No public repositories found.</p>
             )}
           </div>
