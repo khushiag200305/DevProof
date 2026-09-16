@@ -12,9 +12,13 @@ Run with:
 import httpx
 import re
 import base64
+import os
 import pymupdf as fitz  # PyMuPDF (modern import name; fitz is deprecated)
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+load_dotenv()
+
 
 app = FastAPI(title="DevProof API", version="0.1.0")
 
@@ -58,6 +62,10 @@ GITHUB_URL_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+GITHUB_HEADERS = {"Accept": "application/vnd.github+json"}
+if GITHUB_TOKEN:
+    GITHUB_HEADERS["Authorization"] = f"Bearer {GITHUB_TOKEN}"
 
 def extract_text_from_pdf(pdf_bytes: bytes) -> str:
     """Extract raw text from a PDF's bytes using PyMuPDF."""
@@ -119,10 +127,10 @@ async def fetch_github_repos(username: str) -> list[dict]:
     """
     url = f"https://api.github.com/users/{username}/repos"
     params = {"per_page": 100, "sort": "updated"}
-    headers = {"Accept": "application/vnd.github+json"}
+   
 
     async with httpx.AsyncClient() as client:
-        response = await client.get(url, params=params, headers=headers, timeout=10.0)
+        response = await client.get(url, params=params, headers=GITHUB_HEADERS, timeout=10.0)
 
     if response.status_code == 404:
         return []
@@ -159,7 +167,7 @@ FINGERPRINT_RULES = {
 async def fetch_repo_root_files(owner: str, repo: str, client: httpx.AsyncClient) -> list[str]:
     """List filenames in a repository's root directory."""
     url = f"https://api.github.com/repos/{owner}/{repo}/contents"
-    response = await client.get(url, headers={"Accept": "application/vnd.github+json"}, timeout=10.0)
+    response = await client.get(url, headers=GITHUB_HEADERS, timeout=10.0)
     if response.status_code != 200:
         return []
     items = response.json()
@@ -169,7 +177,7 @@ async def fetch_repo_root_files(owner: str, repo: str, client: httpx.AsyncClient
 async def fetch_file_content(owner: str, repo: str, path: str, client: httpx.AsyncClient) -> str:
     """Fetch and decode a single file's text content from a repo."""
     url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
-    response = await client.get(url, headers={"Accept": "application/vnd.github+json"}, timeout=10.0)
+    response = await client.get(url,headers=GITHUB_HEADERS , timeout=10.0)
     if response.status_code != 200:
         return ""
     data = response.json()
@@ -211,6 +219,98 @@ async def fingerprint_repo(owner: str, repo: str) -> dict:
                         evidence[tech].append(f"'{keyword}' found in {filename}")
 
     return evidence
+# Configurable scoring weights (heuristic starting points, per Section 3.4
+# of the proposal — not a claim of statistical optimality).
+SCORE_WEIGHTS = {
+    "fingerprint_match": 40,   # concrete file/keyword evidence found
+    "language_match": 20,      # repo's GitHub-reported primary language matches
+    "not_fork": 20,            # original work, not a forked repository
+    "recent_activity": 20,     # repo updated within the last 12 months
+}
+
+STRONG_THRESHOLD = 70
+GOOD_THRESHOLD = 40
+
+INTERVIEW_QUESTION_TEMPLATES = {
+    "Docker": "How did you use Docker to containerize this application?",
+    "React": "Walk me through how you structured components in one of your React projects.",
+    "FastAPI": "Can you describe an endpoint you built with FastAPI and why you chose it?",
+    "Flask": "Can you walk through how you structured routes in a Flask project?",
+    "Django": "What Django features (ORM, admin, etc.) did you rely on in your project?",
+}
+
+
+def default_interview_question(skill: str) -> str:
+    return INTERVIEW_QUESTION_TEMPLATES.get(
+        skill, f"Can you walk through a specific project where you used {skill}?"
+    )
+
+
+def is_recently_updated(updated_at: str, months: int = 12) -> bool:
+    from datetime import datetime, timezone, timedelta
+    try:
+        updated = datetime.fromisoformat(updated_at.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    cutoff = datetime.now(timezone.utc) - timedelta(days=months * 30)
+    return updated >= cutoff
+
+
+def score_skill(skill: str, repos: list[dict], fingerprints: dict[str, dict]) -> dict:
+    """
+    Computes an explainable 0-100 evidence score for a single claimed
+    skill, by checking every repo for supporting signals and taking the
+    strongest single repo's score (rather than summing across repos,
+    which would unfairly reward having many mediocre repos).
+    """
+    best_score = 0
+    best_reasons: list[str] = []
+
+    for repo in repos:
+        score = 0
+        reasons = []
+
+        detected = fingerprints.get(repo["name"], {}).get("detected_technologies", {})
+        if skill in detected and detected[skill]:
+            score += SCORE_WEIGHTS["fingerprint_match"]
+            reasons.append(f"{repo['name']}: " + "; ".join(detected[skill]))
+
+        if repo.get("language") and repo["language"].lower() == skill.lower():
+            score += SCORE_WEIGHTS["language_match"]
+            reasons.append(f"{repo['name']}: primary language matches ({repo['language']})")
+
+        if not repo.get("is_fork"):
+            score += SCORE_WEIGHTS["not_fork"]
+            reasons.append(f"{repo['name']}: original repository, not a fork")
+
+        if is_recently_updated(repo.get("updated_at", "")):
+            score += SCORE_WEIGHTS["recent_activity"]
+            reasons.append(f"{repo['name']}: updated within the last 12 months")
+
+        if score > best_score:
+            best_score = score
+            best_reasons = reasons
+
+    score = min(best_score, 100)
+
+    if score >= STRONG_THRESHOLD:
+        classification = "Strong Evidence"
+    elif score >= GOOD_THRESHOLD:
+        classification = "Good Evidence"
+    else:
+        classification = "Needs Verification"
+
+    result = {
+        "skill": skill,
+        "score": score,
+        "classification": classification,
+        "reasons": best_reasons if best_reasons else ["No supporting evidence found in analyzed repositories"],
+    }
+
+    if classification == "Needs Verification":
+        result["interview_question"] = default_interview_question(skill)
+
+    return result
 
 @app.get("/health")
 def health_check():
@@ -292,4 +392,44 @@ async def get_repo_fingerprint(username: str, repo: str):
         "repo": repo,
         "status": "ok",
         "detected_technologies": detected,
+    }
+from pydantic import BaseModel
+
+
+class ScoreRequest(BaseModel):
+    username: str
+    skills: list[str]
+    max_repos: int = 10
+
+
+@app.post("/score")
+async def score_candidate(request: ScoreRequest):
+    """
+    Computes an explainable evidence score for each claimed skill by
+    fetching the candidate's repos, fingerprinting the most recently
+    updated ones, then scoring each skill against that combined evidence.
+    """
+    try:
+        repos = await fetch_github_repos(request.username)
+    except httpx.HTTPStatusError as exc:
+        return {"status": "error", "error": f"GitHub API error: {exc.response.status_code}"}
+    except httpx.RequestError as exc:
+        return {"status": "error", "error": f"Network error contacting GitHub: {exc}"}
+
+    repos_to_check = repos[: request.max_repos]
+
+    fingerprints = {}
+    for repo in repos_to_check:
+        raw_evidence = await fingerprint_repo(request.username, repo["name"])
+        fingerprints[repo["name"]] = {
+            "detected_technologies": {tech: items for tech, items in raw_evidence.items() if items}
+        }
+
+    scores = [score_skill(skill, repos_to_check, fingerprints) for skill in request.skills]
+
+    return {
+        "username": request.username,
+        "status": "ok",
+        "repos_analyzed": len(repos_to_check),
+        "skill_scores": scores,
     }
