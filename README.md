@@ -79,10 +79,14 @@ cd code/backend
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+pip install "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl"
+cp .env.example .env             # then point DATABASE_URL at your local Postgres
 uvicorn app.main:app --reload
 ```
 
-The API starts at `http://localhost:8000`.
+The API starts at `http://localhost:8000`. A running PostgreSQL instance matching
+`DATABASE_URL` is only needed to exercise `/api/resume/upload` (which persists a
+Candidate record) — `/health` and the extraction unit tests don't need one.
 
 ### 2. Start the frontend
 

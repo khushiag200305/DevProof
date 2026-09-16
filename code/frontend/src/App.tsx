@@ -1,11 +1,16 @@
 import { useState } from "react";
 
+const API_BASE = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000";
+
 interface ExtractionResult {
+  candidate_id?: number;
   filename: string;
   status: string;
+  name?: string | null;
   extracted_skills?: string[];
-  github_links?: string[];
-  text_preview?: string;
+  projects?: string[];
+  github_url?: string | null;
+  github_username?: string | null;
   error?: string;
 }
 
@@ -32,13 +37,9 @@ interface FingerprintResult {
   error?: string;
 }
 
-function extractUsername(link: string): string {
-  const match = link.match(/github\.com\/([A-Za-z0-9_-]+)/i);
-  return match ? match[1] : link;
-}
-
 function App() {
   const [file, setFile] = useState<File | null>(null);
+  const [githubUrlOverride, setGithubUrlOverride] = useState("");
   const [result, setResult] = useState<ExtractionResult | null>(null);
   const [repoEvidence, setRepoEvidence] = useState<RepoEvidence | null>(null);
   const [loading, setLoading] = useState(false);
@@ -46,11 +47,10 @@ function App() {
   const [fingerprints, setFingerprints] = useState<Record<string, FingerprintResult>>({});
   const [fingerprinting, setFingerprinting] = useState<string | null>(null);
 
-  const fetchRepoEvidence = async (githubLink: string) => {
-    const username = extractUsername(githubLink);
+  const fetchRepoEvidence = async (username: string) => {
     setLoadingRepos(true);
     try {
-      const response = await fetch(`http://127.0.0.1:8000/github/${username}/repos`);
+      const response = await fetch(`${API_BASE}/github/${username}/repos`);
       const data = await response.json();
       setRepoEvidence(data);
     } catch (err) {
@@ -64,7 +64,7 @@ function App() {
     setFingerprinting(repoName);
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/github/${username}/${repoName}/fingerprint`
+        `${API_BASE}/github/${username}/${repoName}/fingerprint`
       );
       const data = await response.json();
       setFingerprints((prev) => ({ ...prev, [repoName]: data }));
@@ -82,17 +82,20 @@ function App() {
 
     const formData = new FormData();
     formData.append("file", file);
+    if (githubUrlOverride.trim()) {
+      formData.append("github_url_override", githubUrlOverride.trim());
+    }
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/resumes/upload", {
+      const response = await fetch(`${API_BASE}/api/resume/upload`, {
         method: "POST",
         body: formData,
       });
       const data: ExtractionResult = await response.json();
       setResult(data);
 
-      if (data.github_links && data.github_links.length > 0) {
-        await fetchRepoEvidence(data.github_links[0]);
+      if (data.github_username) {
+        await fetchRepoEvidence(data.github_username);
       }
     } catch (err) {
       setResult({ filename: file.name, status: "error", error: String(err) });
@@ -109,12 +112,33 @@ function App() {
       </p>
 
       <div className="mt-8 bg-white rounded-lg shadow p-6 w-full max-w-md">
+        <label htmlFor="resume-file" className="block text-sm font-medium text-slate-700 mb-1">
+          Resume PDF
+        </label>
         <input
+          id="resume-file"
           type="file"
           accept="application/pdf"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           className="block w-full text-sm text-slate-600"
         />
+
+        <label htmlFor="github-override" className="block text-sm font-medium text-slate-700 mt-4 mb-1">
+          GitHub URL (optional override)
+        </label>
+        <input
+          id="github-override"
+          type="text"
+          value={githubUrlOverride}
+          onChange={(e) => setGithubUrlOverride(e.target.value)}
+          placeholder="github.com/username"
+          className="block w-full text-sm text-slate-600 border border-slate-200 rounded-md px-3 py-2"
+        />
+        <p className="mt-1 text-xs text-slate-400">
+          PDF extraction can miss GitHub links on multi-column or graphic-heavy
+          resumes - set this if the detected link (if any) looks wrong.
+        </p>
+
         <button
           onClick={handleSubmit}
           disabled={!file || loading}
@@ -130,6 +154,12 @@ function App() {
           <p className="text-slate-500 mb-3">Status: {result.status}</p>
 
           {result.error && <p className="text-red-600">{result.error}</p>}
+
+          {result.name && (
+            <p className="mb-3">
+              <span className="font-medium text-slate-700">Candidate:</span> {result.name}
+            </p>
+          )}
 
           {result.extracted_skills && (
             <div className="mb-3">
@@ -151,20 +181,28 @@ function App() {
             </div>
           )}
 
-          {result.github_links && result.github_links.length > 0 && (
+          {result.projects && result.projects.length > 0 && (
+            <div className="mb-3">
+              <p className="font-medium text-slate-700">Detected projects:</p>
+              <ul className="mt-1 list-disc list-inside text-slate-600">
+                {result.projects.map((project) => (
+                  <li key={project}>{project}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {result.github_url && (
             <div>
-              <p className="font-medium text-slate-700">GitHub links:</p>
-              {result.github_links.map((link) => (
-                <a
-                  key={link}
-                  href={`https://${link.replace(/^https?:\/\//, "")}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block text-blue-600 underline text-xs"
-                >
-                  {link}
-                </a>
-              ))}
+              <p className="font-medium text-slate-700">GitHub:</p>
+              <a
+                href={`https://${result.github_url.replace(/^https?:\/\//, "")}`}
+                target="_blank"
+                rel="noreferrer"
+                className="block text-blue-600 underline text-xs"
+              >
+                {result.github_url}
+              </a>
             </div>
           )}
         </div>

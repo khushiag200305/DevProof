@@ -25,3 +25,7 @@ npm-debug.log*
 # Env files
 .env.local
 .env.*.local
+
+# Uploaded resumes (candidate data, never committed)
+code/backend/uploads/*
+!code/backend/uploads/.gitkeep
