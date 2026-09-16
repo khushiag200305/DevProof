@@ -39,6 +39,15 @@ def test_extract_name_no_person_found():
     assert extract_name("") is None
 
 
+def test_extract_name_does_not_misdetect_a_skill_as_a_name():
+    # Regression: on short, sparse header text spaCy's small model can
+    # mistag an all-caps technology word as a PERSON entity (observed:
+    # "Docker" tagged PERSON given just a two-line header). The name
+    # should never come back as a known skill keyword.
+    text = "Test Person\ngithub.com/testuser\n\nSKILLS\nPython, Docker, React"
+    assert extract_name(text) == "Test Person"
+
+
 def test_extract_skills():
     # SAMPLE_RESUME_TEXT mentions skills both in the SKILLS section and
     # inside project descriptions (Flask, MySQL) - extraction scans the

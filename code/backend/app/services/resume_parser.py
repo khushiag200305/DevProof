@@ -108,24 +108,33 @@ def extract_name(text: str) -> str | None:
     Best-effort candidate name extraction.
 
     Resumes almost always lead with the candidate's name, so this first
-    tries spaCy's PERSON entity recognizer on the first few lines
-    (header), then falls back to a plain "does the first line look like
-    a name" heuristic for headers spaCy's general-purpose NER misses
-    (common on dense, stylized resume headers).
+    checks whether the first line looks like a name (and isn't a skill
+    keyword). That heuristic runs first, ahead of spaCy: on short, sparse
+    header text (no surrounding sentence context), spaCy's small model
+    can mistag an all-caps technology word as a PERSON entity - e.g. it
+    tags "Docker" as PERSON given just a two-line header - so a plain
+    first-line check is the more reliable signal here. spaCy's PERSON
+    NER is the fallback, for headers that don't follow the "name on its
+    own first line" convention.
     """
     lines = [line.strip() for line in text.strip().splitlines() if line.strip()]
     if not lines:
         return None
 
+    first_line = lines[0]
+    if (
+        _NAME_LINE_PATTERN.match(first_line)
+        and "@" not in first_line
+        and first_line.lower() not in SKILL_ALIASES
+    ):
+        return first_line
+
     header = "\n".join(lines[:5])
     doc = _nlp()(header)
     for ent in doc.ents:
-        if ent.label_ == "PERSON":
-            return ent.text.strip()
-
-    first_line = lines[0]
-    if _NAME_LINE_PATTERN.match(first_line) and "@" not in first_line:
-        return first_line
+        candidate = ent.text.strip()
+        if ent.label_ == "PERSON" and candidate.lower() not in SKILL_ALIASES:
+            return candidate
 
     return None
 
