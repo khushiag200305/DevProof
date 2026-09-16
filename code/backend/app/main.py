@@ -16,6 +16,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import models  # noqa: F401  (import registers models on Base.metadata)
 from .database import Base, engine
+from .routers import auth as auth_router
+from .routers import candidates as candidates_router
 from .routers import github as github_router
 from .routers import resume as resume_router
 from .routers import score as score_router
@@ -53,6 +55,8 @@ def health_check():
     return {"status": "ok", "service": "devproof-backend"}
 
 
+app.include_router(auth_router.router)
+app.include_router(candidates_router.router)
 app.include_router(resume_router.router)
 app.include_router(github_router.router)
 app.include_router(score_router.router)

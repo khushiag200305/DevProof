@@ -15,6 +15,9 @@ The prototype favors an explainable, rule-based approach over opaque ML: every s
 
 ## Features (planned for MVP)
 
+- Google sign-in only (no passwords stored): an `@thapar.edu` address signs in as a **student**,
+  any other address signs in as a **recruiter** — students upload their own resume and see their
+  own report; recruiters browse every candidate who has uploaded one
 - Resume PDF upload and parsing (pdfplumber) with skill/name/GitHub-link extraction
 - Skill normalization (e.g. "ReactJS" → "React") via curated mapping + spaCy NER
 - GitHub REST API integration: language composition, dependency manifests, fork status, commit activity
@@ -28,22 +31,24 @@ The prototype favors an explainable, rule-based approach over opaque ML: every s
 
 ```
 React + Tailwind CSS (frontend)
-        ↓ REST API
+        ↓ REST API (Bearer session JWT)
 FastAPI backend
+ ├── Google sign-in (verify ID token → role by email domain → issue session JWT)
  ├── Resume parsing & NLP (pdfplumber, spaCy)
  ├── GitHub evidence engine (GitHub REST API)
  ├── Technology fingerprinting
  └── Evidence scoring & explainability
         ↓
-PostgreSQL (Candidate, Skill, CandidateSkill, Repository, Evidence, Project, InterviewQuestion)
+PostgreSQL (User, Candidate, Skill, CandidateSkill, Repository, Evidence, Project, InterviewQuestion)
 ```
 
 ## Technology stack
 
 | Area | Technology |
 |---|---|
-| Frontend | React, Tailwind CSS |
+| Frontend | React, Tailwind CSS, React Router |
 | Backend | Python, FastAPI |
+| Auth | Google Identity Services (sign-in), PyJWT (DevProof session tokens) |
 | NLP / parsing | pdfplumber, spaCy, (optional) sentence-transformers |
 | Database | PostgreSQL |
 | External API | GitHub REST API |
@@ -70,9 +75,45 @@ site/                              GitHub Pages project documentation site (opti
 
 - Python 3.11+
 - Node.js 20+
-- PostgreSQL (optional for early iterations — see below)
+- PostgreSQL 16 (required — sign-in and candidate data are persisted; see setup below)
 
-### 1. Start the backend
+### 1. Set up PostgreSQL
+
+macOS (Homebrew):
+
+```
+brew install postgresql@16
+brew services start postgresql@16
+export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"   # add to your shell profile
+
+psql -d postgres -c "CREATE ROLE devproof WITH LOGIN PASSWORD 'devproof';"
+psql -d postgres -c "CREATE DATABASE devproof OWNER devproof;"
+# PostgreSQL 15+ no longer grants CREATE on the public schema by default -
+# without this, table creation on startup fails with "no schema has been
+# selected to create in":
+psql -d devproof -c "GRANT ALL ON SCHEMA public TO devproof;"
+```
+
+(Already have Postgres running elsewhere? Just create a `devproof`/`devproof` role+database,
+run the `GRANT` above, or point `DATABASE_URL` at whatever instance you have.)
+
+### 2. Google sign-in setup
+
+DevProof uses Google Identity Services for sign-in — no passwords are stored. You need one
+OAuth Client ID, shared by both the frontend and backend:
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/) → create a project (or
+   pick an existing one).
+2. **APIs & Services → OAuth consent screen**: choose **External**, fill in an app name and your
+   email, and add your own Google account as a test user (while the app is unpublished, only
+   test users can sign in).
+3. **APIs & Services → Credentials → Create Credentials → OAuth client ID**:
+   - Application type: **Web application**
+   - Authorized JavaScript origins: `http://localhost:5173`
+   - Leave Authorized redirect URIs empty (not needed for the popup-based sign-in flow)
+4. Copy the generated **Client ID** (looks like `1234567890-abc...apps.googleusercontent.com`).
+
+### 3. Start the backend
 
 ```
 cd code/backend
@@ -80,23 +121,34 @@ python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 pip install "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl"
-cp .env.example .env             # then point DATABASE_URL at your local Postgres
+cp .env.example .env
+```
+
+Edit `.env` and set `GOOGLE_CLIENT_ID` to the Client ID from step 2, and `JWT_SECRET` to a
+random string (`python -c "import secrets; print(secrets.token_urlsafe(32))"`). Then:
+
+```
 uvicorn app.main:app --reload
 ```
 
-The API starts at `http://localhost:8000`. A running PostgreSQL instance matching
-`DATABASE_URL` is only needed to exercise `/api/resume/upload` (which persists a
-Candidate record) — `/health` and the extraction unit tests don't need one.
+The API starts at `http://localhost:8000` (interactive docs at `/docs`).
 
-### 2. Start the frontend
+### 4. Start the frontend
 
 ```
 cd code/frontend
 npm install
+cp .env.example .env
+```
+
+Edit `.env` and set `VITE_GOOGLE_CLIENT_ID` to the **same** Client ID from step 2. Then:
+
+```
 npm run dev
 ```
 
-Open `http://localhost:5173` in a browser.
+Open `http://localhost:5173` in a browser. Sign in with an `@thapar.edu` address to land on the
+student upload flow, or any other address to land on the recruiter dashboard.
 
 ## Development workflow
 

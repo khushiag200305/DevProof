@@ -19,6 +19,12 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // This project doesn't use the React Compiler, and this rule
+      // flags the standard "setLoading(true) at the top of a
+      // fetch-on-mount/dependency-change effect" pattern used
+      // throughout - which is the correct way to reset loading state
+      // on refetch, not a bug. See e.g. src/pages/StudentUpload.tsx.
+      "react-hooks/set-state-in-effect": "off",
       "react-refresh/only-export-components": [
         "warn",
         { allowConstantExport: true },

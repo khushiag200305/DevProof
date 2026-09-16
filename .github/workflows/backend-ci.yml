@@ -20,6 +20,26 @@ jobs:
       run:
         working-directory: code/backend
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: devproof
+          POSTGRES_PASSWORD: devproof
+          POSTGRES_DB: devproof
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+psycopg2://devproof:devproof@localhost:5432/devproof
+      JWT_SECRET: ci-test-secret
+      GOOGLE_CLIENT_ID: ci-test-client-id
+
     steps:
       - uses: actions/checkout@v4
 

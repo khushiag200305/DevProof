@@ -1,6 +1,11 @@
 {
   "compilerOptions": {
     "composite": true,
+    // Composite projects must emit declarations - route them (and the
+    // .tsbuildinfo cache) into node_modules so they never land in the
+    // source tree or get linted/committed.
+    "outDir": "node_modules/.tsc-out",
+    "tsBuildInfoFile": "node_modules/.tsc-out/tsconfig.node.tsbuildinfo",
     "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "bundler",

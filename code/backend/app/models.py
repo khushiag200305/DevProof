@@ -1,7 +1,8 @@
 """
 SQLAlchemy ORM models for DevProof's core schema (Section 4 of the
 proposal): Candidate, Skill, CandidateSkill, Repository, Evidence,
-Project, InterviewQuestion.
+Project, InterviewQuestion - plus a User table backing Google sign-in
+and role-based access (students vs recruiters).
 
 Iteration 1 only writes to Candidate, Skill, CandidateSkill and Project
 (from resume parsing). Repository, Evidence and InterviewQuestion exist
@@ -20,16 +21,38 @@ def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
+class User(Base):
+    """
+    An authenticated account (Google sign-in only). Role is derived once
+    at first sign-in from the email domain: @thapar.edu -> student,
+    anything else -> recruiter (see app/services/auth.py).
+    """
+
+    __tablename__ = "users"
+
+    user_id = Column(Integer, primary_key=True, index=True)
+    google_sub = Column(String, unique=True, nullable=False, index=True)
+    email = Column(String, unique=True, nullable=False, index=True)
+    name = Column(String, nullable=True)
+    picture_url = Column(String, nullable=True)
+    role = Column(String, nullable=False)  # "student" | "recruiter"
+    created_at = Column(DateTime(timezone=True), default=_utcnow, nullable=False)
+
+    candidates = relationship("Candidate", back_populates="user")
+
+
 class Candidate(Base):
     __tablename__ = "candidates"
 
     candidate_id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.user_id"), nullable=True, index=True)
     name = Column(String, nullable=True)
     email = Column(String, nullable=True)
     resume_path = Column(String, nullable=True)
     github_username = Column(String, nullable=True, index=True)
     created_at = Column(DateTime(timezone=True), default=_utcnow, nullable=False)
 
+    user = relationship("User", back_populates="candidates")
     skills = relationship(
         "CandidateSkill", back_populates="candidate", cascade="all, delete-orphan"
     )

@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 
 from .. import models
 from ..database import get_db
+from ..dependencies import require_role
 from ..services.resume_parser import (
     extract_github_url,
     extract_github_username,
@@ -47,9 +48,12 @@ async def upload_resume(
     file: UploadFile = File(...),
     github_url_override: str | None = Form(default=None),
     db: Session = Depends(get_db),
+    current_user: models.User = Depends(require_role("student")),
 ):
     """
-    Parses an uploaded resume PDF and persists a new Candidate record.
+    Parses an uploaded resume PDF and persists a new Candidate record,
+    owned by the signed-in student (recruiters browse candidates rather
+    than uploading their own resume - see app/routers/candidates.py).
 
     `github_url_override` takes precedence over whatever GitHub URL (if
     any) is found in the resume text itself.
@@ -78,7 +82,9 @@ async def upload_resume(
         out_file.write(contents)
 
     candidate = models.Candidate(
+        user_id=current_user.user_id,
         name=name,
+        email=current_user.email,
         resume_path=resume_path,
         github_username=github_username,
     )
