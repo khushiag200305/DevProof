@@ -9,7 +9,7 @@ Iteration 1 (Weeks 1-2) scope:
 Run with:
     uvicorn app.main:app --reload
 """
-
+import httpx
 import re
 import pymupdf as fitz  # PyMuPDF (modern import name; fitz is deprecated)
 from fastapi import FastAPI, UploadFile, File
@@ -95,6 +95,50 @@ def extract_github_links(text: str) -> list[str]:
     return sorted(set(GITHUB_URL_PATTERN.findall(text))) if False else sorted(
         set(m for m in GITHUB_URL_PATTERN.findall(text))
     )
+def extract_github_username(github_link: str) -> str | None:
+    """
+    Pull the username out of a github.com link.
+
+    Handles links with or without a protocol/www prefix, e.g.:
+    'github.com/khushiag200305' -> 'khushiag200305'
+    'https://github.com/khushiag200305/DevProof' -> 'khushiag200305'
+    """
+    match = re.search(r"github\.com/([A-Za-z0-9_-]+)", github_link, re.IGNORECASE)
+    return match.group(1) if match else None
+
+
+async def fetch_github_repos(username: str) -> list[dict]:
+    """
+    Fetch a user's public repositories from the GitHub REST API.
+
+    Returns a simplified list with just the fields DevProof's evidence
+    engine needs: name, primary language, fork status, and last-updated
+    date. No auth token is used, which caps requests at 60/hour per IP
+    (GitHub's unauthenticated rate limit) - fine for pilot-scale use.
+    """
+    url = f"https://api.github.com/users/{username}/repos"
+    params = {"per_page": 100, "sort": "updated"}
+    headers = {"Accept": "application/vnd.github+json"}
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, params=params, headers=headers, timeout=10.0)
+
+    if response.status_code == 404:
+        return []
+    response.raise_for_status()
+
+    repos = response.json()
+    return [
+        {
+            "name": repo["name"],
+            "language": repo["language"],
+            "is_fork": repo["fork"],
+            "stars": repo["stargazers_count"],
+            "updated_at": repo["updated_at"],
+            "url": repo["html_url"],
+        }
+        for repo in repos
+    ]
 
 
 @app.get("/health")
@@ -130,4 +174,32 @@ async def upload_resume(file: UploadFile = File(...)):
         "extracted_skills": skills,
         "github_links": github_links,
         "text_preview": text[:300],
+    }
+@app.get("/github/{username}/repos")
+async def get_github_repos(username: str):
+    """
+    Returns simplified public repository evidence for a GitHub username.
+    Used by the frontend to show repo-level evidence for a candidate
+    after their resume has been parsed.
+    """
+    try:
+        repos = await fetch_github_repos(username)
+    except httpx.HTTPStatusError as exc:
+        return {
+            "username": username,
+            "status": "error",
+            "error": f"GitHub API error: {exc.response.status_code}",
+        }
+    except httpx.RequestError as exc:
+        return {
+            "username": username,
+            "status": "error",
+            "error": f"Network error contacting GitHub: {exc}",
+        }
+
+    return {
+        "username": username,
+        "status": "ok",
+        "repo_count": len(repos),
+        "repos": repos,
     }
