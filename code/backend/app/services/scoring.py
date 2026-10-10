@@ -45,41 +45,82 @@ def is_recently_updated(updated_at: str, months: int = 12) -> bool:
     return updated >= cutoff
 
 
+def _repo_evidence(skill: str, repo: dict, fingerprints: dict[str, dict]) -> list[dict]:
+    """
+    Evidence items one repository provides for one skill, each with the
+    points it is worth.
+
+    The "original work" and "recent activity" bonuses only count once the
+    repo shows evidence of the skill itself (a fingerprint match or a
+    matching primary language). Without that rule, any recently updated,
+    non-forked repo would add 40 points to every claimed skill, even ones
+    it has nothing to do with.
+    """
+    name = repo["name"]
+    items: list[dict] = []
+
+    detected = fingerprints.get(name, {}).get("detected_technologies", {})
+    if detected.get(skill):
+        items.append({
+            "repo": name,
+            "type": "fingerprint_match",
+            "description": "; ".join(detected[skill]),
+            "weight": SCORE_WEIGHTS["fingerprint_match"],
+        })
+
+    language = repo.get("language")
+    if language and language.lower() == skill.lower():
+        items.append({
+            "repo": name,
+            "type": "language_match",
+            "description": f"primary language matches ({language})",
+            "weight": SCORE_WEIGHTS["language_match"],
+        })
+
+    if not items:
+        return []
+
+    if not repo.get("is_fork"):
+        items.append({
+            "repo": name,
+            "type": "not_fork",
+            "description": "original repository, not a fork",
+            "weight": SCORE_WEIGHTS["not_fork"],
+        })
+
+    if is_recently_updated(repo.get("updated_at") or ""):
+        items.append({
+            "repo": name,
+            "type": "recent_activity",
+            "description": "updated within the last 12 months",
+            "weight": SCORE_WEIGHTS["recent_activity"],
+        })
+
+    return items
+
+
 def score_skill(skill: str, repos: list[dict], fingerprints: dict[str, dict]) -> dict:
     """
     Computes an explainable 0-100 evidence score for a single claimed
     skill, by checking every repo for supporting signals and taking the
     strongest single repo's score (rather than summing across repos,
     which would unfairly reward having many mediocre repos).
+
+    Returns the score, its classification, human-readable `reasons`, and
+    the same evidence as structured `evidence` items (repo, type,
+    description, weight) for storing in the Evidence table.
     """
     best_score = 0
-    best_reasons: list[str] = []
+    best_evidence: list[dict] = []
 
     for repo in repos:
-        score = 0
-        reasons = []
-
-        detected = fingerprints.get(repo["name"], {}).get("detected_technologies", {})
-        if skill in detected and detected[skill]:
-            score += SCORE_WEIGHTS["fingerprint_match"]
-            reasons.append(f"{repo['name']}: " + "; ".join(detected[skill]))
-
-        if repo.get("language") and repo["language"].lower() == skill.lower():
-            score += SCORE_WEIGHTS["language_match"]
-            reasons.append(f"{repo['name']}: primary language matches ({repo['language']})")
-
-        if not repo.get("is_fork"):
-            score += SCORE_WEIGHTS["not_fork"]
-            reasons.append(f"{repo['name']}: original repository, not a fork")
-
-        if is_recently_updated(repo.get("updated_at", "")):
-            score += SCORE_WEIGHTS["recent_activity"]
-            reasons.append(f"{repo['name']}: updated within the last 12 months")
-
+        evidence = _repo_evidence(skill, repo, fingerprints)
+        score = sum(item["weight"] for item in evidence)
         if score > best_score:
             best_score = score
-            best_reasons = reasons
+            best_evidence = evidence
 
+    best_reasons = [f"{item['repo']}: {item['description']}" for item in best_evidence]
     score = min(best_score, 100)
 
     if score >= STRONG_THRESHOLD:
@@ -94,6 +135,7 @@ def score_skill(skill: str, repos: list[dict], fingerprints: dict[str, dict]) ->
         "score": score,
         "classification": classification,
         "reasons": best_reasons if best_reasons else ["No supporting evidence found in analyzed repositories"],
+        "evidence": best_evidence,
     }
 
     if classification == "Needs Verification":
