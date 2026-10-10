@@ -82,8 +82,9 @@ class CandidateSkill(Base):
 
     candidate_id = Column(Integer, ForeignKey("candidates.candidate_id"), primary_key=True)
     skill_id = Column(Integer, ForeignKey("skills.skill_id"), primary_key=True)
-    # STRONG / GOOD / NEEDS_VERIFICATION, assigned once GitHub evidence
-    # scoring runs (Iteration 3). Left null right after resume parsing.
+    # "Strong Evidence" / "Good Evidence" / "Needs Verification" and the
+    # 0-100 score, set by POST /api/candidates/{id}/analyze (see
+    # services/analysis.py). Left null right after resume parsing.
     status = Column(String, nullable=True)
     score = Column(Integer, nullable=True)
 

@@ -150,6 +150,17 @@ npm run dev
 Open `http://localhost:5173` in a browser. Sign in with an `@thapar.edu` address to land on the
 student upload flow, or any other address to land on the recruiter dashboard.
 
+### 5. Run the GitHub evidence analysis
+
+Open any candidate's report and click **Analyze GitHub evidence**. The backend
+(`POST /api/candidates/{id}/analyze`) fetches the candidate's 10 most recently updated public
+repositories, fingerprints them, scores every claimed skill from 0 to 100, and saves the
+classification, the evidence behind each score, and a suggested interview question for skills that
+need verification. Click **Re-run analysis** later to refresh the results.
+
+One analysis makes up to ~40 GitHub API calls. Without a token GitHub allows 60 per hour, so set
+`GITHUB_TOKEN` in `code/backend/.env` (a classic token with no scopes is enough) before a demo.
+
 ## Development workflow
 
 - Feature branch → Pull Request → GitHub Actions (lint + test + build) → Code review → Merge → Deploy to staging
