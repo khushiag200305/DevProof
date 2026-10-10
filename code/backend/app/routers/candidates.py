@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from .. import models
 from ..database import get_db
 from ..dependencies import get_current_user, require_role
+from ..services.analysis import GitHubUnavailableError, analyze_candidate
 
 router = APIRouter(prefix="/api/candidates", tags=["candidates"])
 
@@ -27,16 +28,33 @@ def _candidate_summary(candidate: models.Candidate) -> dict:
 
 
 def _candidate_detail(candidate: models.Candidate) -> dict:
-    return {
-        **_candidate_summary(candidate),
-        "skills": [
+    reasons_by_skill: dict[int, list[str]] = {}
+    for evidence in candidate.evidence:
+        reasons_by_skill.setdefault(evidence.skill_id, []).append(evidence.description)
+
+    question_by_skill = {q.skill_id: q.question for q in candidate.questions}
+    analyzed = len(candidate.repositories) > 0
+
+    skills = []
+    for cs in candidate.skills:
+        reasons = reasons_by_skill.get(cs.skill_id, [])
+        if cs.status is not None and not reasons:
+            reasons = ["No supporting evidence found in analyzed repositories"]
+        skills.append(
             {
                 "skill_name": cs.skill.skill_name,
                 "status": cs.status,
                 "score": cs.score,
+                "reasons": reasons,
+                "interview_question": question_by_skill.get(cs.skill_id),
             }
-            for cs in candidate.skills
-        ],
+        )
+
+    return {
+        **_candidate_summary(candidate),
+        "repos_analyzed": len(candidate.repositories),
+        "analyzed": analyzed,
+        "skills": skills,
         "projects": [
             {"project_name": p.project_name, "description": p.description}
             for p in candidate.projects
@@ -69,6 +87,24 @@ def list_my_candidates(
     return [_candidate_summary(c) for c in candidates]
 
 
+def _get_visible_candidate(
+    candidate_id: int, db: Session, current_user: models.User
+) -> models.Candidate:
+    """
+    Load a candidate the current user is allowed to see: recruiters can
+    see any candidate, a student only their own.
+    """
+    candidate = db.query(models.Candidate).filter_by(candidate_id=candidate_id).first()
+    if candidate is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Candidate not found.")
+
+    is_owner = candidate.user_id == current_user.user_id
+    if current_user.role != "recruiter" and not is_owner:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not your candidate record.")
+
+    return candidate
+
+
 @router.get("/{candidate_id}")
 def get_candidate(
     candidate_id: int,
@@ -78,12 +114,27 @@ def get_candidate(
     """
     Recruiters can open any candidate; a student can only open their own.
     """
-    candidate = db.query(models.Candidate).filter_by(candidate_id=candidate_id).first()
-    if candidate is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Candidate not found.")
+    return _candidate_detail(_get_visible_candidate(candidate_id, db, current_user))
 
-    is_owner = candidate.user_id == current_user.user_id
-    if current_user.role != "recruiter" and not is_owner:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not your candidate record.")
+
+@router.post("/{candidate_id}/analyze")
+async def analyze(
+    candidate_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """
+    Runs the GitHub evidence engine (repos -> fingerprinting -> scoring)
+    for a candidate, saves the scores, reasons and interview questions,
+    and returns the updated candidate detail. Same access rule as GET.
+    """
+    candidate = _get_visible_candidate(candidate_id, db, current_user)
+
+    try:
+        await analyze_candidate(db, candidate)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+    except GitHubUnavailableError as exc:
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(exc)) from exc
 
     return _candidate_detail(candidate)
