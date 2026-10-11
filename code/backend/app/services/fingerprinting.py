@@ -1,60 +1,44 @@
 """
 Technology fingerprinting: checks a repository for concrete evidence of
-each technology (marker files, and where relevant, keyword matches
-inside them) rather than trusting GitHub's reported language percentages
-alone. See Section 3.3 / Section 6 of the proposal.
+each technology rather than trusting GitHub's reported language alone.
+See Section 3.3 / Section 6 of the proposal.
 
-Carried over from the pre-refactor prototype (see github_client.py's
-module docstring) - the fingerprint rule set moves into a formal
-technology fingerprint database as part of Iteration 3.
+This module does the GitHub fetching; the rules themselves (marker files,
+source-file counts, dependency names) live in services/tech_rules.py so
+they can be tested without network access.
+
+Cost per repository: one recursive tree request plus at most
+MAX_MANIFESTS_PER_REPO file reads.
 """
+import asyncio
+
 import httpx
 
-from .github_client import fetch_file_content, fetch_repo_root_files
+from .github_client import fetch_file_content, fetch_repo_tree
+from .tech_rules import TECH_RULES, detect_technologies, manifest_paths
 
-# Per-technology detection rules: which files to look for, and (for
-# text-based files) which keywords inside them count as evidence.
-FINGERPRINT_RULES = {
-    "Docker": {"files": ["Dockerfile", "docker-compose.yml", "docker-compose.yaml"]},
-    "React": {"files": ["package.json"], "keywords": ["\"react\"", "\"react-dom\""]},
-    "Express": {"files": ["package.json"], "keywords": ["\"express\""]},
-    "Node.js": {"files": ["package.json"], "keywords": []},
-    "Flask": {"files": ["requirements.txt", "pyproject.toml"], "keywords": ["flask"]},
-    "FastAPI": {"files": ["requirements.txt", "pyproject.toml"], "keywords": ["fastapi"]},
-    "Django": {"files": ["requirements.txt", "pyproject.toml"], "keywords": ["django"]},
-}
+# Dependency/config files read per repository (shallowest first). Keeps a
+# 10-repo analysis around 50 GitHub API calls.
+MAX_MANIFESTS_PER_REPO = 4
+
+# Kept for anything that lists the supported technologies.
+FINGERPRINT_RULES = TECH_RULES
 
 
-async def fingerprint_repo(owner: str, repo: str) -> dict:
+async def fingerprint_repo(owner: str, repo: str) -> dict[str, list[str]]:
     """
-    Check a single repository for concrete evidence of each technology
-    in FINGERPRINT_RULES: presence of a marker file, and (where relevant)
-    a matching keyword inside that file's content.
+    Check a single repository for concrete evidence of each technology in
+    TECH_RULES, scanning every folder (not just the root).
 
-    Returns a dict of technology -> list of evidence strings found.
-    An empty list means no evidence was found for that technology.
+    Returns technology -> list of evidence strings. Technologies with no
+    evidence are left out.
     """
-    evidence: dict[str, list[str]] = {tech: [] for tech in FINGERPRINT_RULES}
-
     async with httpx.AsyncClient() as client:
-        root_files = await fetch_repo_root_files(owner, repo, client)
+        paths = await fetch_repo_tree(owner, repo, client)
+        to_read = manifest_paths(paths, MAX_MANIFESTS_PER_REPO)
+        contents = await asyncio.gather(
+            *(fetch_file_content(owner, repo, path, client) for path in to_read)
+        )
 
-        for tech, rule in FINGERPRINT_RULES.items():
-            matching_files = [f for f in rule["files"] if f in root_files]
-            if not matching_files:
-                continue
-
-            keywords = rule.get("keywords", [])
-            if not keywords:
-                # File presence alone is sufficient evidence (e.g. Dockerfile).
-                evidence[tech].append(f"{matching_files[0]} present")
-                continue
-
-            for filename in matching_files:
-                content = await fetch_file_content(owner, repo, filename, client)
-                lower_content = content.lower()
-                for keyword in keywords:
-                    if keyword.lower() in lower_content:
-                        evidence[tech].append(f"'{keyword}' found in {filename}")
-
-    return evidence
+    manifests = {path: text for path, text in zip(to_read, contents) if text}
+    return detect_technologies(paths, manifests)
