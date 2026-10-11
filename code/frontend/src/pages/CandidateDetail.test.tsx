@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -16,8 +16,8 @@ const baseCandidate = {
   repos_analyzed: 0,
   analyzed: false,
   skills: [
-    { skill_name: "Docker", status: null, score: null, reasons: [], interview_question: null, supporting_repos: [] },
-    { skill_name: "React", status: null, score: null, reasons: [], interview_question: null, supporting_repos: [] },
+    { skill_name: "Docker", category: "Cloud & DevOps", checkable: true, status: null, score: null, reasons: [], interview_question: null, supporting_repos: [] },
+    { skill_name: "React", category: "Web & Frameworks", checkable: true, status: null, score: null, reasons: [], interview_question: null, supporting_repos: [] },
   ],
   projects: [],
 };
@@ -29,6 +29,8 @@ const analyzedCandidate = {
   skills: [
     {
       skill_name: "Docker",
+      category: "Cloud & DevOps",
+      checkable: true,
       status: "Strong Evidence",
       score: 80,
       reasons: ["shop-api: Dockerfile present", "shop-api: original repository, not a fork"],
@@ -40,6 +42,8 @@ const analyzedCandidate = {
     },
     {
       skill_name: "React",
+      category: "Web & Frameworks",
+      checkable: true,
       status: "Needs Verification",
       score: 0,
       reasons: ["No supporting evidence found in analyzed repositories"],
@@ -123,5 +127,58 @@ describe("CandidateDetail page", () => {
       expect(screen.getByText("No GitHub username on this resume")).toBeInTheDocument()
     );
     expect(screen.queryByRole("button", { name: /analyze/i })).not.toBeInTheDocument();
+  });
+
+  it("groups skills by category and shows concept skills without a score", async () => {
+    vi.spyOn(api, "apiGet").mockResolvedValue({
+      ...analyzedCandidate,
+      skills: [
+        {
+          skill_name: "Python",
+          category: "Programming Languages",
+          checkable: true,
+          status: "Good Evidence",
+          score: 60,
+          reasons: ["algorithms: primary language matches (Python)"],
+          interview_question: null,
+          supporting_repos: [],
+        },
+        {
+          skill_name: "Java",
+          category: "Programming Languages",
+          checkable: true,
+          status: "Needs Verification",
+          score: 0,
+          reasons: ["No supporting evidence found in analyzed repositories"],
+          interview_question: "Can you walk through a specific project where you used Java?",
+          supporting_repos: [],
+        },
+        {
+          skill_name: "Object-Oriented Programming",
+          category: "Core Concepts",
+          checkable: false,
+          status: "Not checkable on GitHub",
+          score: null,
+          reasons: ["Concept knowledge - best checked in the interview."],
+          interview_question: "Explain encapsulation, inheritance and polymorphism.",
+          supporting_repos: [],
+        },
+      ],
+    });
+    renderPage();
+
+    const languages = await screen.findByRole("region", { name: "Programming Languages" });
+    const concepts = screen.getByRole("region", { name: "Core Concepts" });
+
+    expect(within(languages).getByText("Python")).toBeInTheDocument();
+    expect(within(languages).getByText("Java")).toBeInTheDocument();
+    expect(within(languages).getByText("1 of 2 backed by GitHub")).toBeInTheDocument();
+
+    expect(within(concepts).getByText("Checked in interview")).toBeInTheDocument();
+    expect(within(concepts).getByText("Not checkable on GitHub")).toBeInTheDocument();
+    expect(within(concepts).queryByText(/\/100/)).not.toBeInTheDocument();
+    expect(
+      within(concepts).getByText("Concept knowledge - best checked in the interview.")
+    ).toBeInTheDocument();
   });
 });

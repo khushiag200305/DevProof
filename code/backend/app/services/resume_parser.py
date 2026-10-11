@@ -22,7 +22,7 @@ from functools import lru_cache
 import pdfplumber
 import spacy
 
-from ..skills_dictionary import SKILL_ALIASES
+from ..skills_dictionary import SKILL_ALIASES, extract_skill_names
 
 GITHUB_URL_PATTERN = re.compile(
     r"(?<![\w.])(?:https?://)?(?:www\.)?github\.com/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_.-]+)?",
@@ -62,22 +62,11 @@ def extract_text_from_pdf(pdf_bytes: bytes) -> str:
 
 def extract_skills(text: str) -> list[str]:
     """
-    Find mentions of known skills in resume text.
-
-    Uses lookaround assertions instead of \\b, since \\b is unreliable
-    right after punctuation characters (e.g. it fails to correctly
-    bound "C++", which ends in non-word characters). This checks that
-    the alias isn't immediately preceded/followed by another letter,
-    digit, or underscore, which achieves a correct "whole token" match
-    regardless of what the alias itself contains.
+    Find the skills a resume claims, using the aliases in the skill
+    catalog (app/skills_catalog.json). See app/skills_dictionary.py for
+    how short words like "C" or "Word" are matched only as list items.
     """
-    lower_text = text.lower()
-    found = set()
-    for alias, normalized in SKILL_ALIASES.items():
-        pattern = r"(?<![A-Za-z0-9_])" + re.escape(alias) + r"(?![A-Za-z0-9_])"
-        if re.search(pattern, lower_text):
-            found.add(normalized)
-    return sorted(found)
+    return extract_skill_names(text)
 
 
 def extract_github_links(text: str) -> list[str]:

@@ -9,6 +9,8 @@ recomputed on every request.
 """
 from datetime import datetime, timedelta, timezone
 
+from ..skills_dictionary import NOT_CHECKABLE, get_skill, is_checkable
+
 # Configurable scoring weights (heuristic starting points, per Section 3.4
 # of the proposal - not a claim of statistical optimality).
 SCORE_WEIGHTS = {
@@ -21,19 +23,12 @@ SCORE_WEIGHTS = {
 STRONG_THRESHOLD = 70
 GOOD_THRESHOLD = 40
 
-INTERVIEW_QUESTION_TEMPLATES = {
-    "Docker": "How did you use Docker to containerize this application?",
-    "React": "Walk me through how you structured components in one of your React projects.",
-    "FastAPI": "Can you describe an endpoint you built with FastAPI and why you chose it?",
-    "Flask": "Can you walk through how you structured routes in a Flask project?",
-    "Django": "What Django features (ORM, admin, etc.) did you rely on in your project?",
-}
-
-
 def default_interview_question(skill: str) -> str:
-    return INTERVIEW_QUESTION_TEMPLATES.get(
-        skill, f"Can you walk through a specific project where you used {skill}?"
-    )
+    """The catalog's question for this skill, or a generic one."""
+    entry = get_skill(skill)
+    if entry and entry.get("question"):
+        return entry["question"]
+    return f"Can you walk through a specific project where you used {skill}?"
 
 
 def is_recently_updated(updated_at: str, months: int = 12) -> bool:
@@ -112,7 +107,23 @@ def score_skill(skill: str, repos: list[dict], fingerprints: dict[str, dict]) ->
     other repositories that also show evidence for the skill, strongest
     first, as {"repo", "score"}. They are listed for context only and do
     not change the score.
+
+    Skills the catalog marks as 'manual' (concepts like OOP, or tools like
+    Excel that leave nothing on GitHub) get no score: their classification
+    is "Not checkable on GitHub", with the catalog's reason and an
+    interview question instead.
     """
+    if not is_checkable(skill):
+        return {
+            "skill": skill,
+            "score": None,
+            "classification": NOT_CHECKABLE,
+            "reasons": [get_skill(skill)["reason"]],
+            "evidence": [],
+            "supporting_repos": [],
+            "interview_question": default_interview_question(skill),
+        }
+
     best_score = 0
     best_repo: str | None = None
     best_evidence: list[dict] = []

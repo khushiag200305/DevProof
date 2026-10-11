@@ -147,3 +147,33 @@ def test_no_supporting_repos_when_only_one_repo_has_evidence():
     repos = [_repo("only-one", language="Java"), _repo("unrelated", language="Go")]
 
     assert score_skill("Java", repos, _fingerprints())["supporting_repos"] == []
+
+
+def test_manual_skills_get_no_score_but_a_reason_and_question():
+    repos = [_repo("anything", language="Python")]
+
+    result = score_skill("Object-Oriented Programming", repos, _fingerprints())
+
+    assert result["score"] is None
+    assert result["classification"] == "Not checkable on GitHub"
+    assert result["reasons"] == ["Concept knowledge - best checked in the interview."]
+    assert "encapsulation" in result["interview_question"]
+    assert result["evidence"] == [] and result["supporting_repos"] == []
+
+
+def test_interview_questions_come_from_the_catalog_with_a_generic_fallback():
+    c_result = score_skill("C", [], {})
+    unknown = score_skill("Rust", [], {})
+
+    assert "malloc" in c_result["interview_question"]
+    assert unknown["interview_question"] == "Can you walk through a specific project where you used Rust?"
+
+
+def test_c_scores_from_language_and_source_files():
+    repos = [_repo("os-labs", language="C")]
+    fingerprints = _fingerprints(**{"os-labs": {"C": ["12 .c source files"]}})
+
+    result = score_skill("C", repos, fingerprints)
+
+    assert result["score"] == 100
+    assert result["reasons"][0] == "os-labs: 12 .c source files"
