@@ -175,3 +175,42 @@ def test_github_failure_returns_502_and_saves_nothing(client, monkeypatch):
     assert "GITHUB_TOKEN" in response.json()["detail"]
     detail = client.get(f"/api/candidates/{candidate_id}", headers=_auth_headers(recruiter)).json()
     assert _skill(detail, "Docker")["status"] is None
+
+
+def test_other_supporting_repos_are_saved_and_returned(client, monkeypatch):
+    repos = FAKE_REPOS + [
+        {
+            "name": "docker-practice",
+            "language": "Shell",
+            "is_fork": True,
+            "stars": 0,
+            "updated_at": RECENT,
+            "url": "https://github.com/octocat/docker-practice",
+        },
+    ]
+    fingerprints = {**FAKE_FINGERPRINTS, "docker-practice": {"Docker": ["Dockerfile found at Dockerfile"]}}
+
+    async def fake_fetch_repos(username: str):
+        return repos
+
+    async def fake_fingerprint(owner: str, repo: str):
+        return fingerprints[repo]
+
+    monkeypatch.setattr("app.services.analysis.fetch_github_repos", fake_fetch_repos)
+    monkeypatch.setattr("app.services.analysis.fingerprint_repo", fake_fingerprint)
+    student = _make_user("s5@thapar.edu", "student")
+    candidate_id = _make_candidate(student.user_id, ["Docker", "React"])
+    headers = _auth_headers(student)
+
+    body = client.post(f"/api/candidates/{candidate_id}/analyze", headers=headers).json()
+
+    docker = _skill(body, "Docker")
+    assert docker["score"] == 80
+    assert all(reason.startswith("shop-api:") for reason in docker["reasons"])
+    assert docker["supporting_repos"] == [{"repo": "docker-practice", "score": 60}]
+    assert _skill(body, "React")["supporting_repos"] == []
+
+    # Saved: a plain GET returns the same list, and it is not mixed into the reasons.
+    detail = client.get(f"/api/candidates/{candidate_id}", headers=headers).json()
+    assert _skill(detail, "Docker")["supporting_repos"] == [{"repo": "docker-practice", "score": 60}]
+    assert "docker-practice" not in _skill(detail, "Docker")["reasons"]
