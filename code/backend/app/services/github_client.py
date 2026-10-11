@@ -11,6 +11,7 @@ Iteration 3 formalizes the scoring rules against the Evidence table.
 """
 import base64
 import os
+from urllib.parse import quote
 
 import httpx
 from dotenv import load_dotenv
@@ -55,19 +56,31 @@ async def fetch_github_repos(username: str) -> list[dict]:
     ]
 
 
-async def fetch_repo_root_files(owner: str, repo: str, client: httpx.AsyncClient) -> list[str]:
-    """List filenames in a repository's root directory."""
-    url = f"https://api.github.com/repos/{owner}/{repo}/contents"
-    response = await client.get(url, headers=GITHUB_HEADERS, timeout=10.0)
+async def fetch_repo_tree(owner: str, repo: str, client: httpx.AsyncClient) -> list[str]:
+    """
+    Every file path in a repository's default branch, from one recursive
+    git tree request (so files inside subfolders such as backend/ or
+    frontend/ are found too). Returns [] for an empty or unreadable repo.
+
+    GitHub cuts very large trees short ("truncated"); the paths it did
+    return are still used.
+    """
+    url = f"https://api.github.com/repos/{owner}/{repo}/git/trees/HEAD"
+    response = await client.get(
+        url, params={"recursive": "1"}, headers=GITHUB_HEADERS, timeout=15.0
+    )
     if response.status_code != 200:
         return []
-    items = response.json()
-    return [item["name"] for item in items if item.get("type") == "file"]
+    return [
+        item["path"]
+        for item in response.json().get("tree", [])
+        if item.get("type") == "blob"
+    ]
 
 
 async def fetch_file_content(owner: str, repo: str, path: str, client: httpx.AsyncClient) -> str:
     """Fetch and decode a single file's text content from a repo."""
-    url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
+    url = f"https://api.github.com/repos/{owner}/{repo}/contents/{quote(path)}"
     response = await client.get(url, headers=GITHUB_HEADERS, timeout=10.0)
     if response.status_code != 200:
         return ""
