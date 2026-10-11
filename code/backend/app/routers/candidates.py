@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from .. import models
 from ..database import get_db
 from ..dependencies import get_current_user, require_role
-from ..services.analysis import GitHubUnavailableError, analyze_candidate
+from ..services.analysis import SUPPORTING_REPO, GitHubUnavailableError, analyze_candidate
 
 router = APIRouter(prefix="/api/candidates", tags=["candidates"])
 
@@ -29,8 +29,14 @@ def _candidate_summary(candidate: models.Candidate) -> dict:
 
 def _candidate_detail(candidate: models.Candidate) -> dict:
     reasons_by_skill: dict[int, list[str]] = {}
-    for evidence in candidate.evidence:
-        reasons_by_skill.setdefault(evidence.skill_id, []).append(evidence.description)
+    supporting_by_skill: dict[int, list[dict]] = {}
+    for evidence in sorted(candidate.evidence, key=lambda e: e.evidence_id):
+        if evidence.evidence_type == SUPPORTING_REPO:
+            supporting_by_skill.setdefault(evidence.skill_id, []).append(
+                {"repo": evidence.description, "score": evidence.weight}
+            )
+        else:
+            reasons_by_skill.setdefault(evidence.skill_id, []).append(evidence.description)
 
     question_by_skill = {q.skill_id: q.question for q in candidate.questions}
     analyzed = len(candidate.repositories) > 0
@@ -47,6 +53,7 @@ def _candidate_detail(candidate: models.Candidate) -> dict:
                 "score": cs.score,
                 "reasons": reasons,
                 "interview_question": question_by_skill.get(cs.skill_id),
+                "supporting_repos": supporting_by_skill.get(cs.skill_id, []),
             }
         )
 

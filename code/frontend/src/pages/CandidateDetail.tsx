@@ -4,12 +4,18 @@ import { Navbar } from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, apiGet, apiPost } from "../lib/api";
 
+interface SupportingRepo {
+  repo: string;
+  score: number;
+}
+
 interface SkillEntry {
   skill_name: string;
   status: string | null;
   score: number | null;
   reasons: string[];
   interview_question: string | null;
+  supporting_repos: SupportingRepo[];
 }
 
 interface ProjectEntry {
@@ -180,6 +186,12 @@ export function CandidateDetail() {
                             <li key={reason}>{reason}</li>
                           ))}
                         </ul>
+                      )}
+                      {s.supporting_repos.length > 0 && (
+                        <p className="mt-2 text-xs text-slate-500">
+                          <span className="font-medium text-slate-600">Also supported by:</span>{" "}
+                          {s.supporting_repos.map((r) => `${r.repo} (${r.score})`).join(", ")}
+                        </p>
                       )}
                       {s.interview_question && (
                         <p className="mt-2 rounded-md bg-brand-50 px-3 py-2 text-xs text-brand-700">

@@ -16,8 +16,8 @@ const baseCandidate = {
   repos_analyzed: 0,
   analyzed: false,
   skills: [
-    { skill_name: "Docker", status: null, score: null, reasons: [], interview_question: null },
-    { skill_name: "React", status: null, score: null, reasons: [], interview_question: null },
+    { skill_name: "Docker", status: null, score: null, reasons: [], interview_question: null, supporting_repos: [] },
+    { skill_name: "React", status: null, score: null, reasons: [], interview_question: null, supporting_repos: [] },
   ],
   projects: [],
 };
@@ -33,6 +33,10 @@ const analyzedCandidate = {
       score: 80,
       reasons: ["shop-api: Dockerfile present", "shop-api: original repository, not a fork"],
       interview_question: null,
+      supporting_repos: [
+        { repo: "docker-practice", score: 60 },
+        { repo: "DevProof", score: 40 },
+      ],
     },
     {
       skill_name: "React",
@@ -40,6 +44,7 @@ const analyzedCandidate = {
       score: 0,
       reasons: ["No supporting evidence found in analyzed repositories"],
       interview_question: "Walk me through how you structured components in one of your React projects.",
+      supporting_repos: [],
     },
   ],
 };
@@ -92,6 +97,8 @@ describe("CandidateDetail page", () => {
     expect(screen.getByText(/Needs Verification · 0\/100/)).toBeInTheDocument();
     expect(screen.getByText(/structured components in one of your React projects/)).toBeInTheDocument();
     expect(screen.getByText(/Scored against 3 public GitHub repositories/)).toBeInTheDocument();
+    expect(screen.getByText("docker-practice (60), DevProof (40)")).toBeInTheDocument();
+    expect(screen.getAllByText(/Also supported by/)).toHaveLength(1);
     expect(screen.getByRole("button", { name: /re-run analysis/i })).toBeInTheDocument();
   });
 

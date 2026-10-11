@@ -106,19 +106,33 @@ def score_skill(skill: str, repos: list[dict], fingerprints: dict[str, dict]) ->
     strongest single repo's score (rather than summing across repos,
     which would unfairly reward having many mediocre repos).
 
-    Returns the score, its classification, human-readable `reasons`, and
-    the same evidence as structured `evidence` items (repo, type,
-    description, weight) for storing in the Evidence table.
+    Returns the score, its classification, human-readable `reasons`, the
+    same evidence as structured `evidence` items (repo, type, description,
+    weight) for storing in the Evidence table, and `supporting_repos`: the
+    other repositories that also show evidence for the skill, strongest
+    first, as {"repo", "score"}. They are listed for context only and do
+    not change the score.
     """
     best_score = 0
+    best_repo: str | None = None
     best_evidence: list[dict] = []
+    repo_scores: list[tuple[int, str]] = []
 
     for repo in repos:
         evidence = _repo_evidence(skill, repo, fingerprints)
         score = sum(item["weight"] for item in evidence)
+        if score > 0:
+            repo_scores.append((score, repo["name"]))
         if score > best_score:
             best_score = score
+            best_repo = repo["name"]
             best_evidence = evidence
+
+    supporting_repos = [
+        {"repo": name, "score": min(score, 100)}
+        for score, name in sorted(repo_scores, key=lambda item: (-item[0], item[1].lower()))
+        if name != best_repo
+    ]
 
     best_reasons = [f"{item['repo']}: {item['description']}" for item in best_evidence]
     score = min(best_score, 100)
@@ -136,6 +150,7 @@ def score_skill(skill: str, repos: list[dict], fingerprints: dict[str, dict]) ->
         "classification": classification,
         "reasons": best_reasons if best_reasons else ["No supporting evidence found in analyzed repositories"],
         "evidence": best_evidence,
+        "supporting_repos": supporting_repos,
     }
 
     if classification == "Needs Verification":

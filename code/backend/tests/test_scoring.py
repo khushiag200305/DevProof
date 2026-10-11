@@ -119,3 +119,31 @@ def test_missing_updated_at_does_not_crash():
     result = score_skill("Java", repos, _fingerprints())
 
     assert result["score"] == 40
+
+
+def test_other_repos_with_evidence_are_listed_as_supporting():
+    repos = [
+        _repo("old-scripts", language="Python", is_fork=True, updated_at=OLD),
+        _repo("main-project", language="Python"),
+        _repo("ml-notebooks", language="Python", updated_at=OLD),
+        _repo("frontend", language="TypeScript"),
+    ]
+    fingerprints = _fingerprints(**{"main-project": {"Python": ["requirements.txt found at requirements.txt"]}})
+
+    result = score_skill("Python", repos, fingerprints)
+
+    # Score still comes from the single best repo...
+    assert result["score"] == 100
+    assert all(item["repo"] == "main-project" for item in result["evidence"])
+    # ...and the others are listed, strongest first, without the best one
+    # or repos with no evidence for the skill.
+    assert result["supporting_repos"] == [
+        {"repo": "ml-notebooks", "score": 40},
+        {"repo": "old-scripts", "score": 20},
+    ]
+
+
+def test_no_supporting_repos_when_only_one_repo_has_evidence():
+    repos = [_repo("only-one", language="Java"), _repo("unrelated", language="Go")]
+
+    assert score_skill("Java", repos, _fingerprints())["supporting_repos"] == []
