@@ -214,3 +214,35 @@ def test_other_supporting_repos_are_saved_and_returned(client, monkeypatch):
     detail = client.get(f"/api/candidates/{candidate_id}", headers=headers).json()
     assert _skill(detail, "Docker")["supporting_repos"] == [{"repo": "docker-practice", "score": 60}]
     assert "docker-practice" not in _skill(detail, "Docker")["reasons"]
+
+
+def test_skills_are_grouped_by_category_and_concepts_are_not_scored(client, monkeypatch):
+    _fake_github(monkeypatch)
+    student = _make_user("s6@thapar.edu", "student")
+    candidate_id = _make_candidate(
+        student.user_id, ["Object-Oriented Programming", "Docker", "Python", "Excel"]
+    )
+    headers = _auth_headers(student)
+
+    # Before any analysis, concept skills already show why they aren't scored.
+    before = client.get(f"/api/candidates/{candidate_id}", headers=headers).json()
+    assert [s["skill_name"] for s in before["skills"]] == [
+        "Python", "Docker", "Excel", "Object-Oriented Programming",
+    ]
+    assert [s["category"] for s in before["skills"]] == [
+        "Programming Languages", "Cloud & DevOps", "Data & Analytics", "Core Concepts",
+    ]
+    oop = _skill(before, "Object-Oriented Programming")
+    assert oop["checkable"] is False
+    assert oop["status"] == "Not checkable on GitHub"
+    assert oop["score"] is None
+    assert oop["reasons"] == ["Concept knowledge - best checked in the interview."]
+    assert "encapsulation" in oop["interview_question"]
+    assert _skill(before, "Python")["status"] is None
+
+    after = client.post(f"/api/candidates/{candidate_id}/analyze", headers=headers).json()
+
+    assert _skill(after, "Docker")["score"] == 80
+    assert _skill(after, "Excel")["status"] == "Not checkable on GitHub"
+    assert _skill(after, "Excel")["score"] is None
+    assert _skill(after, "Excel")["reasons"] == ["Spreadsheet work isn't stored on GitHub."]

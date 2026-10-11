@@ -24,6 +24,8 @@ import json
 import posixpath
 import re
 
+from ..skills_dictionary import SKILLS
+
 # Folders that hold third-party or generated code, not the candidate's own.
 IGNORED_DIRS = {
     "node_modules", "vendor", "venv", ".venv", "env", "site-packages",
@@ -31,7 +33,8 @@ IGNORED_DIRS = {
     "bower_components", ".next",
 }
 
-# Source files needed before a language counts on extensions alone.
+# Source files needed before a language counts on extensions alone, unless
+# a rule sets its own min_files (e.g. one Tableau workbook is enough).
 MIN_SOURCE_FILES = 3
 
 COMPOSE_FILES = {"docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml"}
@@ -48,69 +51,12 @@ MANIFEST_FILES = {
     "build.gradle.kts",
 } | COMPOSE_FILES
 
-TECH_RULES: dict[str, dict[str, list[str]]] = {
-    "Python": {
-        "marker_files": ["requirements.txt", "pyproject.toml", "setup.py", "Pipfile"],
-        "extensions": [".py", ".ipynb"],
-    },
-    "Java": {
-        "marker_files": ["pom.xml", "build.gradle", "build.gradle.kts"],
-        "extensions": [".java"],
-    },
-    "C++": {
-        "marker_files": ["CMakeLists.txt"],
-        "extensions": [".cpp", ".cc", ".cxx", ".hpp", ".hh"],
-    },
-    "JavaScript": {
-        "extensions": [".js", ".jsx", ".mjs", ".cjs"],
-    },
-    "Docker": {
-        "marker_files": ["Dockerfile", *sorted(COMPOSE_FILES)],
-    },
-    "React": {
-        "dependencies": ["react"],
-    },
-    "Node.js": {
-        # Server-side Node frameworks/tools - a package.json alone is just
-        # as likely to be a frontend build setup.
-        "dependencies": [
-            "express", "koa", "fastify", "@nestjs/core", "@hapi/hapi",
-            "nodemon", "socket.io", "mongoose",
-        ],
-    },
-    "Express": {
-        "dependencies": ["express"],
-    },
-    "Flask": {
-        "dependencies": ["flask"],
-    },
-    "FastAPI": {
-        "dependencies": ["fastapi"],
-    },
-    "Django": {
-        "dependencies": ["django"],
-    },
-    "MongoDB": {
-        "dependencies": [
-            "mongodb", "mongoose", "pymongo", "motor", "mongoengine", "flask-pymongo",
-            "spring-boot-starter-data-mongodb", "mongodb-driver-sync",
-        ],
-        "images": ["mongo"],
-    },
-    "MySQL": {
-        "dependencies": [
-            "mysql", "mysql2", "mysqlclient", "pymysql", "mysql-connector-python",
-            "mysql-connector-j", "mysql-connector-java", "aiomysql",
-        ],
-        "images": ["mysql"],
-    },
-    "PostgreSQL": {
-        "dependencies": [
-            "pg", "postgres", "psycopg", "psycopg2", "psycopg2-binary", "asyncpg",
-            "postgresql", "pg-promise",
-        ],
-        "images": ["postgres", "postgis"],
-    },
+# Detection rules for every skill the catalog marks as checkable on GitHub
+# (app/skills_catalog.json). Skills marked 'manual' have no rules.
+TECH_RULES: dict[str, dict] = {
+    name: skill["rules"]
+    for name, skill in SKILLS.items()
+    if skill["check"] == "github"
 }
 
 
@@ -243,9 +189,16 @@ def detect_technologies(paths: list[str], manifests: dict[str, str]) -> dict[str
                 1 for p in own_paths
                 if p.lower().endswith(extensions) and not is_tooling_config(p)
             )
-            if count >= MIN_SOURCE_FILES:
-                label = "/".join(extensions[:2]) if len(extensions) > 1 else extensions[0]
-                found.append(f"{count} {label} source files")
+            if count >= rule.get("min_files", MIN_SOURCE_FILES):
+                if "file_label" in rule:
+                    plural = "" if count == 1 else "s"
+                    found.append(f"{count} {rule['file_label']}{plural}")
+                else:
+                    label = "/".join(extensions[:2]) if len(extensions) > 1 else extensions[0]
+                    found.append(f"{count} {label} source files")
+
+        if rule.get("any_repo") and own_paths:
+            found.append("public repository on GitHub")
 
         wanted = {_normalize(d) for d in rule.get("dependencies", [])}
         for path in sorted(deps_by_file):

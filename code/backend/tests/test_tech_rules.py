@@ -184,3 +184,57 @@ def test_parse_compose_images_strips_registry_and_tag():
 def test_tool_config_files_are_not_counted_as_source_code():
     paths = ["eslint.config.js", "tailwind.config.js", "postcss.config.js", ".eslintrc.js", "src/main.ts"]
     assert "JavaScript" not in detect_technologies(paths, {})
+
+
+# --- rules added with the skill catalog ----------------------------------
+
+
+def test_c_sql_and_tableau_from_files():
+    paths = ["lab1.c", "lab2.c", "src/queue.c", "db/schema.sql", "reports/sales.twbx"]
+
+    detected = detect_technologies(paths, {})
+
+    assert detected["C"] == ["3 .c source files"]
+    assert detected["SQL"] == ["1 SQL file"]
+    assert detected["Tableau"] == ["1 Tableau workbook"]
+    assert detected["Data Visualization"] == ["1 Tableau workbook"]
+
+
+def test_data_and_ml_skills_from_requirements_and_notebooks():
+    requirements = "pandas\nnumpy\nscikit-learn==1.5\nmatplotlib\nseaborn\nopenai\n"
+
+    detected = detect_technologies(
+        ["requirements.txt", "notebooks/eda.ipynb"], {"requirements.txt": requirements}
+    )
+
+    assert detected["Machine Learning"] == ["'scikit-learn' listed in requirements.txt"]
+    assert detected["Pandas"] == ["'pandas' listed in requirements.txt"]
+    assert detected["Data Visualization"] == ["'matplotlib', 'seaborn' listed in requirements.txt"]
+    assert detected["Prompt Engineering"] == ["'openai' listed in requirements.txt"]
+    assert detected["Exploratory Data Analysis"] == [
+        "1 Jupyter notebook",
+        "'pandas' listed in requirements.txt",
+    ]
+
+
+def test_aws_from_sdk_and_serverless_config():
+    manifests = {"package.json": json.dumps({"dependencies": {"@aws-sdk/client-s3": "^3"}})}
+
+    detected = detect_technologies(["serverless.yml", "package.json", "handler.js"], manifests)
+
+    assert detected["AWS"] == [
+        "serverless.yml found at serverless.yml",
+        "'@aws-sdk/client-s3' listed in package.json",
+    ]
+    assert detected["AWS Lambda"] == ["serverless.yml found at serverless.yml"]
+    assert detected["AWS S3"] == ["'@aws-sdk/client-s3' listed in package.json"]
+
+
+def test_any_own_repository_is_git_evidence():
+    assert detect_technologies(["README.md"], {})["Git & GitHub"] == ["public repository on GitHub"]
+
+
+def test_manual_skills_have_no_detection_rules():
+    detected = detect_technologies(["schema.sql", "notes.md"], {})
+    assert "Normalization" not in detected
+    assert "Database Design" not in detected
