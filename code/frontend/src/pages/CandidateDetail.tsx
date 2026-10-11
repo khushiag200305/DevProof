@@ -11,6 +11,8 @@ interface SupportingRepo {
 
 interface SkillEntry {
   skill_name: string;
+  category: string;
+  checkable: boolean;
   status: string | null;
   score: number | null;
   reasons: string[];
@@ -39,9 +41,78 @@ interface CandidateDetailData {
 function statusBadgeClasses(status: string | null): string {
   if (!status) return "bg-slate-100 text-slate-500";
   const normalized = status.toLowerCase();
+  if (normalized.includes("not checkable")) return "bg-slate-100 text-slate-600";
   if (normalized.includes("strong")) return "bg-emerald-50 text-emerald-700";
   if (normalized.includes("good")) return "bg-amber-50 text-amber-700";
   return "bg-red-50 text-red-700";
+}
+
+interface SkillGroup {
+  category: string;
+  skills: SkillEntry[];
+}
+
+/** Skills arrive sorted by category (resume-style order); group neighbours. */
+function groupByCategory(skills: SkillEntry[]): SkillGroup[] {
+  const groups: SkillGroup[] = [];
+  for (const skill of skills) {
+    const last = groups[groups.length - 1];
+    if (last && last.category === skill.category) {
+      last.skills.push(skill);
+    } else {
+      groups.push({ category: skill.category, skills: [skill] });
+    }
+  }
+  return groups;
+}
+
+/** e.g. "2 of 3 backed by GitHub" or "Checked in interview" for concept-only groups. */
+function groupSummary(group: SkillGroup): string | null {
+  const checkable = group.skills.filter((s) => s.checkable);
+  if (checkable.length === 0) return "Checked in interview";
+  if (checkable.some((s) => s.status === null)) return null;
+  const backed = checkable.filter(
+    (s) => s.status === "Strong Evidence" || s.status === "Good Evidence"
+  ).length;
+  return `${backed} of ${checkable.length} backed by GitHub`;
+}
+
+function SkillCard({ skill: s }: { skill: SkillEntry }) {
+  return (
+    <li className="rounded-lg border border-slate-100 px-4 py-3">
+      <div className="flex items-center justify-between gap-3">
+        <span className="font-medium text-slate-700">{s.skill_name}</span>
+        <span
+          className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${statusBadgeClasses(s.status)}`}
+        >
+          {s.status ?? "Pending Analysis"}
+          {s.score !== null && ` · ${s.score}/100`}
+        </span>
+      </div>
+      {s.reasons.length > 0 &&
+        (s.checkable ? (
+          <ul className="mt-2 list-inside list-disc space-y-0.5 text-xs text-slate-500">
+            {s.reasons.map((reason) => (
+              <li key={reason}>{reason}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-2 text-xs italic text-slate-500">{s.reasons[0]}</p>
+        ))}
+      {s.supporting_repos.length > 0 && (
+        <p className="mt-2 text-xs text-slate-500">
+          <span className="font-medium text-slate-600">Also supported by:</span>{" "}
+          {s.supporting_repos.map((r) => `${r.repo} (${r.score})`).join(", ")}
+        </p>
+      )}
+      {s.interview_question && (
+        <p className="mt-2 rounded-md bg-brand-50 px-3 py-2 text-xs text-brand-700">
+          <span className="font-medium">Suggested interview question:</span>{" "}
+          {s.interview_question}
+        </p>
+      )}
+    </li>
+  );
 }
 
 export function CandidateDetail() {
@@ -165,43 +236,26 @@ export function CandidateDetail() {
               {candidate.skills.length === 0 ? (
                 <p className="mt-4 text-sm text-slate-400">No skills detected.</p>
               ) : (
-                <ul className="mt-4 space-y-3">
-                  {candidate.skills.map((s) => (
-                    <li
-                      key={s.skill_name}
-                      className="rounded-lg border border-slate-100 px-4 py-3"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="font-medium text-slate-700">{s.skill_name}</span>
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-medium ${statusBadgeClasses(s.status)}`}
-                        >
-                          {s.status ?? "Pending Analysis"}
-                          {s.score !== null && ` · ${s.score}/100`}
-                        </span>
-                      </div>
-                      {s.reasons.length > 0 && (
-                        <ul className="mt-2 list-inside list-disc space-y-0.5 text-xs text-slate-500">
-                          {s.reasons.map((reason) => (
-                            <li key={reason}>{reason}</li>
+                <div className="mt-4 space-y-6">
+                  {groupByCategory(candidate.skills).map((group) => {
+                    const summary = groupSummary(group);
+                    return (
+                      <section key={group.category} aria-label={group.category}>
+                        <div className="flex items-baseline justify-between gap-3 border-b border-slate-100 pb-1">
+                          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+                            {group.category}
+                          </h3>
+                          {summary && <span className="text-xs text-slate-400">{summary}</span>}
+                        </div>
+                        <ul className="mt-3 space-y-3">
+                          {group.skills.map((s) => (
+                            <SkillCard key={s.skill_name} skill={s} />
                           ))}
                         </ul>
-                      )}
-                      {s.supporting_repos.length > 0 && (
-                        <p className="mt-2 text-xs text-slate-500">
-                          <span className="font-medium text-slate-600">Also supported by:</span>{" "}
-                          {s.supporting_repos.map((r) => `${r.repo} (${r.score})`).join(", ")}
-                        </p>
-                      )}
-                      {s.interview_question && (
-                        <p className="mt-2 rounded-md bg-brand-50 px-3 py-2 text-xs text-brand-700">
-                          <span className="font-medium">Suggested interview question:</span>{" "}
-                          {s.interview_question}
-                        </p>
-                      )}
-                    </li>
-                  ))}
-                </ul>
+                      </section>
+                    );
+                  })}
+                </div>
               )}
             </div>
 

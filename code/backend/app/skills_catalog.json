@@ -1,0 +1,466 @@
+{
+  "_about": "DevProof skill catalog. Each skill lists the phrasings that count as a resume claim (aliases), the resume-style category it is reported under, and how it is checked: 'github' skills are scored from repository evidence using 'rules'; 'manual' skills cannot be seen in code, so the report shows 'reason' and an interview question instead of a score. 'strict_aliases' only match as a whole list item (e.g. 'Python, C, Java'), for short or everyday words like 'C' or 'Word'. Rule keys: marker_files, extensions (+ min_files, file_label), dependencies, images, any_repo. Loaded and validated by app/skills_dictionary.py.",
+  "categories": [
+    "Programming Languages",
+    "Web & Frameworks",
+    "Databases",
+    "Cloud & DevOps",
+    "AI & Machine Learning",
+    "Data & Analytics",
+    "Core Concepts",
+    "Tools"
+  ],
+  "skills": [
+    {
+      "name": "Python",
+      "category": "Programming Languages",
+      "aliases": ["python", "python3"],
+      "check": "github",
+      "rules": {
+        "marker_files": ["requirements.txt", "pyproject.toml", "setup.py", "Pipfile"],
+        "extensions": [".py", ".ipynb"]
+      }
+    },
+    {
+      "name": "Java",
+      "category": "Programming Languages",
+      "aliases": ["java"],
+      "check": "github",
+      "rules": {
+        "marker_files": ["pom.xml", "build.gradle", "build.gradle.kts"],
+        "extensions": [".java"]
+      }
+    },
+    {
+      "name": "C",
+      "category": "Programming Languages",
+      "aliases": ["c language", "c programming"],
+      "strict_aliases": ["c"],
+      "check": "github",
+      "rules": {
+        "extensions": [".c"]
+      },
+      "question": "Walk me through a C program you wrote. How did you manage memory with malloc and free?"
+    },
+    {
+      "name": "C++",
+      "category": "Programming Languages",
+      "aliases": ["c++", "cpp"],
+      "check": "github",
+      "rules": {
+        "marker_files": ["CMakeLists.txt"],
+        "extensions": [".cpp", ".cc", ".cxx", ".hpp", ".hh"]
+      }
+    },
+    {
+      "name": "JavaScript",
+      "category": "Programming Languages",
+      "aliases": ["javascript", "js"],
+      "check": "github",
+      "rules": {
+        "extensions": [".js", ".jsx", ".mjs", ".cjs"]
+      }
+    },
+    {
+      "name": "React",
+      "category": "Web & Frameworks",
+      "aliases": ["react", "reactjs", "react.js"],
+      "check": "github",
+      "rules": {"dependencies": ["react"]},
+      "question": "Walk me through how you structured components in one of your React projects."
+    },
+    {
+      "name": "Node.js",
+      "category": "Web & Frameworks",
+      "aliases": ["node", "nodejs", "node.js"],
+      "check": "github",
+      "rules": {
+        "dependencies": ["express", "koa", "fastify", "@nestjs/core", "@hapi/hapi", "nodemon", "socket.io", "mongoose"]
+      }
+    },
+    {
+      "name": "Express",
+      "category": "Web & Frameworks",
+      "aliases": ["express", "expressjs", "express.js"],
+      "check": "github",
+      "rules": {"dependencies": ["express"]}
+    },
+    {
+      "name": "Flask",
+      "category": "Web & Frameworks",
+      "aliases": ["flask"],
+      "check": "github",
+      "rules": {"dependencies": ["flask"]},
+      "question": "Can you walk through how you structured routes in a Flask project?"
+    },
+    {
+      "name": "FastAPI",
+      "category": "Web & Frameworks",
+      "aliases": ["fastapi", "fast api"],
+      "check": "github",
+      "rules": {"dependencies": ["fastapi"]},
+      "question": "Can you describe an endpoint you built with FastAPI and why you chose it?"
+    },
+    {
+      "name": "Django",
+      "category": "Web & Frameworks",
+      "aliases": ["django"],
+      "check": "github",
+      "rules": {"dependencies": ["django"]},
+      "question": "What Django features (ORM, admin, etc.) did you rely on in your project?"
+    },
+    {
+      "name": "SQL",
+      "category": "Databases",
+      "aliases": ["sql"],
+      "check": "github",
+      "rules": {
+        "extensions": [".sql"],
+        "min_files": 1,
+        "file_label": "SQL file",
+        "dependencies": [
+          "mysql2", "mysql-connector-python", "pymysql", "mysqlclient", "mysql-connector-j",
+          "psycopg2", "psycopg2-binary", "psycopg", "pg", "asyncpg", "better-sqlite3", "sqlite3"
+        ]
+      },
+      "question": "Write a query that joins two of your project's tables and explain when you'd add an index."
+    },
+    {
+      "name": "MySQL",
+      "category": "Databases",
+      "aliases": ["mysql"],
+      "check": "github",
+      "rules": {
+        "dependencies": [
+          "mysql", "mysql2", "mysqlclient", "pymysql", "mysql-connector-python",
+          "mysql-connector-j", "mysql-connector-java", "aiomysql"
+        ],
+        "images": ["mysql"]
+      }
+    },
+    {
+      "name": "PostgreSQL",
+      "category": "Databases",
+      "aliases": ["postgresql", "postgres"],
+      "check": "github",
+      "rules": {
+        "dependencies": ["pg", "postgres", "psycopg", "psycopg2", "psycopg2-binary", "asyncpg", "postgresql", "pg-promise"],
+        "images": ["postgres", "postgis"]
+      }
+    },
+    {
+      "name": "MongoDB",
+      "category": "Databases",
+      "aliases": ["mongodb", "mongo"],
+      "check": "github",
+      "rules": {
+        "dependencies": [
+          "mongodb", "mongoose", "pymongo", "motor", "mongoengine", "flask-pymongo",
+          "spring-boot-starter-data-mongodb", "mongodb-driver-sync"
+        ],
+        "images": ["mongo"]
+      }
+    },
+    {
+      "name": "Database Design",
+      "category": "Databases",
+      "aliases": ["database design", "schema design"],
+      "check": "manual",
+      "reason": "Design knowledge - best checked in the interview.",
+      "question": "Sketch the tables for one of your projects. How did you decide on primary and foreign keys?"
+    },
+    {
+      "name": "Normalization",
+      "category": "Databases",
+      "aliases": ["normalization", "normalisation", "database normalization"],
+      "check": "manual",
+      "reason": "Design knowledge - best checked in the interview.",
+      "question": "Explain 1NF, 2NF and 3NF with an example from a database you designed."
+    },
+    {
+      "name": "CRUD Operations",
+      "category": "Databases",
+      "aliases": ["crud", "crud operations"],
+      "check": "manual",
+      "reason": "Too general to pin to a specific file - best checked in the interview.",
+      "question": "Walk me through the create, read, update and delete flow for one entity in a project you built."
+    },
+    {
+      "name": "Docker",
+      "category": "Cloud & DevOps",
+      "aliases": ["docker"],
+      "check": "github",
+      "rules": {
+        "marker_files": ["Dockerfile", "compose.yaml", "compose.yml", "docker-compose.yaml", "docker-compose.yml"]
+      },
+      "question": "How did you use Docker to containerize this application?"
+    },
+    {
+      "name": "AWS",
+      "category": "Cloud & DevOps",
+      "aliases": ["aws", "amazon web services"],
+      "check": "github",
+      "rules": {
+        "marker_files": ["serverless.yml", "samconfig.toml", "cdk.json", "buildspec.yml", "appspec.yml"],
+        "dependencies": [
+          "boto3", "botocore", "aws-sdk", "aws-cdk-lib", "aws-amplify", "aws-lambda-powertools", "mangum",
+          "@aws-sdk/client-s3", "@aws-sdk/client-lambda", "@aws-sdk/client-dynamodb", "@aws-sdk/client-ec2"
+        ]
+      },
+      "question": "Which AWS services did you use in a project, and how did your code talk to them?"
+    },
+    {
+      "name": "AWS Lambda",
+      "category": "Cloud & DevOps",
+      "aliases": ["aws lambda", "amazon lambda"],
+      "strict_aliases": ["lambda"],
+      "check": "github",
+      "rules": {
+        "marker_files": ["serverless.yml", "samconfig.toml"],
+        "dependencies": ["aws-lambda-powertools", "mangum", "@aws-sdk/client-lambda", "@types/aws-lambda", "aws-lambda"]
+      },
+      "question": "What triggered your Lambda function, and how did you handle cold starts and timeouts?"
+    },
+    {
+      "name": "AWS S3",
+      "category": "Cloud & DevOps",
+      "aliases": ["aws s3", "amazon s3", "s3"],
+      "check": "github",
+      "rules": {
+        "dependencies": ["@aws-sdk/client-s3", "@aws-sdk/s3-request-presigner", "s3fs", "django-storages"]
+      },
+      "question": "How did your application read and write S3 objects, and how did you control access to the bucket?"
+    },
+    {
+      "name": "AWS EC2",
+      "category": "Cloud & DevOps",
+      "aliases": ["aws ec2", "amazon ec2", "ec2"],
+      "check": "manual",
+      "reason": "Servers are set up in the AWS console, not usually in code.",
+      "question": "How did you launch and secure an EC2 instance - which instance type, security groups and key pairs?"
+    },
+    {
+      "name": "AWS IAM",
+      "category": "Cloud & DevOps",
+      "aliases": ["aws iam"],
+      "strict_aliases": ["iam"],
+      "check": "manual",
+      "reason": "Permissions are set up in the AWS console, not usually in code.",
+      "question": "Explain the difference between an IAM user, group and role, and when you'd use each."
+    },
+    {
+      "name": "AWS VPC",
+      "category": "Cloud & DevOps",
+      "aliases": ["aws vpc"],
+      "strict_aliases": ["vpc"],
+      "check": "manual",
+      "reason": "Networks are set up in the AWS console, not usually in code.",
+      "question": "How would you set up public and private subnets in a VPC for a web app and its database?"
+    },
+    {
+      "name": "Cloud Computing",
+      "category": "Cloud & DevOps",
+      "aliases": ["cloud computing"],
+      "check": "manual",
+      "reason": "Concept knowledge - best checked in the interview.",
+      "question": "Explain IaaS, PaaS and SaaS with an example of each."
+    },
+    {
+      "name": "Machine Learning",
+      "category": "AI & Machine Learning",
+      "aliases": ["machine learning", "scikit-learn", "sklearn"],
+      "strict_aliases": ["ml"],
+      "check": "github",
+      "rules": {
+        "dependencies": ["scikit-learn", "sklearn", "tensorflow", "torch", "keras", "xgboost", "lightgbm", "catboost", "transformers"]
+      },
+      "question": "Walk me through one model you trained: the features, how you split the data, and how you evaluated it."
+    },
+    {
+      "name": "PCA",
+      "category": "AI & Machine Learning",
+      "aliases": ["pca", "principal component analysis"],
+      "check": "manual",
+      "reason": "A specific technique inside code - an automatic check is planned for a later version.",
+      "question": "Why did you use PCA in a project, and how did you choose the number of components?"
+    },
+    {
+      "name": "K-Means Clustering",
+      "category": "AI & Machine Learning",
+      "aliases": ["k-means", "kmeans", "k means", "k-means clustering"],
+      "check": "manual",
+      "reason": "A specific technique inside code - an automatic check is planned for a later version.",
+      "question": "How did you choose k for K-Means, and how did you check the clusters made sense?"
+    },
+    {
+      "name": "Prompt Engineering",
+      "category": "AI & Machine Learning",
+      "aliases": ["prompt engineering", "llm", "llms", "langchain"],
+      "check": "github",
+      "rules": {
+        "dependencies": [
+          "openai", "anthropic", "@anthropic-ai/sdk", "langchain", "langchain-openai", "llama-index",
+          "google-generativeai", "google-genai", "ollama"
+        ]
+      },
+      "question": "Show a prompt you iterated on. What changed between versions and how did you judge the results?"
+    },
+    {
+      "name": "Pandas",
+      "category": "Data & Analytics",
+      "aliases": ["pandas"],
+      "check": "github",
+      "rules": {"dependencies": ["pandas"]}
+    },
+    {
+      "name": "NumPy",
+      "category": "Data & Analytics",
+      "aliases": ["numpy"],
+      "check": "github",
+      "rules": {"dependencies": ["numpy"]}
+    },
+    {
+      "name": "Data Analysis",
+      "category": "Data & Analytics",
+      "aliases": ["data analysis", "data analytics"],
+      "check": "github",
+      "rules": {
+        "dependencies": ["pandas", "numpy", "polars"],
+        "extensions": [".ipynb"],
+        "min_files": 1,
+        "file_label": "Jupyter notebook"
+      },
+      "question": "Walk me through an analysis you did: the question, the dataset, and what you concluded."
+    },
+    {
+      "name": "Data Cleaning",
+      "category": "Data & Analytics",
+      "aliases": ["data cleaning", "data wrangling", "data preprocessing"],
+      "check": "github",
+      "rules": {
+        "dependencies": ["pandas", "polars"],
+        "extensions": [".ipynb"],
+        "min_files": 1,
+        "file_label": "Jupyter notebook"
+      },
+      "question": "How did you handle missing values, duplicates and outliers in a dataset you cleaned?"
+    },
+    {
+      "name": "Exploratory Data Analysis",
+      "category": "Data & Analytics",
+      "aliases": ["exploratory data analysis", "eda"],
+      "check": "github",
+      "rules": {
+        "dependencies": ["pandas", "ydata-profiling", "pandas-profiling", "sweetviz"],
+        "extensions": [".ipynb"],
+        "min_files": 1,
+        "file_label": "Jupyter notebook"
+      },
+      "question": "What were the first five things you checked when exploring a new dataset, and why?"
+    },
+    {
+      "name": "Data Visualization",
+      "category": "Data & Analytics",
+      "aliases": ["data visualization", "data visualisation", "matplotlib", "seaborn", "plotly"],
+      "check": "github",
+      "rules": {
+        "dependencies": [
+          "matplotlib", "seaborn", "plotly", "bokeh", "altair", "chart.js", "recharts", "d3",
+          "react-chartjs-2", "apexcharts"
+        ],
+        "extensions": [".twb", ".twbx"],
+        "min_files": 1,
+        "file_label": "Tableau workbook"
+      },
+      "question": "Show a chart you made. Why that chart type, and what did it reveal?"
+    },
+    {
+      "name": "Tableau",
+      "category": "Data & Analytics",
+      "aliases": ["tableau"],
+      "check": "github",
+      "rules": {
+        "extensions": [".twb", ".twbx"],
+        "min_files": 1,
+        "file_label": "Tableau workbook"
+      },
+      "question": "Describe a Tableau dashboard you built: the data source, the filters, and who used it."
+    },
+    {
+      "name": "Excel",
+      "category": "Data & Analytics",
+      "aliases": ["microsoft excel", "ms excel"],
+      "strict_aliases": ["excel"],
+      "check": "manual",
+      "reason": "Spreadsheet work isn't stored on GitHub.",
+      "question": "Which Excel features (pivot tables, lookups, charts) have you used, and for what task?"
+    },
+    {
+      "name": "Data Structures & Algorithms",
+      "category": "Core Concepts",
+      "aliases": ["data structures and algorithms", "data structures & algorithms", "data structures", "dsa"],
+      "check": "manual",
+      "reason": "Concept knowledge - best checked in the interview.",
+      "question": "Which data structure would you use to find the k most frequent items in a list, and why?"
+    },
+    {
+      "name": "Object-Oriented Programming",
+      "category": "Core Concepts",
+      "aliases": ["object-oriented programming", "object oriented programming", "oop", "oops"],
+      "check": "manual",
+      "reason": "Concept knowledge - best checked in the interview.",
+      "question": "Explain encapsulation, inheritance and polymorphism using classes from one of your projects."
+    },
+    {
+      "name": "Computer Networks",
+      "category": "Core Concepts",
+      "aliases": ["computer networks", "computer networking"],
+      "check": "manual",
+      "reason": "Concept knowledge - best checked in the interview.",
+      "question": "What happens, step by step, when you type a URL into a browser and press Enter?"
+    },
+    {
+      "name": "Operating Systems",
+      "category": "Core Concepts",
+      "aliases": ["operating system", "operating systems"],
+      "strict_aliases": ["os"],
+      "check": "manual",
+      "reason": "Concept knowledge - best checked in the interview.",
+      "question": "Explain the difference between a process and a thread, and what a deadlock is."
+    },
+    {
+      "name": "DBMS",
+      "category": "Core Concepts",
+      "aliases": ["dbms", "rdbms", "database management systems", "database management system"],
+      "check": "manual",
+      "reason": "Concept knowledge - best checked in the interview.",
+      "question": "Explain ACID properties and what a transaction isolation level controls."
+    },
+    {
+      "name": "Git & GitHub",
+      "category": "Tools",
+      "aliases": [],
+      "strict_aliases": ["git", "github"],
+      "check": "github",
+      "rules": {"any_repo": true},
+      "question": "How do you use branches and pull requests when working with teammates?"
+    },
+    {
+      "name": "VS Code",
+      "category": "Tools",
+      "aliases": ["vs code", "vscode", "visual studio code"],
+      "check": "manual",
+      "reason": "Editor choice doesn't show up in code.",
+      "question": "Which VS Code features or extensions do you rely on for debugging?"
+    },
+    {
+      "name": "Microsoft Office",
+      "category": "Tools",
+      "aliases": ["microsoft office", "ms office", "powerpoint", "microsoft word", "ms word"],
+      "strict_aliases": ["word"],
+      "check": "manual",
+      "reason": "Office documents aren't stored on GitHub.",
+      "question": "Describe a report or presentation you prepared and who it was for."
+    }
+  ]
+}
