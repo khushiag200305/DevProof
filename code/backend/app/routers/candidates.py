@@ -12,6 +12,14 @@ from .. import models
 from ..database import get_db
 from ..dependencies import get_current_user, require_role
 from ..services.analysis import SUPPORTING_REPO, GitHubUnavailableError, analyze_candidate
+from ..services.scoring import default_interview_question
+from ..skills_dictionary import (
+    NOT_CHECKABLE,
+    category_of,
+    category_rank,
+    get_skill,
+    is_checkable,
+)
 
 router = APIRouter(prefix="/api/candidates", tags=["candidates"])
 
@@ -42,17 +50,36 @@ def _candidate_detail(candidate: models.Candidate) -> dict:
     analyzed = len(candidate.repositories) > 0
 
     skills = []
-    for cs in candidate.skills:
-        reasons = reasons_by_skill.get(cs.skill_id, [])
-        if cs.status is not None and not reasons:
-            reasons = ["No supporting evidence found in analyzed repositories"]
+    ordered = sorted(
+        candidate.skills,
+        key=lambda cs: (category_rank(cs.skill.skill_name), cs.skill.skill_name.lower()),
+    )
+    for cs in ordered:
+        name = cs.skill.skill_name
+        checkable = is_checkable(name)
+
+        if checkable:
+            status, score = cs.status, cs.score
+            reasons = reasons_by_skill.get(cs.skill_id, [])
+            if status is not None and not reasons:
+                reasons = ["No supporting evidence found in analyzed repositories"]
+            question = question_by_skill.get(cs.skill_id)
+        else:
+            # Concept/offline skills: nothing to analyze, so show the
+            # catalog's reason and question even before any analysis.
+            status, score = NOT_CHECKABLE, None
+            reasons = [get_skill(name)["reason"]]
+            question = question_by_skill.get(cs.skill_id) or default_interview_question(name)
+
         skills.append(
             {
-                "skill_name": cs.skill.skill_name,
-                "status": cs.status,
-                "score": cs.score,
+                "skill_name": name,
+                "category": category_of(name),
+                "checkable": checkable,
+                "status": status,
+                "score": score,
                 "reasons": reasons,
-                "interview_question": question_by_skill.get(cs.skill_id),
+                "interview_question": question,
                 "supporting_repos": supporting_by_skill.get(cs.skill_id, []),
             }
         )

@@ -19,16 +19,24 @@ The prototype favors an explainable, rule-based approach over opaque ML: every s
   any other address signs in as a **recruiter** — students upload their own resume and see their
   own report; recruiters browse every candidate who has uploaded one
 - Resume PDF upload and parsing (pdfplumber) with skill/name/GitHub-link extraction
-- Skill normalization (e.g. "ReactJS" → "React") via curated mapping + spaCy NER
+- Skill catalog (`code/backend/app/skills_catalog.json`): ~45 skills in 8 resume-style categories
+  (languages, web, databases, cloud, AI/ML, data & analytics, core concepts, tools), each with its
+  aliases (e.g. "ReactJS" → "React", "kmeans" → "K-Means Clustering"), how it is checked,
+  and an interview question. Adding a skill means adding one JSON entry; the catalog is validated at
+  startup. Short words like "C", "Excel" or "Word" only count as items in a list.
 - GitHub REST API integration: language composition, dependency manifests, fork status, commit activity
-- Technology fingerprinting for an initial set: Python, Java, C++, JavaScript, React, Node.js, Express, Flask, FastAPI, Django, MongoDB, MySQL, PostgreSQL, Docker.
+- Technology fingerprinting for every catalog skill marked as checkable on GitHub: languages (Python, Java, C, C++, JavaScript), web frameworks, databases and SQL, Docker and AWS (SDKs, Serverless/SAM/CDK config), machine learning and LLM libraries, data libraries (pandas, NumPy, plotting), Jupyter notebooks and Tableau workbooks.
   Every folder of a repository is scanned (not just the root), using three kinds of evidence:
   marker files (`Dockerfile`, `pom.xml`, `CMakeLists.txt`, ...), source-file counts (3+ `.py`, `.java`,
   `.cpp`, ... files), and package names in dependency files (`package.json`, `requirements.txt`,
   `pyproject.toml`, `pom.xml`, `build.gradle`) or database images in `docker-compose.yml`.
-  The rules live in `code/backend/app/services/tech_rules.py`.
+  The rules for each skill live in the catalog; `code/backend/app/services/tech_rules.py` applies them.
 - Transparent 0–100 rule-based evidence scoring with configurable weights
-- Classification: Strong Evidence / Good Evidence / Needs Verification, each with a stated reason
+- Classification: Strong Evidence / Good Evidence / Needs Verification, each with a stated reason.
+  Skills that can't be seen in code (concepts like OOP or DBMS, offline tools like Excel, AWS console
+  settings like IAM) are shown as **Not checkable on GitHub** with no score, the reason, and an
+  interview question - rather than an unfair 0/100.
+- Report grouped by category, with a per-category summary (e.g. "2 of 3 backed by GitHub")
 - Auto-generated, template-based interview questions for low-evidence skills
 - Candidate dashboard (React + Tailwind) with skill detail views
 
