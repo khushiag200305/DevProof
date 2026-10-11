@@ -27,6 +27,12 @@ from .scoring import score_skill
 MAX_REPOS = 10
 
 
+# Evidence rows of this type record another repository that also supports
+# a skill (description = repo name, weight = that repo's score), as
+# opposed to the itemised evidence from the best repository.
+SUPPORTING_REPO = "supporting_repo"
+
+
 class GitHubUnavailableError(RuntimeError):
     """Raised when GitHub can't be reached or refuses the request."""
 
@@ -113,6 +119,16 @@ async def analyze_candidate(db: Session, candidate: models.Candidate) -> int:
                 evidence_type=item["type"],
                 description=f"{item['repo']}: {item['description']}",
                 weight=item["weight"],
+            ))
+
+        for supporting in result["supporting_repos"]:
+            db.add(models.Evidence(
+                candidate_id=candidate.candidate_id,
+                skill_id=candidate_skill.skill_id,
+                repo_id=repo_ids.get(supporting["repo"]),
+                evidence_type=SUPPORTING_REPO,
+                description=supporting["repo"],
+                weight=supporting["score"],
             ))
 
         if result.get("interview_question"):
