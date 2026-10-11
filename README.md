@@ -21,7 +21,12 @@ The prototype favors an explainable, rule-based approach over opaque ML: every s
 - Resume PDF upload and parsing (pdfplumber) with skill/name/GitHub-link extraction
 - Skill normalization (e.g. "ReactJS" → "React") via curated mapping + spaCy NER
 - GitHub REST API integration: language composition, dependency manifests, fork status, commit activity
-- Technology fingerprinting for an initial set: Python, Java, C++, JavaScript, React, Node.js, Express, Flask, FastAPI, Django, MongoDB, MySQL, PostgreSQL, Docker
+- Technology fingerprinting for an initial set: Python, Java, C++, JavaScript, React, Node.js, Express, Flask, FastAPI, Django, MongoDB, MySQL, PostgreSQL, Docker.
+  Every folder of a repository is scanned (not just the root), using three kinds of evidence:
+  marker files (`Dockerfile`, `pom.xml`, `CMakeLists.txt`, ...), source-file counts (3+ `.py`, `.java`,
+  `.cpp`, ... files), and package names in dependency files (`package.json`, `requirements.txt`,
+  `pyproject.toml`, `pom.xml`, `build.gradle`) or database images in `docker-compose.yml`.
+  The rules live in `code/backend/app/services/tech_rules.py`.
 - Transparent 0–100 rule-based evidence scoring with configurable weights
 - Classification: Strong Evidence / Good Evidence / Needs Verification, each with a stated reason
 - Auto-generated, template-based interview questions for low-evidence skills
@@ -158,7 +163,7 @@ repositories, fingerprints them, scores every claimed skill from 0 to 100, and s
 classification, the evidence behind each score, and a suggested interview question for skills that
 need verification. Click **Re-run analysis** later to refresh the results.
 
-One analysis makes up to ~40 GitHub API calls. Without a token GitHub allows 60 per hour, so set
+One analysis makes up to ~50 GitHub API calls. Without a token GitHub allows 60 per hour, so set
 `GITHUB_TOKEN` in `code/backend/.env` (a classic token with no scopes is enough) before a demo.
 
 ## Development workflow
