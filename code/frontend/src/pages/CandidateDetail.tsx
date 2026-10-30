@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Navbar } from "../components/Navbar";
+import { PortfolioPanel } from "../components/PortfolioPanel";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, apiGet, apiPost } from "../lib/api";
 
@@ -124,6 +125,7 @@ export function CandidateDetail() {
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+  const [analysisRuns, setAnalysisRuns] = useState(0);
 
   useEffect(() => {
     if (!candidateId) return;
@@ -151,6 +153,7 @@ export function CandidateDetail() {
         `/api/candidates/${candidateId}/analyze`
       );
       setCandidate(updated);
+      setAnalysisRuns((n) => n + 1);
     } catch (err) {
       setAnalyzeError(
         err instanceof ApiError ? err.message : "Analysis failed. Please try again."
@@ -258,6 +261,10 @@ export function CandidateDetail() {
                 </div>
               )}
             </div>
+
+            {user?.role === "student" && (
+              <PortfolioPanel candidateId={candidate.candidate_id} refreshKey={analysisRuns} />
+            )}
 
             {candidate.projects.length > 0 && (
               <div className="mt-6 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm sm:p-8">

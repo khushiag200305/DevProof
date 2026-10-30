@@ -3,6 +3,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useAuth } from "./context/AuthContext";
 import { CandidateDetail } from "./pages/CandidateDetail";
 import { Login } from "./pages/Login";
+import { Portfolio } from "./pages/Portfolio";
 import { RecruiterDashboard } from "./pages/RecruiterDashboard";
 import { StudentUpload } from "./pages/StudentUpload";
 
@@ -18,6 +19,7 @@ function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/p/:slug" element={<Portfolio />} />
       <Route
         path="/upload"
         element={
