@@ -8,13 +8,15 @@ source-file counts, dependency names) live in services/tech_rules.py so
 they can be tested without network access.
 
 Cost per repository: one recursive tree request plus at most
-MAX_MANIFESTS_PER_REPO file reads.
+MAX_MANIFESTS_PER_REPO file reads (inspect_repo adds one commit-count
+request).
 """
 import asyncio
 
 import httpx
 
-from .github_client import fetch_file_content, fetch_repo_tree
+from .github_client import fetch_commit_count, fetch_file_content, fetch_repo_tree
+from .repo_profile import project_signals
 from .tech_rules import TECH_RULES, detect_technologies, manifest_paths
 
 # Dependency/config files read per repository (shallowest first). Keeps a
@@ -42,3 +44,30 @@ async def fingerprint_repo(owner: str, repo: str) -> dict[str, list[str]]:
 
     manifests = {path: text for path, text in zip(to_read, contents) if text}
     return detect_technologies(paths, manifests)
+
+
+async def inspect_repo(owner: str, repo: str) -> dict:
+    """
+    Everything the analysis keeps about one repository, from the same
+    tree request fingerprint_repo makes plus one commit-count request:
+
+    - "technologies": technology -> evidence strings (as fingerprint_repo)
+    - "signals":      tests / CI / README / frontend+backend / size
+                      (services/repo_profile.py)
+    - "commit_count": commits authored by `owner` on the default branch
+    """
+    async with httpx.AsyncClient() as client:
+        paths = await fetch_repo_tree(owner, repo, client)
+        to_read = manifest_paths(paths, MAX_MANIFESTS_PER_REPO)
+        results = await asyncio.gather(
+            *(fetch_file_content(owner, repo, path, client) for path in to_read),
+            fetch_commit_count(owner, repo, client),
+        )
+
+    contents, commit_count = results[:-1], results[-1]
+    manifests = {path: text for path, text in zip(to_read, contents) if text}
+    return {
+        "technologies": detect_technologies(paths, manifests),
+        "signals": project_signals(paths),
+        "commit_count": commit_count,
+    }

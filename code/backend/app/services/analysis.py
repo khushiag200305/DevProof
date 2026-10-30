@@ -11,13 +11,15 @@ evidence, interview questions and per-skill scores), so re-analyzing
 after a candidate pushes new work simply refreshes the report.
 """
 import asyncio
+import json
 from datetime import datetime
 
 import httpx
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .. import models
-from .fingerprinting import fingerprint_repo
+from .fingerprinting import inspect_repo
 from .github_client import fetch_github_repos
 from .scoring import score_skill
 
@@ -47,7 +49,13 @@ def _parse_github_datetime(value: str | None) -> datetime | None:
 
 
 async def _collect_evidence(username: str) -> tuple[list[dict], dict[str, dict]]:
-    """Fetch the user's repos and fingerprint the most recent ones in parallel."""
+    """
+    Fetch the user's repos and inspect the most recent ones in parallel.
+
+    Returns the repos and, per repo name, its detected technologies (as
+    scoring expects under "detected_technologies") plus its project
+    signals and the candidate's commit count.
+    """
     try:
         repos = await fetch_github_repos(username)
     except httpx.HTTPStatusError as exc:
@@ -61,18 +69,44 @@ async def _collect_evidence(username: str) -> tuple[list[dict], dict[str, dict]]
 
     try:
         results = await asyncio.gather(
-            *(fingerprint_repo(username, repo["name"]) for repo in repos)
+            *(inspect_repo(username, repo["name"]) for repo in repos)
         )
     except httpx.RequestError as exc:
         raise GitHubUnavailableError(f"Could not reach GitHub: {exc}") from exc
 
     fingerprints = {
         repo["name"]: {
-            "detected_technologies": {tech: items for tech, items in raw.items() if items}
+            "detected_technologies": {
+                tech: items for tech, items in result["technologies"].items() if items
+            },
+            "signals": result.get("signals", {}),
+            "commit_count": result.get("commit_count", 0),
         }
-        for repo, raw in zip(repos, results)
+        for repo, result in zip(repos, results)
     }
     return repos, fingerprints
+
+
+def _repo_detail(repo_id: int, repo: dict, fingerprint: dict) -> models.RepositoryDetail:
+    signals = fingerprint.get("signals", {})
+    return models.RepositoryDetail(
+        repo_id=repo_id,
+        description=repo.get("description"),
+        language=repo.get("language"),
+        topics=",".join(repo.get("topics") or []),
+        homepage=repo.get("homepage"),
+        stars=repo.get("stars") or 0,
+        created_at=_parse_github_datetime(repo.get("created_at")),
+        pushed_at=_parse_github_datetime(repo.get("pushed_at")),
+        technologies=json.dumps(sorted(fingerprint.get("detected_technologies", {}))),
+        has_tests=bool(signals.get("has_tests")),
+        has_ci=bool(signals.get("has_ci")),
+        has_readme=bool(signals.get("has_readme")),
+        has_docs=bool(signals.get("has_docs")),
+        has_frontend_and_backend=bool(signals.get("has_frontend_and_backend")),
+        has_compose=bool(signals.get("has_compose")),
+        source_files=int(signals.get("source_files") or 0),
+    )
 
 
 async def analyze_candidate(db: Session, candidate: models.Candidate) -> int:
@@ -91,6 +125,12 @@ async def analyze_candidate(db: Session, candidate: models.Candidate) -> int:
     # Replace any previous analysis.
     db.query(models.Evidence).filter_by(candidate_id=candidate.candidate_id).delete()
     db.query(models.InterviewQuestion).filter_by(candidate_id=candidate.candidate_id).delete()
+    old_repo_ids = select(models.Repository.repo_id).where(
+        models.Repository.candidate_id == candidate.candidate_id
+    )
+    db.query(models.RepositoryDetail).filter(
+        models.RepositoryDetail.repo_id.in_(old_repo_ids)
+    ).delete(synchronize_session=False)
     db.query(models.Repository).filter_by(candidate_id=candidate.candidate_id).delete()
 
     repo_ids: dict[str, int] = {}
@@ -100,11 +140,13 @@ async def analyze_candidate(db: Session, candidate: models.Candidate) -> int:
             repo_name=repo["name"],
             repo_url=repo["url"],
             is_fork=bool(repo.get("is_fork")),
+            commit_count=fingerprints.get(repo["name"], {}).get("commit_count", 0),
             last_updated=_parse_github_datetime(repo.get("updated_at")),
         )
         db.add(row)
         db.flush()  # assigns row.repo_id
         repo_ids[repo["name"]] = row.repo_id
+        db.add(_repo_detail(row.repo_id, repo, fingerprints.get(repo["name"], {})))
 
     for candidate_skill in candidate.skills:
         result = score_skill(candidate_skill.skill.skill_name, repos, fingerprints)

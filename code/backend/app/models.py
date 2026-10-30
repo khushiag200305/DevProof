@@ -68,6 +68,9 @@ class Candidate(Base):
     questions = relationship(
         "InterviewQuestion", back_populates="candidate", cascade="all, delete-orphan"
     )
+    portfolio = relationship(
+        "Portfolio", back_populates="candidate", uselist=False, cascade="all, delete-orphan"
+    )
 
 
 class Skill(Base):
@@ -105,6 +108,58 @@ class Repository(Base):
 
     candidate = relationship("Candidate", back_populates="repositories")
     evidence = relationship("Evidence", back_populates="repository")
+    detail = relationship(
+        "RepositoryDetail", back_populates="repository", uselist=False, cascade="all, delete-orphan"
+    )
+
+
+class RepositoryDetail(Base):
+    """
+    What a repository is about and how it is built, saved by the analysis
+    for the portfolio page and resume lines: GitHub's description and
+    topics, the technologies detected in it, and project signals (tests,
+    CI, README, ...). Kept in its own table so existing databases get it
+    from create_all without a migration.
+    """
+
+    __tablename__ = "repository_details"
+
+    repo_id = Column(Integer, ForeignKey("repositories.repo_id"), primary_key=True)
+    description = Column(Text, nullable=True)
+    language = Column(String, nullable=True)
+    topics = Column(Text, nullable=True)  # comma-separated
+    homepage = Column(String, nullable=True)
+    stars = Column(Integer, default=0, nullable=False)
+    created_at = Column(DateTime(timezone=True), nullable=True)
+    pushed_at = Column(DateTime(timezone=True), nullable=True)
+    technologies = Column(Text, nullable=True)  # JSON list of detected skill names
+    has_tests = Column(Boolean, default=False, nullable=False)
+    has_ci = Column(Boolean, default=False, nullable=False)
+    has_readme = Column(Boolean, default=False, nullable=False)
+    has_docs = Column(Boolean, default=False, nullable=False)
+    has_frontend_and_backend = Column(Boolean, default=False, nullable=False)
+    has_compose = Column(Boolean, default=False, nullable=False)
+    source_files = Column(Integer, default=0, nullable=False)
+
+    repository = relationship("Repository", back_populates="detail")
+
+
+class Portfolio(Base):
+    """
+    A student's public portfolio page for one candidate record. Private
+    until the student publishes it; `slug` is the unguessable part of the
+    public link (/p/<slug>).
+    """
+
+    __tablename__ = "portfolios"
+
+    candidate_id = Column(Integer, ForeignKey("candidates.candidate_id"), primary_key=True)
+    slug = Column(String, unique=True, nullable=False, index=True)
+    is_public = Column(Boolean, default=False, nullable=False)
+    headline = Column(String, nullable=True)
+    updated_at = Column(DateTime(timezone=True), default=_utcnow, onupdate=_utcnow, nullable=False)
+
+    candidate = relationship("Candidate", back_populates="portfolio")
 
 
 class Evidence(Base):
