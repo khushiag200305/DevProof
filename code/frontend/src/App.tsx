@@ -5,6 +5,7 @@ import { CandidateDetail } from "./pages/CandidateDetail";
 import { Login } from "./pages/Login";
 import { Portfolio } from "./pages/Portfolio";
 import { RecruiterDashboard } from "./pages/RecruiterDashboard";
+import { ResumeBullets } from "./pages/ResumeBullets";
 import { StudentUpload } from "./pages/StudentUpload";
 
 function Home() {
@@ -41,6 +42,14 @@ function App() {
         element={
           <ProtectedRoute>
             <CandidateDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/candidate/:candidateId/bullets"
+        element={
+          <ProtectedRoute>
+            <ResumeBullets />
           </ProtectedRoute>
         }
       />
