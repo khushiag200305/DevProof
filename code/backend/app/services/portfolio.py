@@ -173,8 +173,9 @@ def repo_dicts(candidate: models.Candidate) -> list[dict]:
     return [_repo_dict(r) for r in candidate.repositories]
 
 
-def portfolio_from_candidate(candidate: models.Candidate) -> dict:
-    skills = [
+def skill_dicts(candidate: models.Candidate) -> list[dict]:
+    """The candidate's claimed skills with their status and score."""
+    return [
         {
             "skill_name": cs.skill.skill_name,
             "status": cs.status if is_checkable(cs.skill.skill_name) else NOT_CHECKABLE,
@@ -182,6 +183,10 @@ def portfolio_from_candidate(candidate: models.Candidate) -> dict:
         }
         for cs in candidate.skills
     ]
+
+
+def portfolio_from_candidate(candidate: models.Candidate) -> dict:
+    skills = skill_dicts(candidate)
     headline = candidate.portfolio.headline if candidate.portfolio else None
     return build_portfolio(
         {"name": candidate.name, "github_username": candidate.github_username},
