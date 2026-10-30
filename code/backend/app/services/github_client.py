@@ -16,6 +16,8 @@ from urllib.parse import quote
 import httpx
 from dotenv import load_dotenv
 
+from .repo_profile import commit_count_from_page
+
 load_dotenv()
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -51,9 +53,30 @@ async def fetch_github_repos(username: str) -> list[dict]:
             "stars": repo["stargazers_count"],
             "updated_at": repo["updated_at"],
             "url": repo["html_url"],
+            # Shown on the portfolio page and used for resume lines.
+            "description": repo.get("description"),
+            "topics": repo.get("topics") or [],
+            "homepage": repo.get("homepage") or None,
+            "created_at": repo.get("created_at"),
+            "pushed_at": repo.get("pushed_at"),
         }
         for repo in repos
     ]
+
+
+async def fetch_commit_count(owner: str, repo: str, client: httpx.AsyncClient) -> int:
+    """
+    How many commits on the default branch were authored by `owner`, from
+    a single `per_page=1` request (the Link header's last page is the
+    total). Returns 0 for an empty or unreadable repository.
+    """
+    url = f"https://api.github.com/repos/{owner}/{repo}/commits"
+    response = await client.get(
+        url, params={"author": owner, "per_page": 1}, headers=GITHUB_HEADERS, timeout=10.0
+    )
+    if response.status_code != 200:
+        return 0
+    return commit_count_from_page(response.headers.get("link"), len(response.json()))
 
 
 async def fetch_repo_tree(owner: str, repo: str, client: httpx.AsyncClient) -> list[str]:

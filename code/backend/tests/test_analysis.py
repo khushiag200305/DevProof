@@ -25,8 +25,23 @@ FAKE_REPOS = [
         "stars": 3,
         "updated_at": RECENT,
         "url": "https://github.com/octocat/shop-api",
+        "description": "REST API for an online shop",
+        "topics": ["fastapi", "docker"],
+        "homepage": None,
+        "created_at": "2026-03-02T10:00:00Z",
+        "pushed_at": RECENT,
     },
 ]
+
+FAKE_SIGNALS = {
+    "has_tests": True,
+    "has_ci": True,
+    "has_readme": True,
+    "has_docs": False,
+    "has_frontend_and_backend": False,
+    "has_compose": False,
+    "source_files": 14,
+}
 
 FAKE_FINGERPRINTS = {
     "shop-api": {
@@ -75,11 +90,15 @@ def _fake_github(monkeypatch):
     async def fake_fetch_repos(username: str):
         return FAKE_REPOS
 
-    async def fake_fingerprint(owner: str, repo: str):
-        return FAKE_FINGERPRINTS[repo]
+    async def fake_inspect(owner: str, repo: str):
+        return {
+            "technologies": FAKE_FINGERPRINTS[repo],
+            "signals": FAKE_SIGNALS,
+            "commit_count": 12,
+        }
 
     monkeypatch.setattr("app.services.analysis.fetch_github_repos", fake_fetch_repos)
-    monkeypatch.setattr("app.services.analysis.fingerprint_repo", fake_fingerprint)
+    monkeypatch.setattr("app.services.analysis.inspect_repo", fake_inspect)
 
 
 def _skill(body: dict, name: str) -> dict:
@@ -120,6 +139,24 @@ def test_analyze_scores_and_saves_each_skill(client, monkeypatch):
     assert _skill(detail, "React")["interview_question"] == react["interview_question"]
 
 
+def test_analysis_saves_repository_details(client, monkeypatch):
+    _fake_github(monkeypatch)
+    student = _make_user("details@thapar.edu", "student")
+    candidate_id = _make_candidate(student.user_id, ["Docker"])
+
+    client.post(f"/api/candidates/{candidate_id}/analyze", headers=_auth_headers(student))
+
+    with SessionLocal() as db:
+        repo = db.query(models.Repository).filter_by(candidate_id=candidate_id).one()
+        assert repo.commit_count == 12
+        detail = repo.detail
+        assert detail.description == "REST API for an online shop"
+        assert detail.topics == "fastapi,docker"
+        assert detail.has_tests is True and detail.has_ci is True
+        assert detail.source_files == 14
+        assert "Docker" in detail.technologies
+
+
 def test_reanalyzing_replaces_previous_results(client, monkeypatch):
     _fake_github(monkeypatch)
     student = _make_user("s2@thapar.edu", "student")
@@ -132,6 +169,7 @@ def test_reanalyzing_replaces_previous_results(client, monkeypatch):
     with SessionLocal() as db:
         assert db.query(models.Repository).filter_by(candidate_id=candidate_id).count() == 1
         assert db.query(models.Evidence).filter_by(candidate_id=candidate_id).count() == 3
+        assert db.query(models.RepositoryDetail).count() == 1
 
 
 def test_student_can_analyze_own_candidate_only(client, monkeypatch):
@@ -193,11 +231,11 @@ def test_other_supporting_repos_are_saved_and_returned(client, monkeypatch):
     async def fake_fetch_repos(username: str):
         return repos
 
-    async def fake_fingerprint(owner: str, repo: str):
-        return fingerprints[repo]
+    async def fake_inspect(owner: str, repo: str):
+        return {"technologies": fingerprints[repo], "signals": {}, "commit_count": 0}
 
     monkeypatch.setattr("app.services.analysis.fetch_github_repos", fake_fetch_repos)
-    monkeypatch.setattr("app.services.analysis.fingerprint_repo", fake_fingerprint)
+    monkeypatch.setattr("app.services.analysis.inspect_repo", fake_inspect)
     student = _make_user("s5@thapar.edu", "student")
     candidate_id = _make_candidate(student.user_id, ["Docker", "React"])
     headers = _auth_headers(student)
