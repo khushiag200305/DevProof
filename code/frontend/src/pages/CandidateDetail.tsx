@@ -262,6 +262,23 @@ export function CandidateDetail() {
               )}
             </div>
 
+            {user?.role === "student" && candidate.analyzed && (
+              <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-8">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-800">Resume bullet ideas</h2>
+                  <p className="mt-1 text-sm text-slate-400">
+                    Resume lines written from your repositories, tailored to a job if you paste one.
+                  </p>
+                </div>
+                <Link
+                  to={`/candidate/${candidate.candidate_id}/bullets`}
+                  className="shrink-0 rounded-md bg-brand-600 px-4 py-2 text-center text-sm font-medium text-white transition hover:bg-brand-700"
+                >
+                  Get resume lines
+                </Link>
+              </div>
+            )}
+
             {user?.role === "student" && (
               <PortfolioPanel candidateId={candidate.candidate_id} refreshKey={analysisRuns} />
             )}
