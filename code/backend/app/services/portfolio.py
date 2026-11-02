@@ -14,6 +14,7 @@ from datetime import datetime
 
 from .. import models
 from ..skills_dictionary import NOT_CHECKABLE, category_of, category_rank, is_checkable
+from .project_links import match_repo
 
 # Projects shown on the page, best first.
 MAX_PROJECTS = 6
@@ -54,10 +55,13 @@ def active_period(created: datetime | None, pushed: datetime | None) -> str | No
 
 def project_card(repo: dict) -> dict:
     """One project card from a repository dict (see portfolio_from_candidate)."""
+    points = repo.get("resume_points") or []
     return {
         "name": repo["name"],
         "url": repo["url"],
-        "description": repo.get("description"),
+        # The project's name as written on the resume, when the repo is linked to one.
+        "resume_title": repo.get("resume_title"),
+        "description": repo.get("description") or (points[0] if points else None),
         "language": repo.get("language"),
         "topics": repo.get("topics", []),
         "homepage": repo.get("homepage"),
@@ -71,15 +75,22 @@ def project_card(repo: dict) -> dict:
 
 def rank_projects(repos: list[dict], claimed: set[str]) -> list[dict]:
     """
-    Original (non-fork) repositories, best first: most claimed skills shown
-    in the repo, then most commits by the candidate, then most recent push.
+    Original (non-fork) repositories, best first: repositories of projects
+    listed on the resume, then most claimed skills shown in the repo, then
+    most commits by the candidate, then most recent push.
     """
     own = [r for r in repos if not r.get("is_fork")]
 
     def key(repo: dict):
+        on_resume = bool(repo.get("resume_title"))
         shows = len(set(repo.get("technologies", [])) & claimed)
         pushed = repo.get("pushed_at")
-        return (-shows, -repo.get("commit_count", 0), -(pushed.timestamp() if pushed else 0))
+        return (
+            not on_resume,
+            -shows,
+            -repo.get("commit_count", 0),
+            -(pushed.timestamp() if pushed else 0),
+        )
 
     return sorted(own, key=key)
 
@@ -168,9 +179,35 @@ def _repo_dict(repo: models.Repository) -> dict:
     return data
 
 
+def link_resume_projects(repos: list[dict], projects: list[dict]) -> list[dict]:
+    """
+    Mark each repository that a resume project points to (services/
+    project_links.py) with that project's title and description points.
+    `projects` items have "name" and "bullets".
+    """
+    by_name = {r["name"]: r for r in repos}
+    for project in projects:
+        repo = match_repo(project["name"], repos)
+        if repo is not None and not by_name[repo["name"]].get("resume_title"):
+            by_name[repo["name"]]["resume_title"] = project["name"]
+            by_name[repo["name"]]["resume_points"] = project.get("bullets", [])
+    return repos
+
+
 def repo_dicts(candidate: models.Candidate) -> list[dict]:
-    """The candidate's analyzed repositories as plain dicts (details included)."""
-    return [_repo_dict(r) for r in candidate.repositories]
+    """
+    The candidate's analyzed repositories as plain dicts (details
+    included), linked to the projects on their resume.
+    """
+    repos = [_repo_dict(r) for r in candidate.repositories]
+    projects = [
+        {
+            "name": p.project_name,
+            "bullets": [line.strip() for line in (p.description or "").splitlines() if line.strip()],
+        }
+        for p in sorted(candidate.projects, key=lambda p: p.project_id)
+    ]
+    return link_resume_projects(repos, projects)
 
 
 def skill_dicts(candidate: models.Candidate) -> list[dict]:

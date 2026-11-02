@@ -131,3 +131,9 @@ def test_forks_are_left_out():
     fork = dict(SHOP_API, name="someone-elses-repo", is_fork=True)
     report = bullet_report([fork, DASHBOARD], SKILLS)
     assert [p["name"] for p in report["projects"]] == ["sales_dashboard"]
+
+
+def test_resume_title_is_used_when_the_repo_is_linked_to_a_resume_project():
+    repo = dict(SHOP_API, resume_title="Online Shop Backend")
+    assert _texts(project_bullets(repo, set()))[0].startswith("Built Online Shop Backend, REST API")
+    assert bullet_report([repo], SKILLS)["projects"][0]["title"] == "Online Shop Backend"

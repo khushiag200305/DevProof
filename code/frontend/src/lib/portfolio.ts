@@ -9,6 +9,8 @@ export interface PortfolioSkill {
 export interface PortfolioProject {
   name: string;
   url: string;
+  /** The project's name as written on the resume, when the repo is linked to one. */
+  resume_title: string | null;
   description: string | null;
   language: string | null;
   topics: string[];

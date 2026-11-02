@@ -35,6 +35,11 @@ def humanize_repo_name(name: str) -> str:
     return " ".join(w.upper() if w.lower() in _ACRONYMS else w.capitalize() for w in words)
 
 
+def project_title(repo: dict) -> str:
+    """The project's name as written on the resume if linked to one, else the repo name tidied up."""
+    return repo.get("resume_title") or humanize_repo_name(repo["name"])
+
+
 def join_words(items: list[str]) -> str:
     """['A'] -> 'A', ['A', 'B'] -> 'A and B', ['A', 'B', 'C'] -> 'A, B and C'."""
     if len(items) <= 1:
@@ -63,7 +68,7 @@ def project_bullets(repo: dict, claimed: set[str], jd_skills: set[str] | None = 
     {"text": str, "skills": [skills it mentions]}.
     """
     jd_skills = jd_skills or set()
-    name = humanize_repo_name(repo["name"])
+    name = project_title(repo)
     techs = _order_skills(list(repo.get("technologies", [])), jd_skills, claimed)
     stack = techs[:4]
     bullets: list[dict] = []
@@ -190,7 +195,7 @@ def bullet_report(repos: list[dict], skills: list[dict], job_description: str | 
     for repo in ranked[:MAX_PROJECTS]:
         projects.append({
             "name": repo["name"],
-            "title": humanize_repo_name(repo["name"]),
+            "title": project_title(repo),
             "url": repo["url"],
             "matched_skills": sorted(set(repo.get("technologies", [])) & jd_skills),
             "bullets": project_bullets(repo, claimed, jd_skills),

@@ -12,13 +12,14 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 
-from app.database import Base, SessionLocal, engine
+from app.database import Base, SessionLocal, engine, ensure_columns
 from app.main import app
 
 
 @pytest.fixture(scope="session", autouse=True)
 def _create_tables():
     Base.metadata.create_all(bind=engine)
+    ensure_columns(engine)
     yield
 
 

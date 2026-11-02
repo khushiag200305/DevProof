@@ -22,6 +22,7 @@ export const samplePortfolio: PortfolioData = {
     {
       name: "shop-api",
       url: "https://github.com/aditisharma-dev/shop-api",
+      resume_title: null,
       description: "REST API for an online shop",
       language: "Python",
       topics: ["fastapi"],

@@ -21,12 +21,23 @@ from ..services.resume_parser import (
     extract_github_url,
     extract_github_username,
     extract_name,
-    extract_projects,
+    extract_project_details,
     extract_skills,
     extract_text_from_pdf,
 )
 
 router = APIRouter(prefix="/api/resume", tags=["resume"])
+
+
+def project_row(candidate_id: int, project: dict) -> models.Project:
+    """A Project row from one parsed resume project (see services/resume_projects.py)."""
+    return models.Project(
+        candidate_id=candidate_id,
+        project_name=project["name"][:255],
+        description="\n".join(project["bullets"]) or None,
+        tech_stack=", ".join(project["tech_stack"]) or None,
+        period=project["period"],
+    )
 
 # app/routers/resume.py -> app/routers -> app -> backend -> backend/uploads
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
@@ -71,7 +82,7 @@ async def upload_resume(
 
     name = extract_name(text)
     skills = extract_skills(text)
-    projects = extract_projects(text)
+    projects = extract_project_details(text)
 
     github_url = (github_url_override or "").strip() or extract_github_url(text)
     github_username = extract_github_username(github_url) if github_url else None
@@ -91,8 +102,8 @@ async def upload_resume(
     db.add(candidate)
     db.flush()  # assigns candidate.candidate_id
 
-    for project_name in projects:
-        db.add(models.Project(candidate_id=candidate.candidate_id, project_name=project_name))
+    for project in projects:
+        db.add(project_row(candidate.candidate_id, project))
 
     for skill_name in skills:
         skill = _get_or_create_skill(db, skill_name)
@@ -106,7 +117,7 @@ async def upload_resume(
         "status": "parsed",
         "name": name,
         "extracted_skills": skills,
-        "projects": projects,
+        "projects": [p["name"] for p in projects],
         "github_url": github_url,
         "github_username": github_username,
     }

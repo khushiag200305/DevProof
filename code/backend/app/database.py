@@ -8,7 +8,7 @@ throwaway CI database without touching code.
 """
 import os
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 DATABASE_URL = os.getenv(
@@ -27,3 +27,28 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+# Columns added to existing tables after they were first created.
+# Base.metadata.create_all() creates missing tables but never alters an
+# existing one, so these are added here (until the project moves to Alembic).
+ADDED_COLUMNS = {
+    "projects": {"tech_stack": "TEXT", "period": "VARCHAR"},
+}
+
+
+def ensure_columns(bind=None) -> list[str]:
+    """Add any ADDED_COLUMNS missing from existing tables. Returns what was added."""
+    bind = bind or engine
+    inspector = inspect(bind)
+    added: list[str] = []
+    with bind.begin() as conn:
+        for table, columns in ADDED_COLUMNS.items():
+            if not inspector.has_table(table):
+                continue
+            existing = {c["name"] for c in inspector.get_columns(table)}
+            for column, sql_type in columns.items():
+                if column not in existing:
+                    conn.execute(text(f'ALTER TABLE "{table}" ADD COLUMN "{column}" {sql_type}'))
+                    added.append(f"{table}.{column}")
+    return added
