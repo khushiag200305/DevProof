@@ -99,3 +99,17 @@ def test_ensure_columns_adds_missing_project_columns():
     columns = {c["name"] for c in inspect(engine).get_columns("projects")}
     assert {"tech_stack", "period"} <= columns
     assert ensure_columns(engine) == []  # nothing left to add
+
+
+def test_resume_found_in_uploads_after_project_folder_moved(tmp_path):
+    from app.routers.candidates import resolve_resume_path
+
+    uploads = tmp_path / "uploads"
+    uploads.mkdir()
+    (uploads / "abc_resume.pdf").write_bytes(b"%PDF-1.4")
+    old_path = str(tmp_path / "DevProof-before-move" / "uploads" / "abc_resume.pdf")
+
+    assert resolve_resume_path(old_path, str(uploads)) == str(uploads / "abc_resume.pdf")
+    assert resolve_resume_path(str(uploads / "abc_resume.pdf"), str(uploads)) == str(uploads / "abc_resume.pdf")
+    assert resolve_resume_path(str(tmp_path / "x" / "missing.pdf"), str(uploads)) is None
+    assert resolve_resume_path(None, str(uploads)) is None

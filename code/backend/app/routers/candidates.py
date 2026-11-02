@@ -24,7 +24,7 @@ from ..skills_dictionary import (
     get_skill,
     is_checkable,
 )
-from .resume import project_row
+from .resume import UPLOAD_DIR, project_row
 
 router = APIRouter(prefix="/api/candidates", tags=["candidates"])
 
@@ -173,6 +173,21 @@ def get_candidate(
     return _candidate_detail(_get_visible_candidate(candidate_id, db, current_user))
 
 
+def resolve_resume_path(stored: str | None, upload_dir: str | None = None) -> str | None:
+    """
+    Where a candidate's resume PDF is now. The database keeps the full
+    path from upload time, which breaks if the project folder is moved or
+    re-cloned; in that case the same file name is looked up in the
+    current uploads folder. None if the file can't be found.
+    """
+    if not stored:
+        return None
+    if os.path.exists(stored):
+        return stored
+    moved = os.path.join(upload_dir or UPLOAD_DIR, os.path.basename(stored))
+    return moved if os.path.exists(moved) else None
+
+
 def refresh_projects_from_resume(db: Session, candidate: models.Candidate) -> bool:
     """
     Re-read the projects from the candidate's stored resume PDF with the
@@ -180,8 +195,8 @@ def refresh_projects_from_resume(db: Session, candidate: models.Candidate) -> bo
     fixed by re-running the analysis. Does nothing if the file is missing
     or no projects are found. Returns True if the projects were replaced.
     """
-    path = candidate.resume_path
-    if not path or not os.path.exists(path):
+    path = resolve_resume_path(candidate.resume_path)
+    if not path:
         return False
     text = read_resume_text(path)
     projects = extract_project_details(text) if text else []
