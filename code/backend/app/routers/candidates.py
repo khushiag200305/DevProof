@@ -5,6 +5,8 @@ Access is role-gated per the product's "students self-upload, recruiters
 browse" design: recruiters can list and open any candidate; a student
 can only see their own uploads.
 """
+import os
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -12,6 +14,8 @@ from .. import models
 from ..database import get_db
 from ..dependencies import get_current_user, require_role
 from ..services.analysis import SUPPORTING_REPO, GitHubUnavailableError, analyze_candidate
+from ..services.project_links import match_repo
+from ..services.resume_parser import extract_project_details, read_resume_text
 from ..services.scoring import default_interview_question
 from ..skills_dictionary import (
     NOT_CHECKABLE,
@@ -20,6 +24,7 @@ from ..skills_dictionary import (
     get_skill,
     is_checkable,
 )
+from .resume import UPLOAD_DIR, project_row
 
 router = APIRouter(prefix="/api/candidates", tags=["candidates"])
 
@@ -32,6 +37,19 @@ def _candidate_summary(candidate: models.Candidate) -> dict:
         "github_username": candidate.github_username,
         "created_at": candidate.created_at,
         "skill_count": len(candidate.skills),
+    }
+
+
+def _project_detail(project: models.Project, repos: list[dict]) -> dict:
+    """A resume project with its tech stack, points and (if found) its GitHub repository."""
+    repo = match_repo(project.project_name, repos)
+    return {
+        "project_name": project.project_name,
+        "description": project.description,
+        "tech_stack": [t.strip() for t in (project.tech_stack or "").split(",") if t.strip()],
+        "period": project.period,
+        "bullets": [line.strip() for line in (project.description or "").splitlines() if line.strip()],
+        "repo": {"name": repo["name"], "url": repo["url"]} if repo else None,
     }
 
 
@@ -48,6 +66,10 @@ def _candidate_detail(candidate: models.Candidate) -> dict:
 
     question_by_skill = {q.skill_id: q.question for q in candidate.questions}
     analyzed = len(candidate.repositories) > 0
+    repos = [
+        {"name": r.repo_name, "url": r.repo_url, "is_fork": r.is_fork}
+        for r in candidate.repositories
+    ]
 
     skills = []
     ordered = sorted(
@@ -90,8 +112,8 @@ def _candidate_detail(candidate: models.Candidate) -> dict:
         "analyzed": analyzed,
         "skills": skills,
         "projects": [
-            {"project_name": p.project_name, "description": p.description}
-            for p in candidate.projects
+            _project_detail(p, repos)
+            for p in sorted(candidate.projects, key=lambda p: p.project_id)
         ],
     }
 
@@ -151,6 +173,43 @@ def get_candidate(
     return _candidate_detail(_get_visible_candidate(candidate_id, db, current_user))
 
 
+def resolve_resume_path(stored: str | None, upload_dir: str | None = None) -> str | None:
+    """
+    Where a candidate's resume PDF is now. The database keeps the full
+    path from upload time, which breaks if the project folder is moved or
+    re-cloned; in that case the same file name is looked up in the
+    current uploads folder. None if the file can't be found.
+    """
+    if not stored:
+        return None
+    if os.path.exists(stored):
+        return stored
+    moved = os.path.join(upload_dir or UPLOAD_DIR, os.path.basename(stored))
+    return moved if os.path.exists(moved) else None
+
+
+def refresh_projects_from_resume(db: Session, candidate: models.Candidate) -> bool:
+    """
+    Re-read the projects from the candidate's stored resume PDF with the
+    current parser, so records uploaded before a parser improvement get
+    fixed by re-running the analysis. Does nothing if the file is missing
+    or no projects are found. Returns True if the projects were replaced.
+    """
+    path = resolve_resume_path(candidate.resume_path)
+    if not path:
+        return False
+    text = read_resume_text(path)
+    projects = extract_project_details(text) if text else []
+    if not projects:
+        return False
+    db.query(models.Project).filter_by(candidate_id=candidate.candidate_id).delete()
+    for project in projects:
+        db.add(project_row(candidate.candidate_id, project))
+    db.flush()
+    db.expire(candidate, ["projects"])
+    return True
+
+
 @router.post("/{candidate_id}/analyze")
 async def analyze(
     candidate_id: int,
@@ -163,6 +222,7 @@ async def analyze(
     and returns the updated candidate detail. Same access rule as GET.
     """
     candidate = _get_visible_candidate(candidate_id, db, current_user)
+    refresh_projects_from_resume(db, candidate)
 
     try:
         await analyze_candidate(db, candidate)

@@ -22,7 +22,7 @@ from fastapi import FastAPI  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 
 from . import models  # noqa: E402,F401  (import registers models on Base.metadata)
-from .database import Base, engine  # noqa: E402
+from .database import Base, engine, ensure_columns  # noqa: E402
 from .routers import auth as auth_router  # noqa: E402
 from .routers import candidates as candidates_router  # noqa: E402
 from .routers import github as github_router  # noqa: E402
@@ -41,6 +41,7 @@ async def lifespan(app: FastAPI):
     """
     try:
         Base.metadata.create_all(bind=engine)
+        ensure_columns(engine)
     except Exception as exc:  # pragma: no cover - depends on local DB availability
         print(f"Warning: could not connect to the database on startup: {exc}")
     yield

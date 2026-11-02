@@ -24,6 +24,10 @@ interface SkillEntry {
 interface ProjectEntry {
   project_name: string;
   description: string | null;
+  tech_stack: string[];
+  period: string | null;
+  bullets: string[];
+  repo: { name: string; url: string } | null;
 }
 
 interface CandidateDetailData {
@@ -262,6 +266,66 @@ export function CandidateDetail() {
               )}
             </div>
 
+            {candidate.projects.length > 0 && (
+              <div className="mt-6 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm sm:p-8">
+                <h2 className="text-lg font-semibold text-slate-800">Projects on the resume</h2>
+                <p className="mt-1 text-sm text-slate-400">
+                  {candidate.analyzed
+                    ? "Each project is linked to its GitHub repository when the names match."
+                    : "Run the analysis to link each project to its GitHub repository."}
+                </p>
+                <ul className="mt-4 space-y-3">
+                  {candidate.projects.map((p, i) => (
+                    <li
+                      key={`${p.project_name}-${i}`}
+                      aria-label={p.project_name}
+                      className="rounded-lg border border-slate-100 px-4 py-3"
+                    >
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                        <span className="font-medium text-slate-700">{p.project_name}</span>
+                        {p.period && <span className="shrink-0 text-xs text-slate-400">{p.period}</span>}
+                      </div>
+                      {p.tech_stack.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {p.tech_stack.map((t) => (
+                            <span
+                              key={t}
+                              className="rounded-md bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700"
+                            >
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {p.bullets.length > 0 && (
+                        <ul className="mt-2 list-inside list-disc space-y-0.5 text-sm text-slate-600">
+                          {p.bullets.map((b) => (
+                            <li key={b}>{b}</li>
+                          ))}
+                        </ul>
+                      )}
+                      {candidate.analyzed && (
+                        <p className="mt-2 text-xs">
+                          {p.repo ? (
+                            <a
+                              href={p.repo.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="font-medium text-brand-700 hover:underline"
+                            >
+                              GitHub: {p.repo.name} ↗
+                            </a>
+                          ) : (
+                            <span className="text-slate-400">No matching GitHub repository found</span>
+                          )}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {user?.role === "student" && candidate.analyzed && (
               <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-8">
                 <div>
@@ -283,16 +347,6 @@ export function CandidateDetail() {
               <PortfolioPanel candidateId={candidate.candidate_id} refreshKey={analysisRuns} />
             )}
 
-            {candidate.projects.length > 0 && (
-              <div className="mt-6 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm sm:p-8">
-                <h2 className="text-lg font-semibold text-slate-800">Projects</h2>
-                <ul className="mt-4 list-inside list-disc space-y-1 text-sm text-slate-600">
-                  {candidate.projects.map((p) => (
-                    <li key={p.project_name}>{p.project_name}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </>
         )}
       </main>

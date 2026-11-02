@@ -183,7 +183,11 @@ class Project(Base):
     project_id = Column(Integer, primary_key=True, index=True)
     candidate_id = Column(Integer, ForeignKey("candidates.candidate_id"), nullable=False)
     project_name = Column(String, nullable=False)
+    # Description points from the resume, one per line.
     description = Column(Text, nullable=True)
+    # Added after the table first shipped; see database.ensure_columns().
+    tech_stack = Column(Text, nullable=True)  # comma-separated, as written on the resume
+    period = Column(String, nullable=True)  # e.g. "Jan 2025 - Apr 2025"
 
     candidate = relationship("Candidate", back_populates="projects")
 

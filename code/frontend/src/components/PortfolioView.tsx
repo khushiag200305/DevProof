@@ -89,14 +89,19 @@ export function PortfolioView({ data }: { data: PortfolioData }) {
                 className="flex flex-col rounded-2xl border border-brand-100 bg-white p-5 shadow-sm"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <a
-                    href={p.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-semibold text-slate-800 hover:text-brand-700 hover:underline"
-                  >
-                    {p.name}
-                  </a>
+                  <div>
+                    <a
+                      href={p.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold text-slate-800 hover:text-brand-700 hover:underline"
+                    >
+                      {p.resume_title ?? p.name}
+                    </a>
+                    {p.resume_title && (
+                      <p className="text-xs text-slate-400">github.com/…/{p.name}</p>
+                    )}
+                  </div>
                   {p.language && (
                     <span className="shrink-0 text-xs text-slate-400">{p.language}</span>
                   )}

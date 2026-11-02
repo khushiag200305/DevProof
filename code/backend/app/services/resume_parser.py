@@ -5,8 +5,8 @@ Extracts structured candidate data from a resume PDF's raw text:
 - name          (spaCy PERSON NER over the resume header, with a
                   regex fallback for headers spaCy misses)
 - skills        (curated dictionary + regex normalization, Section 3.1)
-- projects      ("Projects" section heuristic: section header, then
-                  following bullet/lines up to the next section header)
+- projects      (title, tech stack, dates and description points per
+                  project - see services/resume_projects.py)
 - GitHub URL    (regex over github.com links)
 
 This module does text extraction and rule-based extraction only - no
@@ -23,6 +23,7 @@ import pdfplumber
 import spacy
 
 from ..skills_dictionary import SKILL_ALIASES, extract_skill_names
+from .resume_projects import parse_projects
 
 GITHUB_URL_PATTERN = re.compile(
     r"(?<![\w.])(?:https?://)?(?:www\.)?github\.com/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_.-]+)?",
@@ -128,43 +129,23 @@ def extract_name(text: str) -> str | None:
     return None
 
 
+def extract_project_details(text: str) -> list[dict]:
+    """
+    Structured projects from the resume's Projects section: name, tech
+    stack, dates and description points (services/resume_projects.py).
+    """
+    return parse_projects(text)
+
+
 def extract_projects(text: str) -> list[str]:
-    """
-    Heuristic extraction of project names from a resume's "Projects"
-    section (or "Personal Projects" / "Academic Projects"): find the
-    section header, then read lines until the next known section header,
-    treating each non-empty line/bullet as one project entry.
+    """Just the project names, in resume order."""
+    return [p["name"] for p in parse_projects(text)]
 
-    Keeps only a short project "name" per entry (first ~8 words) since
-    resume project lines often continue into a description on the same
-    line.
-    """
-    lines = [line.strip() for line in text.splitlines()]
-    projects: list[str] = []
-    in_projects_section = False
 
-    for line in lines:
-        lower = line.strip(" :•-").lower()
-
-        if lower in ("projects", "personal projects", "academic projects"):
-            in_projects_section = True
-            continue
-
-        if in_projects_section and lower in SECTION_HEADERS:
-            break
-
-        if not in_projects_section or not line.strip():
-            continue
-
-        # Strip common bullet characters, then keep a short "name" -
-        # the first clause before a dash/colon, or the first 8 words.
-        entry = re.sub(r"^[•\-*\s]+", "", line).strip()
-        if not entry:
-            continue
-        entry = re.split(r"[:–—-]\s", entry, maxsplit=1)[0].strip()
-        words = entry.split()
-        name = " ".join(words[:8])
-        if name:
-            projects.append(name)
-
-    return projects
+def read_resume_text(path: str) -> str | None:
+    """Text of a stored resume PDF, or None if the file is gone or unreadable."""
+    try:
+        with open(path, "rb") as pdf_file:
+            return extract_text_from_pdf(pdf_file.read())
+    except Exception:  # pragma: no cover - depends on the stored file
+        return None

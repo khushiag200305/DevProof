@@ -182,3 +182,63 @@ describe("CandidateDetail page", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("CandidateDetail projects", () => {
+  beforeEach(() => {
+    vi.spyOn(AuthContextModule, "useAuth").mockReturnValue({
+      user: { user_id: 2, email: "r@acme.com", name: "R", picture_url: null, role: "recruiter" },
+      loading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("shows each resume project with its stack, points and linked repository", async () => {
+    vi.spyOn(api, "apiGet").mockResolvedValue({
+      ...analyzedCandidate,
+      projects: [
+        {
+          project_name: "Credit Card Fraud Detection & Transaction Analytics",
+          description: "Built a fraud detection model.",
+          tech_stack: ["Python", "MySQL"],
+          period: "Jan 2025 - Apr 2025",
+          bullets: ["Built a fraud detection model.", "Designed a MySQL database."],
+          repo: { name: "credit-card-fraud-detection", url: "https://github.com/k/credit-card-fraud-detection" },
+        },
+        {
+          project_name: "Portfolio Website",
+          description: null,
+          tech_stack: [],
+          period: null,
+          bullets: [],
+          repo: null,
+        },
+      ],
+    });
+    render(
+      <MemoryRouter initialEntries={["/candidate/7"]}>
+        <Routes>
+          <Route path="/candidate/:candidateId" element={<CandidateDetail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    const fraud = await screen.findByRole("listitem", {
+      name: "Credit Card Fraud Detection & Transaction Analytics",
+    });
+    expect(within(fraud).getByText("Jan 2025 - Apr 2025")).toBeInTheDocument();
+    expect(within(fraud).getByText("MySQL")).toBeInTheDocument();
+    expect(within(fraud).getByText("Designed a MySQL database.")).toBeInTheDocument();
+    expect(within(fraud).getByRole("link", { name: /credit-card-fraud-detection/ })).toHaveAttribute(
+      "href",
+      "https://github.com/k/credit-card-fraud-detection"
+    );
+
+    const website = screen.getByRole("listitem", { name: "Portfolio Website" });
+    expect(within(website).getByText("No matching GitHub repository found")).toBeInTheDocument();
+  });
+});

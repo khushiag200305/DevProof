@@ -5,6 +5,7 @@ from app.services.portfolio import (
     MAX_PROJECTS,
     active_period,
     build_portfolio,
+    link_resume_projects,
     make_slug,
     rank_projects,
 )
@@ -129,3 +130,23 @@ def test_slug_is_readable_and_unguessable():
     assert len(slug.rsplit("-", 1)[1]) == 6
     assert make_slug("Khushi Agarwal", 7) != slug
     assert make_slug(None, 7).startswith("candidate-7-")
+
+
+def test_resume_projects_are_linked_to_their_repositories():
+    repos = [dict(NOTES), dict(SHOP_API, name="credit-card-fraud-detection", description=None)]
+    linked = link_resume_projects(
+        repos,
+        [{"name": "Credit Card Fraud Detection & Analytics", "bullets": ["Built a fraud model."]}],
+    )
+    fraud = next(r for r in linked if r["name"] == "credit-card-fraud-detection")
+    assert fraud["resume_title"] == "Credit Card Fraud Detection & Analytics"
+    assert "resume_title" not in next(r for r in linked if r["name"] == "notes")
+
+
+def test_repositories_on_the_resume_come_first_and_borrow_its_description():
+    repos = [dict(SHOP_API), dict(NOTES, resume_title="Notes App", resume_points=["Built a notes app."])]
+    page = _build(repos=repos)
+    first = page["projects"][0]
+    assert first["name"] == "notes"
+    assert first["resume_title"] == "Notes App"
+    assert first["description"] == "Built a notes app."
