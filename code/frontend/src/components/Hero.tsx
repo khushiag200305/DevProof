@@ -1,0 +1,101 @@
+import type { CSSProperties, ReactNode } from "react";
+
+/** Small deterministic hash so the same seed always draws the same grid. */
+function hash(text: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+const LEVELS = ["bg-white/10", "bg-white/25", "bg-white/45", "bg-white/70", "bg-white"];
+
+/**
+ * A GitHub-style contribution grid, drawn from a seed (a name or page
+ * title) so each page and each candidate gets its own pattern. Purely
+ * decorative.
+ */
+export function CommitGrid({
+  seed,
+  weeks = 18,
+  className = "",
+}: {
+  seed: string;
+  weeks?: number;
+  className?: string;
+}) {
+  let state = hash(seed) || 1;
+  const next = () => {
+    state ^= state << 13;
+    state ^= state >>> 17;
+    state ^= state << 5;
+    return (state >>> 0) / 4294967296;
+  };
+  const cells: number[] = [];
+  for (let w = 0; w < weeks; w++) {
+    // Activity ramps up towards recent weeks, like a real busy profile.
+    const ramp = 0.35 + (w / weeks) * 0.65;
+    for (let d = 0; d < 7; d++) {
+      const r = next() * ramp;
+      cells.push(r < 0.18 ? 0 : r < 0.32 ? 1 : r < 0.48 ? 2 : r < 0.62 ? 3 : 4);
+    }
+  }
+  return (
+    <div
+      aria-hidden="true"
+      className={`grid grid-flow-col grid-rows-7 gap-[5px] ${className}`}
+    >
+      {cells.map((level, i) => (
+        <span
+          key={i}
+          className={`grid-cell h-3 w-3 rounded-[3px] sm:h-3.5 sm:w-3.5 ${LEVELS[level]}`}
+          style={{ "--i": Math.floor(i / 7) * 2 + (i % 7) } as CSSProperties}
+        />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * The gradient banner at the top of each page: content on the left, an
+ * optional aside (stats, a score) on the right, and the commit grid
+ * glowing behind it.
+ */
+export function Hero({
+  seed,
+  children,
+  aside,
+  className = "",
+}: {
+  seed: string;
+  children: ReactNode;
+  aside?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={`hero ${className}`}>
+      <CommitGrid
+        seed={seed}
+        weeks={22}
+        className="pointer-events-none absolute -right-6 top-1/2 hidden -translate-y-1/2 opacity-40 md:grid"
+      />
+      <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+      <div className="relative flex flex-col gap-6 p-6 sm:p-9 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0 max-w-2xl">{children}</div>
+        {aside && <div className="relative shrink-0">{aside}</div>}
+      </div>
+    </section>
+  );
+}
+
+/** Frosted stat block used inside the hero. */
+export function HeroStat({ value, label }: { value: ReactNode; label: string }) {
+  return (
+    <div className="rounded-2xl bg-white/15 px-4 py-3 backdrop-blur-md ring-1 ring-white/25">
+      <p className="font-display text-2xl font-extrabold leading-none sm:text-3xl">{value}</p>
+      <p className="mt-1 text-xs font-medium text-white/80">{label}</p>
+    </div>
+  );
+}

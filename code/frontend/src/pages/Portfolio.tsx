@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { LogoMark } from "../components/Icons";
 import { PortfolioView } from "../components/PortfolioView";
+import { ThemeToggle } from "../components/ThemeToggle";
 import { ApiError, apiGet } from "../lib/api";
 import type { PortfolioData } from "../lib/portfolio";
 
@@ -24,14 +26,19 @@ export function Portfolio() {
   }, [slug]);
 
   return (
-    <div className="min-h-screen bg-brand-50/40">
-      <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
-        {!data && !error && <p className="text-sm text-slate-400">Loading...</p>}
-        {error && (
-          <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
-        )}
+    <div className="min-h-screen">
+      <header className="mx-auto flex max-w-7xl items-center justify-between px-4 pt-5 sm:px-6">
+        <span className="flex items-center gap-2">
+          <LogoMark className="h-8 w-8" />
+          <span className="font-display text-lg font-extrabold">DevProof</span>
+        </span>
+        <ThemeToggle />
+      </header>
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+        {!data && !error && <p className="muted text-sm">Loading...</p>}
+        {error && <p className="alert">{error}</p>}
         {data && <PortfolioView data={data} />}
-        <p className="mt-10 text-center text-xs text-slate-400">
+        <p className="muted mt-12 text-center text-xs">
           Skills verified against public GitHub work with DevProof
         </p>
       </main>

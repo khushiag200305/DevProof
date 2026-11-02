@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ApiError, apiGet, apiPut } from "../lib/api";
 import { portfolioUrl, type PortfolioSettings } from "../lib/portfolio";
+import { CheckIcon, CopyIcon, GlobeIcon } from "./Icons";
 import { PortfolioView } from "./PortfolioView";
 
 interface Props {
@@ -54,97 +55,100 @@ export function PortfolioPanel({ candidateId, refreshKey }: Props) {
   };
 
   if (!settings) {
-    return error ? (
-      <p className="mt-6 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
-    ) : null;
+    return error ? <p className="alert">{error}</p> : null;
   }
 
   const url = settings.slug ? portfolioUrl(settings.slug) : null;
 
   return (
-    <div className="mt-6 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm sm:p-8">
+    <div className="panel h-full">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-slate-800">Portfolio page</h2>
-          <p className="mt-1 text-sm text-slate-400">
-            A shareable page with your GitHub-verified skills and best projects.
-          </p>
+        <div className="flex items-start gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-pop-500 text-white">
+            <GlobeIcon className="h-5 w-5" />
+          </span>
+          <div>
+            <h2 className="text-2xl font-bold">Portfolio page</h2>
+            <p className="muted mt-1 text-sm">
+              A shareable page with your GitHub-verified skills and best projects.
+            </p>
+          </div>
         </div>
         <span
-          className={`shrink-0 self-start rounded-full px-3 py-1 text-xs font-medium ${
-            settings.is_public ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"
+          className={`chip inline-flex shrink-0 items-center gap-1.5 self-start px-3 py-1 ${
+            settings.is_public
+              ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+              : "bg-slate-500/10 text-ink-mute dark:text-slate-400"
           }`}
         >
+          <span
+            className={`h-2 w-2 rounded-full ${settings.is_public ? "animate-pulse bg-emerald-500" : "bg-slate-400"}`}
+            aria-hidden="true"
+          />
           {settings.is_public ? "Public" : "Private"}
         </span>
       </div>
 
-      <label htmlFor="portfolio-headline" className="mt-5 block text-sm font-medium text-slate-700">
-        Headline
-      </label>
-      <input
-        id="portfolio-headline"
-        type="text"
-        maxLength={120}
-        value={headline}
-        onChange={(e) => setHeadline(e.target.value)}
-        placeholder="e.g. Backend developer · Python, FastAPI, PostgreSQL"
-        className="mt-1 block w-full rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-600 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
-      />
-
-      <div className="mt-4 flex flex-wrap gap-3">
-        {settings.is_public ? (
-          <>
-            <button
-              onClick={() => save(true)}
-              disabled={saving}
-              className="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-40"
-            >
-              Save headline
+      <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+        <div>
+          <label htmlFor="portfolio-headline" className="label">
+            Headline
+          </label>
+          <input
+            id="portfolio-headline"
+            type="text"
+            maxLength={120}
+            value={headline}
+            onChange={(e) => setHeadline(e.target.value)}
+            placeholder="e.g. Backend developer, Python and FastAPI"
+            className="field"
+          />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {settings.is_public ? (
+            <>
+              <button onClick={() => save(true)} disabled={saving} className="btn-primary">
+                Save headline
+              </button>
+              <button onClick={() => save(false)} disabled={saving} className="btn-ghost py-2.5">
+                Make private
+              </button>
+            </>
+          ) : (
+            <button onClick={() => save(true)} disabled={saving} className="btn-primary">
+              {saving ? "Publishing..." : "Publish portfolio"}
             </button>
-            <button
-              onClick={() => save(false)}
-              disabled={saving}
-              className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-40"
-            >
-              Make private
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={() => save(true)}
-            disabled={saving}
-            className="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-40"
-          >
-            {saving ? "Publishing..." : "Publish portfolio"}
-          </button>
-        )}
-        <button
-          onClick={() => setShowPreview((v) => !v)}
-          className="rounded-md border border-brand-200 px-4 py-2 text-sm font-medium text-brand-700 transition hover:bg-brand-50"
-        >
-          {showPreview ? "Hide preview" : "Preview"}
-        </button>
+          )}
+        </div>
       </div>
 
       {settings.is_public && url && (
-        <div className="mt-4 flex flex-col gap-2 rounded-md bg-brand-50 px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between">
-          <a href={url} target="_blank" rel="noreferrer" className="break-all text-brand-700 hover:underline">
+        <div className="rise mt-4 flex flex-col gap-2 rounded-xl bg-brand-600/10 px-4 py-3 text-sm dark:bg-brand-500/15 sm:flex-row sm:items-center sm:justify-between">
+          <a href={url} target="_blank" rel="noreferrer" className="link break-all">
             {url}
           </a>
           <button
             onClick={() => copyLink(url)}
-            className="shrink-0 rounded-md border border-brand-200 bg-white px-3 py-1 text-xs font-medium text-brand-700 hover:bg-brand-50"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-brand-700 shadow-sm transition hover:shadow dark:bg-night-700 dark:text-brand-200"
           >
+            {copied ? <CheckIcon className="h-3.5 w-3.5" /> : <CopyIcon className="h-3.5 w-3.5" />}
             {copied ? "Copied!" : "Copy link"}
           </button>
         </div>
       )}
 
-      {error && <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+      {error && <p className="alert mt-4">{error}</p>}
+
+      <button
+        onClick={() => setShowPreview((v) => !v)}
+        aria-expanded={showPreview}
+        className="btn-ghost mt-5 w-full"
+      >
+        {showPreview ? "Hide preview" : "Preview"}
+      </button>
 
       {showPreview && (
-        <div className="mt-6 rounded-2xl bg-brand-50/40 p-4">
+        <div className="rise mt-5 rounded-2xl bg-paper p-3 ring-1 ring-brand-100 dark:bg-night dark:ring-night-600 sm:p-4">
           <PortfolioView data={settings.portfolio} />
         </div>
       )}
