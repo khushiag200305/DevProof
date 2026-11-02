@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Avatar } from "../components/Avatar";
 import { Hero } from "../components/Hero";
-import { ArrowLeftIcon, ChatIcon, ExternalIcon, GitHubIcon, SparkIcon } from "../components/Icons";
+import { ArrowLeftIcon, ChatIcon, ChevronIcon, ExternalIcon, GitHubIcon, SparkIcon } from "../components/Icons";
 import { Navbar } from "../components/Navbar";
 import { PortfolioPanel } from "../components/PortfolioPanel";
 import { useAuth } from "../context/AuthContext";
@@ -59,15 +59,15 @@ function statusTone(status: string | null): { badge: string; bar: string } {
   return { badge: "bg-pop-500/10 text-pop-600 dark:text-pop-400", bar: "bg-pop-500" };
 }
 
-/** One colour per category tile, cycled in order. Full class names so Tailwind keeps them. */
+/** One colour per skill category, cycled in order. Full class names so Tailwind keeps them. */
 const ACCENTS = [
-  { tile: "from-brand-500 to-brand-700", dot: "bg-brand-500", ring: "ring-brand-500" },
-  { tile: "from-pop-400 to-pop-600", dot: "bg-pop-500", ring: "ring-pop-500" },
-  { tile: "from-sun-300 to-amber-500", dot: "bg-sun-400", ring: "ring-sun-400" },
-  { tile: "from-emerald-400 to-teal-600", dot: "bg-emerald-500", ring: "ring-emerald-500" },
-  { tile: "from-sky-400 to-indigo-500", dot: "bg-sky-500", ring: "ring-sky-500" },
-  { tile: "from-fuchsia-400 to-purple-600", dot: "bg-fuchsia-500", ring: "ring-fuchsia-500" },
-];
+  { dot: "bg-brand-500", bar: "from-brand-500 to-brand-400" },
+  { dot: "bg-pop-500", bar: "from-pop-500 to-pop-400" },
+  { dot: "bg-sun-400", bar: "from-sun-500 to-sun-300" },
+  { dot: "bg-emerald-500", bar: "from-emerald-500 to-emerald-400" },
+  { dot: "bg-sky-500", bar: "from-sky-500 to-sky-400" },
+  { dot: "bg-fuchsia-500", bar: "from-fuchsia-500 to-fuchsia-400" },
+]
 
 interface SkillGroup {
   category: string;
@@ -106,7 +106,7 @@ function EvidenceRing({ percent }: { percent: number }) {
   const r = 44;
   const c = 2 * Math.PI * r;
   return (
-    <div className="relative h-32 w-32">
+    <div className="relative h-28 w-28">
       <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90" aria-hidden="true">
         <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="9" />
         <circle
@@ -124,55 +124,71 @@ function EvidenceRing({ percent }: { percent: number }) {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="font-display text-3xl font-extrabold leading-none">{percent}%</span>
-        <span className="mt-1 text-[11px] font-semibold text-white/80">backed</span>
+        <span className="mt-1 text-[11px] font-semibold text-white/80">on GitHub</span>
       </div>
     </div>
   );
 }
 
-function SkillCard({ skill: s }: { skill: SkillEntry }) {
+/** A skill as one compact row; clicking it opens the evidence underneath. */
+function SkillRow({ skill: s, open, onToggle }: { skill: SkillEntry; open: boolean; onToggle: () => void }) {
   const tone = statusTone(s.status);
   return (
-    <li className="tile flex flex-col p-4 transition hover:border-brand-200 hover:shadow-md dark:hover:border-night-600">
-      <div className="flex items-start justify-between gap-3">
-        <span className="font-display text-lg font-bold leading-tight">{s.skill_name}</span>
+    <li className="border-t border-slate-100 first:border-t-0 dark:border-night-600">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="group flex w-full items-center gap-3 py-3 text-left"
+      >
+        <span className="min-w-0 flex-1 truncate font-semibold group-hover:text-brand-700 dark:group-hover:text-brand-300">
+          {s.skill_name}
+        </span>
+        {s.score !== null && (
+          <span className="hidden h-1.5 w-20 overflow-hidden rounded-full bg-slate-100 dark:bg-night-600 sm:block" aria-hidden="true">
+            <span className={`bar-fill block h-full rounded-full ${tone.bar}`} style={{ width: `${Math.max(4, s.score)}%` }} />
+          </span>
+        )}
         <span className={`chip shrink-0 py-1 ${tone.badge}`}>
           {s.status ?? "Pending Analysis"}
           {s.score !== null && ` · ${s.score}/100`}
         </span>
+        <ChevronIcon
+          className={`h-4 w-4 shrink-0 text-ink-mute transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      <div className={open ? "rise pb-4" : "hidden"}>
+        {s.reasons.length > 0 &&
+          (s.checkable ? (
+            <ul className="space-y-1 text-sm text-ink-soft dark:text-slate-300">
+              {s.reasons.map((reason) => (
+                <li key={reason} className="flex gap-2">
+                  <span className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${tone.bar}`} aria-hidden="true" />
+                  <span>{reason}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted text-sm italic">{s.reasons[0]}</p>
+          ))}
+        {s.supporting_repos.length > 0 && (
+          <p className="muted mt-2 text-xs">
+            <span className="font-semibold text-ink-soft dark:text-slate-300">Also supported by:</span>{" "}
+            {s.supporting_repos.map((r) => `${r.repo} (${r.score})`).join(", ")}
+          </p>
+        )}
+        {s.interview_question && (
+          <p className="mt-3 flex gap-2 rounded-xl bg-brand-600/[0.07] px-3 py-2.5 text-sm text-brand-900 dark:bg-brand-500/10 dark:text-brand-100">
+            <ChatIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-600 dark:text-brand-300" />
+            <span>
+              <span className="font-semibold">Suggested interview question:</span> {s.interview_question}
+            </span>
+          </p>
+        )}
+        {s.reasons.length === 0 && !s.interview_question && (
+          <p className="muted text-sm">Run the analysis to see the evidence for this skill.</p>
+        )}
       </div>
-      {s.score !== null && (
-        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-night-600" aria-hidden="true">
-          <div className={`bar-fill h-full rounded-full ${tone.bar}`} style={{ width: `${Math.max(3, s.score)}%` }} />
-        </div>
-      )}
-      {s.reasons.length > 0 &&
-        (s.checkable ? (
-          <ul className="mt-3 space-y-1 text-sm text-ink-soft dark:text-slate-300">
-            {s.reasons.map((reason) => (
-              <li key={reason} className="flex gap-2">
-                <span className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${tone.bar}`} aria-hidden="true" />
-                <span>{reason}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="muted mt-3 text-sm italic">{s.reasons[0]}</p>
-        ))}
-      {s.supporting_repos.length > 0 && (
-        <p className="muted mt-3 text-xs">
-          <span className="font-semibold text-ink-soft dark:text-slate-300">Also supported by:</span>{" "}
-          {s.supporting_repos.map((r) => `${r.repo} (${r.score})`).join(", ")}
-        </p>
-      )}
-      {s.interview_question && (
-        <p className="mt-3 flex gap-2 rounded-xl bg-brand-600/10 px-3 py-2.5 text-sm text-brand-800 dark:bg-brand-500/15 dark:text-brand-100">
-          <ChatIcon className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>
-            <span className="font-semibold">Suggested interview question:</span> {s.interview_question}
-          </span>
-        </p>
-      )}
     </li>
   );
 }
@@ -180,33 +196,34 @@ function SkillCard({ skill: s }: { skill: SkillEntry }) {
 function ProjectCard({ project: p, analyzed, index }: { project: ProjectEntry; analyzed: boolean; index: number }) {
   const accent = ACCENTS[index % ACCENTS.length];
   return (
-    <li aria-label={p.project_name} className="tile relative flex flex-col overflow-hidden p-5">
-      <span className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${accent.tile}`} aria-hidden="true" />
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-        <span className="font-display text-lg font-bold leading-snug">{p.project_name}</span>
-        {p.period && <span className="muted shrink-0 text-xs font-medium">{p.period}</span>}
+    <li aria-label={p.project_name} className="panel flex flex-col">
+      <div className="flex items-start justify-between gap-3">
+        <span className="font-display text-xl font-bold leading-snug">{p.project_name}</span>
+        {p.period && (
+          <span className="chip shrink-0 bg-slate-500/10 text-ink-soft dark:text-slate-300">{p.period}</span>
+        )}
       </div>
       {p.tech_stack.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
           {p.tech_stack.map((t) => (
-            <span key={t} className="chip bg-brand-600/10 text-brand-700 dark:bg-brand-500/20 dark:text-brand-200">
+            <span key={t} className="chip bg-brand-600/10 text-brand-700 dark:bg-brand-500/15 dark:text-brand-200">
               {t}
             </span>
           ))}
         </div>
       )}
       {p.bullets.length > 0 && (
-        <ul className="mt-3 space-y-1.5 text-sm text-ink-soft dark:text-slate-300">
+        <ul className="mt-4 space-y-2 text-sm text-ink-soft dark:text-slate-300">
           {p.bullets.map((b) => (
-            <li key={b} className="flex gap-2">
-              <span className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${accent.dot}`} aria-hidden="true" />
+            <li key={b} className="flex gap-2.5">
+              <span className={`mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full ${accent.dot}`} aria-hidden="true" />
               <span>{b}</span>
             </li>
           ))}
         </ul>
       )}
       {analyzed && (
-        <p className="mt-auto pt-4 text-sm">
+        <p className="mt-auto pt-5 text-sm">
           {p.repo ? (
             <a
               href={p.repo.url}
@@ -227,6 +244,8 @@ function ProjectCard({ project: p, analyzed, index }: { project: ProjectEntry; a
   );
 }
 
+type Tab = "skills" | "projects" | "share";
+
 export function CandidateDetail() {
   const { candidateId } = useParams<{ candidateId: string }>();
   const { user } = useAuth();
@@ -237,7 +256,9 @@ export function CandidateDetail() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
   const [analysisRuns, setAnalysisRuns] = useState(0);
-  const [openCategory, setOpenCategory] = useState<string | null>(null);
+  const [category, setCategory] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>("skills");
+  const [openSkills, setOpenSkills] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!candidateId) return;
@@ -275,14 +296,42 @@ export function CandidateDetail() {
     }
   };
 
+  const toggleSkill = (name: string) =>
+    setOpenSkills((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+
   const groups = candidate ? groupByCategory(candidate.skills) : [];
-  const shownGroups = openCategory ? groups.filter((g) => g.category === openCategory) : groups;
-  const checkable = candidate?.skills.filter((s) => s.checkable) ?? [];
+  const shownGroups = category ? groups.filter((g) => g.category === category) : groups;
+  const skills = candidate?.skills ?? [];
+  const checkable = skills.filter((s) => s.checkable);
   const backedPercent =
     candidate?.analyzed && checkable.length > 0
       ? Math.round((checkable.filter(isBacked).length / checkable.length) * 100)
       : null;
+  const allOpen = skills.length > 0 && skills.every((s) => openSkills.has(s.skill_name));
   const displayName = candidate ? (candidate.name ?? `Candidate #${candidate.candidate_id}`) : "";
+
+  const breakdown = [
+    { label: "Strong", count: skills.filter((s) => s.status === "Strong Evidence").length, color: "bg-emerald-500" },
+    { label: "Good", count: skills.filter((s) => s.status === "Good Evidence").length, color: "bg-sun-400" },
+    { label: "Needs proof", count: skills.filter((s) => s.checkable && s.status !== null && !isBacked(s)).length, color: "bg-pop-500" },
+    { label: "Interview only", count: skills.filter((s) => !s.checkable).length, color: "bg-sky-400" },
+    { label: "Not checked yet", count: skills.filter((s) => s.checkable && s.status === null).length, color: "bg-slate-300 dark:bg-slate-500" },
+  ].filter((b) => b.count > 0);
+
+  const tabs: { id: Tab; label: string; count?: number }[] = candidate
+    ? [
+        { id: "skills", label: "Skills", count: skills.length },
+        ...(candidate.projects.length > 0
+          ? [{ id: "projects" as Tab, label: "Projects", count: candidate.projects.length }]
+          : []),
+        ...(user?.role === "student" ? [{ id: "share" as Tab, label: "Portfolio & resume lines" }] : []),
+      ]
+    : [];
 
   return (
     <div className="min-h-screen">
@@ -303,7 +352,7 @@ export function CandidateDetail() {
             <Hero
               seed={displayName}
               aside={
-                <div className="flex items-center gap-5 lg:flex-col lg:items-end">
+                <div className="flex items-center gap-5">
                   {backedPercent !== null && <EvidenceRing percent={backedPercent} />}
                   {candidate.github_username ? (
                     <button onClick={runAnalysis} disabled={analyzing} className="btn-light">
@@ -329,12 +378,12 @@ export function CandidateDetail() {
                 <ArrowLeftIcon className="h-4 w-4" /> Back
               </Link>
               <div className="mt-5 flex items-center gap-4">
-                <Avatar name={displayName} className="h-16 w-16 text-2xl ring-4 ring-white/30 sm:h-20 sm:w-20 sm:text-3xl" />
+                <Avatar name={displayName} className="h-16 w-16 text-2xl ring-4 ring-white/25" />
                 <div className="min-w-0">
-                  <h1 className="break-words text-3xl font-extrabold leading-tight sm:text-5xl">
+                  <h1 className="break-words text-3xl font-extrabold leading-tight sm:text-4xl">
                     {displayName}
                   </h1>
-                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-white/85">
+                  <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-white/85">
                     {candidate.email && <span>{candidate.email}</span>}
                     {candidate.github_username && (
                       <a
@@ -354,139 +403,185 @@ export function CandidateDetail() {
 
             {analyzeError && <p className="alert mt-4">{analyzeError}</p>}
 
-            <section className="panel mt-6" aria-labelledby="skills-heading">
-              <h2 id="skills-heading" className="text-2xl font-bold">
-                Claimed skills
-              </h2>
-              <p className="muted mt-1 text-sm">
-                {candidate.analyzed
-                  ? `Scored against ${candidate.repos_analyzed} public GitHub ${
-                      candidate.repos_analyzed === 1 ? "repository" : "repositories"
-                    }. Every score lists the evidence behind it.`
-                  : "Run the analysis to check each skill against public GitHub evidence."}
-              </p>
+            <div role="tablist" aria-label="Report sections" className="mt-6 flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-night-600">
+              {tabs.map((t) => (
+                <button
+                  key={t.id}
+                  role="tab"
+                  aria-selected={tab === t.id}
+                  onClick={() => setTab(t.id)}
+                  className={`-mb-px flex shrink-0 items-center gap-2 border-b-[3px] px-4 py-3 text-sm font-semibold transition ${
+                    tab === t.id
+                      ? "border-brand-600 text-ink dark:border-brand-400 dark:text-white"
+                      : "border-transparent text-ink-mute hover:text-ink dark:text-slate-400 dark:hover:text-white"
+                  }`}
+                >
+                  {t.label}
+                  {t.count !== undefined && (
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs ${
+                        tab === t.id
+                          ? "bg-brand-600 text-white"
+                          : "bg-slate-200/70 text-ink-soft dark:bg-night-600 dark:text-slate-300"
+                      }`}
+                    >
+                      {t.count}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
 
-              {candidate.skills.length === 0 ? (
-                <p className="muted mt-4 text-sm">No skills detected.</p>
-              ) : (
-                <>
-                  {groups.length > 1 && (
-                    <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+            {/* Skills: summary and category filter on the left, skill rows on the right. */}
+            <div role="tabpanel" className={tab === "skills" ? "mt-6 grid gap-6 lg:grid-cols-[17rem_1fr]" : "hidden"}>
+              <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+                <div className="panel p-5 sm:p-5">
+                  <h2 className="text-lg font-bold">Claimed skills</h2>
+                  <p className="muted mt-1 text-sm">
+                    {candidate.analyzed
+                      ? `Scored against ${candidate.repos_analyzed} public GitHub ${
+                          candidate.repos_analyzed === 1 ? "repository" : "repositories"
+                        }. Every score lists the evidence behind it.`
+                      : "Run the analysis to check each skill against public GitHub evidence."}
+                  </p>
+                  {skills.length > 0 && (
+                    <>
+                      <div className="mt-4 flex h-2.5 overflow-hidden rounded-full bg-slate-100 dark:bg-night-600" aria-hidden="true">
+                        {breakdown.map((b) => (
+                          <span key={b.label} className={`bar-fill ${b.color}`} style={{ width: `${(b.count / skills.length) * 100}%` }} />
+                        ))}
+                      </div>
+                      <ul className="mt-3 space-y-1.5 text-sm">
+                        {breakdown.map((b) => (
+                          <li key={b.label} className="flex items-center gap-2">
+                            <span className={`h-2.5 w-2.5 rounded-full ${b.color}`} aria-hidden="true" />
+                            <span className="flex-1 text-ink-soft dark:text-slate-300">{b.label}</span>
+                            <span className="font-semibold tabular-nums">{b.count}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                </div>
+
+                {groups.length > 1 && (
+                  <nav aria-label="Skill categories" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:block lg:rounded-2xl lg:border lg:border-slate-200/70 lg:bg-white lg:p-2 lg:dark:border-night-600 lg:dark:bg-night-800">
+                    {[{ category: null as string | null, label: "All categories", count: skills.length, dot: "bg-ink dark:bg-white" }, ...groups.map((g, i) => ({
+                      category: g.category as string | null,
+                      label: g.category,
+                      count: g.skills.length,
+                      dot: ACCENTS[i % ACCENTS.length].dot,
+                    }))].map((item) => {
+                      const active = category === item.category;
+                      return (
+                        <button
+                          key={item.label}
+                          onClick={() => setCategory(item.category)}
+                          aria-pressed={active}
+                          className={`flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-semibold transition lg:w-full ${
+                            active
+                              ? "bg-brand-600 text-white"
+                              : "bg-white text-ink-soft ring-1 ring-slate-200/70 hover:bg-slate-100 dark:bg-night-800 dark:text-slate-300 dark:ring-night-600 dark:hover:bg-night-700 lg:bg-transparent lg:ring-0 lg:dark:bg-transparent"
+                          }`}
+                        >
+                          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${active ? "bg-white" : item.dot}`} aria-hidden="true" />
+                          <span className="truncate lg:flex-1">{item.label}</span>
+                          <span className={`text-xs tabular-nums ${active ? "text-white/80" : "text-ink-mute"}`}>{item.count}</span>
+                        </button>
+                      );
+                    })}
+                  </nav>
+                )}
+              </aside>
+
+              <div className="min-w-0">
+                {skills.length === 0 ? (
+                  <p className="panel muted text-sm">No skills detected.</p>
+                ) : (
+                  <>
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <p className="muted text-sm">Click a skill to see the evidence behind its score.</p>
                       <button
-                        onClick={() => setOpenCategory(null)}
-                        aria-pressed={openCategory === null}
-                        className={`rounded-2xl border-2 p-4 text-left transition hover:-translate-y-0.5 ${
-                          openCategory === null
-                            ? "border-ink bg-ink text-white dark:border-white dark:bg-white dark:text-ink"
-                            : "border-slate-200 hover:border-ink/40 dark:border-night-600 dark:hover:border-slate-400"
-                        }`}
+                        onClick={() => setOpenSkills(allOpen ? new Set() : new Set(skills.map((s) => s.skill_name)))}
+                        className="btn-ghost shrink-0 px-3 py-1.5 text-xs"
                       >
-                        <span className="block font-display text-base font-bold">All skills</span>
-                        <span className="mt-1 block text-xs opacity-75">{candidate.skills.length} on the resume</span>
+                        {allOpen ? "Collapse all" : "Expand all"}
                       </button>
-                      {groups.map((g, i) => {
-                        const accent = ACCENTS[i % ACCENTS.length];
-                        const open = openCategory === g.category;
-                        const groupCheckable = g.skills.filter((s) => s.checkable);
-                        const backed = groupCheckable.filter(isBacked).length;
+                    </div>
+                    <div key={category ?? "all"} className="gap-5 xl:columns-2">
+                      {shownGroups.map((group) => {
+                        const summary = groupSummary(group);
+                        const accent = ACCENTS[groups.indexOf(group) % ACCENTS.length];
                         return (
-                          <button
-                            key={g.category}
-                            onClick={() => setOpenCategory(open ? null : g.category)}
-                            aria-pressed={open}
-                            className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br p-4 text-left text-white shadow-md transition hover:-translate-y-1 hover:shadow-xl ${accent.tile} ${
-                              open ? `ring-4 ring-offset-2 ring-offset-white dark:ring-offset-night-800 ${accent.ring} scale-[1.02]` : ""
-                            } ${openCategory && !open ? "opacity-60 hover:opacity-100" : ""}`}
+                          <section
+                            key={group.category}
+                            aria-label={group.category}
+                            className="panel rise mb-5 break-inside-avoid px-5 pb-2 pt-4 sm:px-5"
                           >
-                            <span className="absolute -right-3 -top-3 font-display text-6xl font-extrabold opacity-20 transition-transform group-hover:scale-110">
-                              {g.skills.length}
-                            </span>
-                            <span className="relative block font-display text-base font-bold leading-tight">
-                              {g.category}
-                            </span>
-                            <span className="relative mt-1 block text-xs font-medium text-white/85">
-                              {groupCheckable.length === 0
-                                ? "Concepts"
-                                : candidate.analyzed
-                                  ? `${backed}/${groupCheckable.length} proven`
-                                  : `${g.skills.length} to check`}
-                            </span>
-                          </button>
+                            <div className="flex flex-wrap items-center justify-between gap-2 pb-1">
+                              <h3 className="flex items-center gap-2.5 text-lg font-bold">
+                                <span className={`h-3 w-3 rounded-full ${accent.dot}`} aria-hidden="true" />
+                                {group.category}
+                              </h3>
+                              {summary && <span className="muted text-xs font-semibold">{summary}</span>}
+                            </div>
+                            <ul>
+                              {group.skills.map((s) => (
+                                <SkillRow
+                                  key={s.skill_name}
+                                  skill={s}
+                                  open={openSkills.has(s.skill_name)}
+                                  onToggle={() => toggleSkill(s.skill_name)}
+                                />
+                              ))}
+                            </ul>
+                          </section>
                         );
                       })}
                     </div>
-                  )}
-
-                  <div key={openCategory ?? "all"} className="mt-6 space-y-8">
-                    {shownGroups.map((group) => {
-                      const summary = groupSummary(group);
-                      const accent = ACCENTS[groups.indexOf(group) % ACCENTS.length];
-                      return (
-                        <section key={group.category} aria-label={group.category} className="rise">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <h3 className="flex items-center gap-2.5 text-xl font-bold">
-                              <span className={`h-3 w-3 rounded-full ${accent.dot}`} aria-hidden="true" />
-                              {group.category}
-                            </h3>
-                            {summary && (
-                              <span className="chip bg-slate-500/10 py-1 text-ink-soft dark:text-slate-300">
-                                {summary}
-                              </span>
-                            )}
-                          </div>
-                          <ul className="mt-3 grid gap-3 md:grid-cols-2">
-                            {group.skills.map((s) => (
-                              <SkillCard key={s.skill_name} skill={s} />
-                            ))}
-                          </ul>
-                        </section>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-            </section>
+                  </>
+                )}
+              </div>
+            </div>
 
             {candidate.projects.length > 0 && (
-              <section className="panel mt-6" aria-labelledby="projects-heading">
-                <h2 id="projects-heading" className="text-2xl font-bold">
-                  Projects on the resume
-                </h2>
+              <div role="tabpanel" className={tab === "projects" ? "mt-6" : "hidden"}>
+                <h2 className="text-2xl font-bold">Projects on the resume</h2>
                 <p className="muted mt-1 text-sm">
                   {candidate.analyzed
                     ? "Each project is linked to its GitHub repository when the names match."
                     : "Run the analysis to link each project to its GitHub repository."}
                 </p>
-                <ul className="mt-5 grid gap-4 md:grid-cols-2">
+                <ul className="mt-5 grid gap-5 md:grid-cols-2">
                   {candidate.projects.map((p, i) => (
                     <ProjectCard key={`${p.project_name}-${i}`} project={p} analyzed={candidate.analyzed} index={i} />
                   ))}
                 </ul>
-              </section>
+              </div>
             )}
 
             {user?.role === "student" && (
-              <div className="mt-6 grid gap-6 lg:grid-cols-3">
-                {candidate.analyzed && (
-                  <div className="relative flex flex-col justify-between gap-5 overflow-hidden rounded-2xl bg-gradient-to-br from-pop-500 via-pop-400 to-sun-400 p-6 text-white shadow-lg shadow-pop-500/20 sm:p-7">
-                    <SparkIcon className="absolute -right-4 -top-4 h-28 w-28 opacity-20" />
-                    <div className="relative">
-                      <h2 className="text-2xl font-extrabold">Resume bullet ideas</h2>
-                      <p className="mt-2 text-sm text-white/90">
-                        Resume lines written from your repositories, tailored to a job if you paste one.
-                      </p>
-                    </div>
+              <div role="tabpanel" className={tab === "share" ? "mt-6 grid items-start gap-6 lg:grid-cols-[1fr_2fr]" : "hidden"}>
+                {candidate.analyzed ? (
+                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-600 to-pop-500 p-6 text-white shadow-lg shadow-brand-600/20 sm:p-7">
+                    <SparkIcon className="absolute -right-5 -top-5 h-28 w-28 opacity-15" />
+                    <h2 className="relative text-2xl font-extrabold">Resume bullet ideas</h2>
+                    <p className="relative mt-2 text-sm text-white/90">
+                      Resume lines written from your repositories, tailored to a job if you paste one.
+                    </p>
                     <Link
                       to={`/candidate/${candidate.candidate_id}/bullets`}
-                      className="btn-light relative self-start text-pop-600"
+                      className="btn-light relative mt-5"
                     >
                       Get resume lines
                     </Link>
                   </div>
+                ) : (
+                  <div className="panel muted text-sm">
+                    Run the GitHub analysis to get resume lines written from your repositories.
+                  </div>
                 )}
-                <div className={candidate.analyzed ? "lg:col-span-2" : "lg:col-span-3"}>
-                  <PortfolioPanel candidateId={candidate.candidate_id} refreshKey={analysisRuns} />
-                </div>
+                <PortfolioPanel candidateId={candidate.candidate_id} refreshKey={analysisRuns} />
               </div>
             )}
           </>

@@ -79,11 +79,13 @@ export function Hero({
 }) {
   return (
     <section className={`hero ${className}`}>
-      <CommitGrid
-        seed={seed}
-        weeks={22}
-        className="pointer-events-none absolute -right-6 top-1/2 hidden -translate-y-1/2 opacity-40 md:grid"
-      />
+      {!aside && (
+        <CommitGrid
+          seed={seed}
+          weeks={20}
+          className="pointer-events-none absolute right-8 top-1/2 hidden -translate-y-1/2 opacity-50 [mask-image:linear-gradient(to_right,transparent,black_40%)] lg:grid"
+        />
+      )}
       <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
       <div className="relative flex flex-col gap-6 p-6 sm:p-9 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0 max-w-2xl">{children}</div>

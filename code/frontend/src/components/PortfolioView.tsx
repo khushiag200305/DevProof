@@ -31,7 +31,7 @@ export function PortfolioView({ data }: { data: PortfolioData }) {
             <HeroStat label="Commits" value={data.stats.commits} />
             <HeroStat
               label="Top languages"
-              value={<span className="text-base sm:text-lg">{data.stats.top_languages.join(", ") || "-"}</span>}
+              value={<span className="block text-base leading-snug sm:text-lg">{data.stats.top_languages.join(", ") || "-"}</span>}
             />
           </div>
         }

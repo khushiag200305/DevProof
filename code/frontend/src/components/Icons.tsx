@@ -127,3 +127,9 @@ export const LogoMark = ({ className = "h-9 w-9" }: P) => (
     <path d="M16.3 20.2l2.6 2.6 4.9-5" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
+
+export const ChevronIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M6 9l6 6 6-6" />
+  </Icon>
+);

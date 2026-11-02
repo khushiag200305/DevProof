@@ -4,7 +4,9 @@ import { MoonIcon, SunIcon } from "./Icons";
 
 /** Sun / moon switch. Follows the system setting until the user flips it. */
 export function ThemeToggle({ className = "" }: { className?: string }) {
-  const [theme, setTheme] = useState<Theme>(currentTheme);
+  const [theme, setTheme] = useState<Theme>(() =>
+    document.documentElement.classList.contains("dark") ? "dark" : currentTheme()
+  );
 
   useEffect(() => watchSystemTheme(setTheme), []);
 

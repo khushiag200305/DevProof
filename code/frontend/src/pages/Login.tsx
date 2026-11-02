@@ -45,7 +45,7 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen p-3 sm:p-4 lg:grid lg:grid-cols-[1.15fr_1fr] lg:gap-4">
+    <div className="relative min-h-screen p-3 sm:p-4 lg:grid lg:grid-cols-[1.15fr_1fr] lg:gap-4">
       <section className="hero flex flex-col justify-between gap-10 p-7 sm:p-10 lg:min-h-[calc(100vh-2rem)]">
         <div className="pointer-events-none absolute -bottom-32 -right-24 h-96 w-96 rounded-full bg-sun-400/30 blur-3xl" />
         <div className="relative flex items-center gap-3">
@@ -76,8 +76,8 @@ export function Login() {
         </div>
       </section>
 
-      <section className="relative flex items-center justify-center px-2 py-10 lg:py-0">
-        <ThemeToggle className="absolute right-2 top-2 lg:right-4 lg:top-4" />
+      <ThemeToggle className="absolute right-6 top-6 z-10 lg:right-8 lg:top-8" />
+      <section className="flex items-center justify-center px-2 py-10 lg:py-0">
         <div className="w-full max-w-sm">
           <h2 className="font-display text-3xl font-extrabold sm:text-4xl">Sign in</h2>
           <p className="muted mt-2">Sign in with Google to continue.</p>

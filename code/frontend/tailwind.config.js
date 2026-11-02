@@ -25,8 +25,8 @@ export default {
         sun: { 300: "#ffd36e", 400: "#ffc23d", 500: "#ffb627" },
         // Text and surfaces. "paper" is the light page, "night" the dark one.
         ink: { DEFAULT: "#170f2e", soft: "#4b4466", mute: "#7d7697" },
-        paper: "#f6f4fe",
-        night: { DEFAULT: "#110a22", 800: "#1b1333", 700: "#261c45", 600: "#352a5c" },
+        paper: "#f6f6fa",
+        night: { DEFAULT: "#0b0d17", 800: "#131624", 700: "#1b1f30", 600: "#2a2f44" },
       },
       fontFamily: {
         display: ['"Bricolage Grotesque"', "ui-sans-serif", "system-ui", "sans-serif"],
