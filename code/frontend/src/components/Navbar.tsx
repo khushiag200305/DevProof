@@ -20,17 +20,17 @@ export function Navbar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <div className="flex items-center gap-6">
           <Link to={homePath} className="group flex items-center gap-2.5 rounded-xl">
-            <LogoMark className="h-9 w-9 transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-105" />
-            <span className="font-display text-xl font-extrabold tracking-tight">DevProof</span>
+            <LogoMark className="h-8 w-8" />
+            <span className="text-lg font-semibold tracking-tight">DevProof</span>
           </Link>
           {user && (
             <nav className="hidden sm:block">
               <NavLink
                 to={homePath}
                 className={({ isActive }) =>
-                  `rounded-full px-3.5 py-1.5 text-sm font-semibold transition ${
+                  `rounded-lg px-3 py-1.5 text-sm font-medium transition ${
                     isActive
-                      ? "bg-brand-600 text-white"
+                      ? "bg-slate-200/70 text-ink dark:bg-night-700 dark:text-white"
                       : "text-ink-soft hover:bg-brand-50 dark:text-slate-300 dark:hover:bg-night-700"
                   }`
                 }
@@ -45,7 +45,7 @@ export function Navbar() {
           <ThemeToggle />
           {user && (
             <>
-              <span className="hidden rounded-full bg-sun-400/20 px-3 py-1 text-xs font-bold capitalize text-amber-700 dark:text-sun-300 md:inline-block">
+              <span className="hidden rounded-md bg-slate-200/70 px-2 py-0.5 text-xs font-medium capitalize text-ink-soft dark:bg-night-700 dark:text-slate-300 md:inline-block">
                 {user.role}
               </span>
               {user.picture_url ? (

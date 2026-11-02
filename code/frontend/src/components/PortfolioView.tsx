@@ -12,7 +12,7 @@ const GROUP_TONES = [
 ];
 
 const PROJECT_BANDS = [
-  "from-brand-500 to-pop-500",
+  "from-brand-500 to-brand-700",
   "from-pop-500 to-sun-400",
   "from-emerald-400 to-sky-500",
   "from-sun-400 to-brand-500",
@@ -39,7 +39,7 @@ export function PortfolioView({ data }: { data: PortfolioData }) {
         <div className="flex items-center gap-4">
           <Avatar name={data.name} className="h-16 w-16 text-2xl ring-4 ring-white/30" />
           <div className="min-w-0">
-            <h1 className="break-words text-3xl font-extrabold leading-tight sm:text-5xl">{data.name}</h1>
+            <h1 className="break-words text-3xl font-bold leading-tight sm:text-5xl">{data.name}</h1>
             {data.headline && <p className="mt-1 text-lg text-white/90">{data.headline}</p>}
           </div>
         </div>

@@ -96,7 +96,7 @@ export function ResumeBullets() {
           >
             <ArrowLeftIcon className="h-4 w-4" /> Back to report
           </Link>
-          <h1 className="mt-5 text-4xl font-extrabold sm:text-5xl">Resume bullet ideas</h1>
+          <h1 className="mt-5 text-4xl font-bold sm:text-5xl">Resume bullet ideas</h1>
           <p className="mt-3 text-white/90 sm:text-lg">
             Specific resume lines built from what your repositories actually contain. Paste a job
             description to put the most relevant projects and lines first and see which of its

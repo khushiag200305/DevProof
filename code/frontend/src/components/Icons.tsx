@@ -116,9 +116,8 @@ export const LogoMark = ({ className = "h-9 w-9" }: P) => (
   <svg viewBox="0 0 40 40" className={className} aria-hidden="true">
     <defs>
       <linearGradient id="dp-mark" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stopColor="#6c3bff" />
-        <stop offset="0.6" stopColor="#ff4f8b" />
-        <stop offset="1" stopColor="#ffb627" />
+        <stop offset="0" stopColor="#7c47ff" />
+        <stop offset="1" stopColor="#3b23a3" />
       </linearGradient>
     </defs>
     <rect width="40" height="40" rx="12" fill="url(#dp-mark)" />

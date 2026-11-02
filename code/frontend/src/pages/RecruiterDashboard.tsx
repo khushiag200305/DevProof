@@ -73,7 +73,7 @@ export function RecruiterDashboard() {
             </div>
           }
         >
-          <h1 className="text-4xl font-extrabold sm:text-5xl">Candidates</h1>
+          <h1 className="text-4xl font-bold sm:text-5xl">Candidates</h1>
           <p className="mt-3 text-white/90 sm:text-lg">
             Every candidate who has uploaded a resume, with evidence-backed skill reports.
           </p>

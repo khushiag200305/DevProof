@@ -123,7 +123,7 @@ function EvidenceRing({ percent }: { percent: number }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-display text-3xl font-extrabold leading-none">{percent}%</span>
+        <span className="font-display text-3xl font-bold leading-none">{percent}%</span>
         <span className="mt-1 text-[11px] font-semibold text-white/80">on GitHub</span>
       </div>
     </div>
@@ -380,7 +380,7 @@ export function CandidateDetail() {
               <div className="mt-5 flex items-center gap-4">
                 <Avatar name={displayName} className="h-16 w-16 text-2xl ring-4 ring-white/25" />
                 <div className="min-w-0">
-                  <h1 className="break-words text-3xl font-extrabold leading-tight sm:text-4xl">
+                  <h1 className="break-words text-3xl font-bold leading-tight sm:text-4xl">
                     {displayName}
                   </h1>
                   <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-white/85">
@@ -563,9 +563,9 @@ export function CandidateDetail() {
             {user?.role === "student" && (
               <div role="tabpanel" className={tab === "share" ? "mt-6 grid items-start gap-6 lg:grid-cols-[1fr_2fr]" : "hidden"}>
                 {candidate.analyzed ? (
-                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-600 to-pop-500 p-6 text-white shadow-lg shadow-brand-600/20 sm:p-7">
+                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 p-6 text-white shadow-lg shadow-brand-600/20 sm:p-7">
                     <SparkIcon className="absolute -right-5 -top-5 h-28 w-28 opacity-15" />
-                    <h2 className="relative text-2xl font-extrabold">Resume bullet ideas</h2>
+                    <h2 className="relative text-2xl font-bold">Resume bullet ideas</h2>
                     <p className="relative mt-2 text-sm text-white/90">
                       Resume lines written from your repositories, tailored to a job if you paste one.
                     </p>

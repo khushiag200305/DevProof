@@ -30,7 +30,7 @@ export function Portfolio() {
       <header className="mx-auto flex max-w-7xl items-center justify-between px-4 pt-5 sm:px-6">
         <span className="flex items-center gap-2">
           <LogoMark className="h-8 w-8" />
-          <span className="font-display text-lg font-extrabold">DevProof</span>
+          <span className="font-display text-lg font-bold">DevProof</span>
         </span>
         <ThemeToggle />
       </header>

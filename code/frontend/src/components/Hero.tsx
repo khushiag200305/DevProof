@@ -99,7 +99,7 @@ export function Hero({
 export function HeroStat({ value, label }: { value: ReactNode; label: string }) {
   return (
     <div className="rounded-2xl bg-white/15 px-4 py-3 backdrop-blur-md ring-1 ring-white/25">
-      <p className="font-display text-2xl font-extrabold leading-none sm:text-3xl">{value}</p>
+      <p className="font-display text-2xl font-bold leading-none sm:text-3xl">{value}</p>
       <p className="mt-1 text-xs font-medium text-white/80">{label}</p>
     </div>
   );

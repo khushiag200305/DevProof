@@ -20,7 +20,7 @@ export default {
           900: "#3d1c96",
           950: "#230e5e",
         },
-        // Hot pink and sunshine - the other two stops of the hero gradient.
+        // Pink and amber: accents for status and categories.
         pop: { 400: "#ff7aa8", 500: "#ff4f8b", 600: "#e8336f" },
         sun: { 300: "#ffd36e", 400: "#ffc23d", 500: "#ffb627" },
         // Text and surfaces. "paper" is the light page, "night" the dark one.
@@ -29,11 +29,11 @@ export default {
         night: { DEFAULT: "#0b0d17", 800: "#131624", 700: "#1b1f30", 600: "#2a2f44" },
       },
       fontFamily: {
-        display: ['"Bricolage Grotesque"', "ui-sans-serif", "system-ui", "sans-serif"],
-        sans: ['"Instrument Sans"', "ui-sans-serif", "system-ui", "-apple-system", "sans-serif"],
+        display: ['"Geist"', "ui-sans-serif", "system-ui", "-apple-system", "sans-serif"],
+        sans: ['"Geist"', "ui-sans-serif", "system-ui", "-apple-system", "sans-serif"],
       },
       borderRadius: {
-        hero: "2rem",
+        hero: "1.25rem",
       },
     },
   },

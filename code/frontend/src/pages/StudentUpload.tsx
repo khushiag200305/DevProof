@@ -101,7 +101,7 @@ export function StudentUpload() {
             </div>
           }
         >
-          <h1 className="text-4xl font-extrabold leading-tight sm:text-5xl">Upload your resume</h1>
+          <h1 className="text-4xl font-bold leading-tight sm:text-5xl">Upload your resume</h1>
           <p className="mt-3 max-w-xl text-white/90 sm:text-lg">
             We'll extract your skills and cross-check them against your public GitHub activity to
             build an evidence-backed report you can share with recruiters.
@@ -129,7 +129,7 @@ export function StudentUpload() {
               >
                 <span
                   className={`flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-lg transition-transform group-hover:-translate-y-1 ${
-                    file ? "bg-emerald-500" : "bg-gradient-to-br from-brand-500 to-pop-500"
+                    file ? "bg-emerald-500" : "bg-gradient-to-br from-brand-500 to-brand-700"
                   }`}
                 >
                   {file ? <FileIcon className="h-7 w-7" /> : <UploadIcon className="h-7 w-7" />}
@@ -182,7 +182,7 @@ export function StudentUpload() {
                   <div>
                     <p className="muted text-sm">Analyzed {result.filename}</p>
                     {result.name && (
-                      <p className="mt-1 font-display text-2xl font-extrabold">{result.name}</p>
+                      <p className="mt-1 font-display text-2xl font-bold">{result.name}</p>
                     )}
                   </div>
                   <Link to={`/candidate/${result.candidate_id}`} className="btn-primary shrink-0">
@@ -228,7 +228,7 @@ export function StudentUpload() {
                     >
                       <span
                         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white ${
-                          i === 0 ? "bg-gradient-to-br from-brand-500 to-pop-500" : "bg-brand-300 dark:bg-night-600"
+                          i === 0 ? "bg-gradient-to-br from-brand-500 to-brand-700" : "bg-brand-300 dark:bg-night-600"
                         }`}
                       >
                         <FileIcon className="h-4 w-4" />
