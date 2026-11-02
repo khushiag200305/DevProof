@@ -2,6 +2,8 @@ import { GoogleLogin } from "@react-oauth/google";
 import type { CredentialResponse } from "@react-oauth/google";
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
+import { LogoMark } from "../components/Icons";
+import { ThemeToggle } from "../components/ThemeToggle";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, apiPost } from "../lib/api";
 import type { AuthUser } from "../context/AuthContext";
@@ -10,6 +12,12 @@ interface SignInResponse {
   access_token: string;
   user: AuthUser;
 }
+
+const STEPS = [
+  { title: "Upload your resume", text: "We read the skills and projects you list." },
+  { title: "We check your public GitHub", text: "Every skill is matched against real code in your repositories." },
+  { title: "Share the evidence", text: "Recruiters see a score for each skill and the files behind it." },
+];
 
 export function Login() {
   const { user, login } = useAuth();
@@ -36,47 +44,70 @@ export function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-50 via-white to-brand-100 px-4 py-12">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600 text-xl font-bold text-white shadow-lg shadow-brand-600/20">
-            DP
-          </div>
-          <h1 className="mt-4 text-2xl font-bold text-slate-800 sm:text-3xl">DevProof</h1>
-          <p className="mt-2 text-sm text-slate-500 sm:text-base">
+    <div className="relative min-h-screen p-3 sm:p-4 lg:grid lg:grid-cols-[1.1fr_1fr] lg:gap-4">
+      <section className="hero flex flex-col justify-between gap-12 p-7 sm:p-12 lg:min-h-[calc(100vh-2rem)]">
+        <div className="relative flex items-center gap-2.5">
+          <LogoMark className="h-8 w-8" />
+          <h1 className="text-lg font-semibold tracking-tight">DevProof</h1>
+        </div>
+
+        <div className="relative max-w-lg">
+          <p className="text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">
+            Prove every skill on your resume with real code.
+          </p>
+          <p className="mt-5 text-base text-white/70 sm:text-lg">
             Evidence-backed skill reports from public GitHub activity.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-brand-100 bg-white p-6 shadow-xl shadow-brand-900/5 sm:p-8">
-          <h2 className="text-center text-lg font-semibold text-slate-800">Sign in</h2>
-          <p className="mt-1 text-center text-sm text-slate-500">
-            Sign in with Google to continue.
-          </p>
+        <ol className="relative grid gap-6 sm:grid-cols-3">
+          {STEPS.map((step, i) => (
+            <li key={step.title} className="border-t border-white/15 pt-4">
+              <span className="text-sm font-medium text-brand-300">{i + 1}</span>
+              <p className="mt-2 font-semibold">{step.title}</p>
+              <p className="mt-1 text-sm leading-relaxed text-white/60">{step.text}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
 
-          <div className="mt-6 flex justify-center">
+      <ThemeToggle className="absolute right-6 top-6 z-10 lg:right-8 lg:top-8" />
+      <section className="flex items-center justify-center px-2 py-12 lg:py-0">
+        <div className="w-full max-w-sm">
+          <h2 className="text-3xl font-semibold tracking-tight">Sign in</h2>
+          <p className="muted mt-2">Use your Google account to continue.</p>
+
+          <div className="mt-8 flex flex-col items-center gap-4">
             <GoogleLogin
               onSuccess={handleSuccess}
               onError={() => setError("Google sign-in failed. Please try again.")}
               theme="outline"
-              shape="pill"
+              shape="rectangular"
               size="large"
-              width="300"
+              width="360"
             />
+            {error && <p className="alert w-full text-center">{error}</p>}
           </div>
 
-          {error && (
-            <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-center text-sm text-red-700">
-              {error}
+          <div className="mt-8 border-t border-slate-200 pt-6 text-sm dark:border-night-600">
+            <dl className="space-y-3">
+              <div className="flex gap-3">
+                <dt className="w-20 shrink-0 font-semibold">Students</dt>
+                <dd className="muted">Upload a resume and get your skills verified.</dd>
+              </div>
+              <div className="flex gap-3">
+                <dt className="w-20 shrink-0 font-semibold">Recruiters</dt>
+                <dd className="muted">Review candidates with the evidence behind each skill.</dd>
+              </div>
+            </dl>
+            <p className="muted mt-5 text-xs leading-relaxed">
+              Signing in with a{" "}
+              <span className="font-semibold text-ink-soft dark:text-slate-200">@thapar.edu</span>{" "}
+              address gives you a student account; any other address signs you in as a recruiter.
             </p>
-          )}
-
-          <p className="mt-6 text-center text-xs text-slate-400">
-            Signing in with a <span className="font-medium text-slate-500">@thapar.edu</span>{" "}
-            address gives you a student account; any other address signs you in as a recruiter.
-          </p>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

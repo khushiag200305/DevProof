@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import type { Role } from "../context/AuthContext";
+import { LogoMark } from "./Icons";
 
 /**
  * Gates a route behind sign-in, and optionally a specific role. A
@@ -19,8 +20,9 @@ export function ProtectedRoute({
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-brand-50">
-        <p className="text-brand-700">Loading...</p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+        <LogoMark className="h-12 w-12 animate-pulse" />
+        <p className="font-semibold text-brand-700 dark:text-brand-300">Loading...</p>
       </div>
     );
   }

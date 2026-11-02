@@ -1,5 +1,7 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { LogoMark, LogoutIcon } from "./Icons";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function Navbar() {
   const { user, logout } = useAuth();
@@ -11,45 +13,66 @@ export function Navbar() {
   };
 
   const homePath = user?.role === "recruiter" ? "/dashboard" : "/upload";
+  const homeLabel = user?.role === "recruiter" ? "Candidates" : "My resumes";
 
   return (
-    <header className="border-b border-brand-100 bg-white/80 backdrop-blur sticky top-0 z-10">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-        <Link to={homePath} className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">
-            DP
-          </span>
-          <span className="text-lg font-semibold text-slate-800">DevProof</span>
-        </Link>
+    <header className="sticky top-0 z-20 border-b border-brand-100/70 bg-paper/80 backdrop-blur-xl dark:border-night-600/70 dark:bg-night/80">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <div className="flex items-center gap-6">
+          <Link to={homePath} className="group flex items-center gap-2.5 rounded-xl">
+            <LogoMark className="h-8 w-8" />
+            <span className="text-lg font-semibold tracking-tight">DevProof</span>
+          </Link>
+          {user && (
+            <nav className="hidden sm:block">
+              <NavLink
+                to={homePath}
+                className={({ isActive }) =>
+                  `rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                    isActive
+                      ? "bg-slate-200/70 text-ink dark:bg-night-700 dark:text-white"
+                      : "text-ink-soft hover:bg-brand-50 dark:text-slate-300 dark:hover:bg-night-700"
+                  }`
+                }
+              >
+                {homeLabel}
+              </NavLink>
+            </nav>
+          )}
+        </div>
 
-        {user && (
-          <div className="flex items-center gap-3">
-            <span className="hidden rounded-full bg-brand-50 px-3 py-1 text-xs font-medium capitalize text-brand-700 sm:inline-block">
-              {user.role}
-            </span>
-            {user.picture_url ? (
-              <img
-                src={user.picture_url}
-                alt={user.name ?? user.email}
-                className="h-8 w-8 rounded-full ring-1 ring-brand-200"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700">
-                {(user.name ?? user.email).slice(0, 1).toUpperCase()}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <ThemeToggle />
+          {user && (
+            <>
+              <span className="hidden rounded-md bg-slate-200/70 px-2 py-0.5 text-xs font-medium capitalize text-ink-soft dark:bg-night-700 dark:text-slate-300 md:inline-block">
+                {user.role}
               </span>
-            )}
-            <span className="hidden text-sm text-slate-600 md:inline">
-              {user.name ?? user.email}
-            </span>
-            <button
-              onClick={handleLogout}
-              className="rounded-md border border-brand-200 px-3 py-1.5 text-sm font-medium text-brand-700 transition hover:bg-brand-50"
-            >
-              Sign out
-            </button>
-          </div>
-        )}
+              {user.picture_url ? (
+                <img
+                  src={user.picture_url}
+                  alt={user.name ?? user.email}
+                  className="h-9 w-9 rounded-full ring-2 ring-brand-200 dark:ring-night-600"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-700 dark:bg-night-700 dark:text-brand-200">
+                  {(user.name ?? user.email).slice(0, 1).toUpperCase()}
+                </span>
+              )}
+              <span className="hidden text-sm font-medium text-ink-soft dark:text-slate-300 lg:inline">
+                {user.name ?? user.email}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold text-ink-soft transition hover:bg-pop-500/10 hover:text-pop-600 dark:text-slate-300 dark:hover:text-pop-400"
+              >
+                <LogoutIcon className="h-4 w-4" />
+                <span className="hidden sm:inline">Sign out</span>
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );

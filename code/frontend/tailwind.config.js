@@ -1,24 +1,39 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  // Dark mode is switched by a "dark" class on <html> (see src/lib/theme.ts).
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
-        // DevProof brand ramp - a warm crimson, not an alarm-red - used
-        // for primary actions, links, and accents throughout the app.
+        // Electric violet - primary actions, links, focus rings.
         brand: {
-          50: "#fef2f2",
-          100: "#fde4e4",
-          200: "#facdcd",
-          300: "#f5a8a8",
-          400: "#ec7878",
-          500: "#dd4b4b",
-          600: "#c22f34",
-          700: "#a3232a",
-          800: "#861f27",
-          900: "#711e25",
-          950: "#3e0b10",
+          50: "#f3f0ff",
+          100: "#e8e1ff",
+          200: "#d3c6ff",
+          300: "#b49dff",
+          400: "#936cff",
+          500: "#7c47ff",
+          600: "#6c3bff",
+          700: "#5a24e6",
+          800: "#4a1fbd",
+          900: "#3d1c96",
+          950: "#230e5e",
         },
+        // Pink and amber: accents for status and categories.
+        pop: { 400: "#ff7aa8", 500: "#ff4f8b", 600: "#e8336f" },
+        sun: { 300: "#ffd36e", 400: "#ffc23d", 500: "#ffb627" },
+        // Text and surfaces. "paper" is the light page, "night" the dark one.
+        ink: { DEFAULT: "#170f2e", soft: "#4b4466", mute: "#7d7697" },
+        paper: "#f6f6fa",
+        night: { DEFAULT: "#0b0d17", 800: "#131624", 700: "#1b1f30", 600: "#2a2f44" },
+      },
+      fontFamily: {
+        display: ['"Geist"', "ui-sans-serif", "system-ui", "-apple-system", "sans-serif"],
+        sans: ['"Geist"', "ui-sans-serif", "system-ui", "-apple-system", "sans-serif"],
+      },
+      borderRadius: {
+        hero: "1.25rem",
       },
     },
   },

@@ -2,6 +2,117 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+@layer base {
+  body {
+    @apply bg-paper font-sans text-ink antialiased transition-colors duration-300 dark:bg-night dark:text-slate-100;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tight;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-paper dark:ring-brand-300 dark:ring-offset-night;
+  }
+}
+
+@layer components {
+  /* Deep indigo banner at the top of every page, lit by a violet glow. */
+  .hero {
+    @apply relative overflow-hidden rounded-hero text-white shadow-lg shadow-brand-950/20 ring-1 ring-white/10;
+    background:
+      radial-gradient(60% 120% at 100% 0%, rgba(236, 72, 153, 0.28), transparent 60%),
+      radial-gradient(70% 140% at 80% 100%, rgba(124, 71, 255, 0.55), transparent 65%),
+      linear-gradient(135deg, #14112e 0%, #241a5c 55%, #3b23a3 100%);
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: linear-gradient(to left, black, transparent 75%);
+    pointer-events: none;
+  }
+
+  .panel {
+    @apply rounded-2xl border border-slate-200/70 bg-white p-6 shadow-[0_1px_2px_rgba(23,15,46,0.04)] dark:border-night-600 dark:bg-night-800 sm:p-7;
+  }
+  .tile {
+    @apply rounded-xl border border-slate-100 bg-white dark:border-night-600 dark:bg-night-700/60;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:pointer-events-none disabled:opacity-40;
+  }
+  .btn-light {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-brand-700 shadow-sm transition hover:bg-brand-50 disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-brand-700 transition hover:bg-brand-50 disabled:opacity-40 dark:border-night-600 dark:text-brand-200 dark:hover:bg-night-700;
+  }
+
+  .field {
+    @apply mt-1.5 block w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-slate-400 transition focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/15 dark:border-night-600 dark:bg-night-700 dark:text-slate-100 dark:placeholder:text-slate-500;
+  }
+  .label {
+    @apply block text-sm font-semibold text-ink-soft dark:text-slate-300;
+  }
+  .muted {
+    @apply text-ink-mute dark:text-slate-400;
+  }
+  .link {
+    @apply font-semibold text-brand-700 underline-offset-4 hover:underline dark:text-brand-300;
+  }
+  .alert {
+    @apply rounded-xl border border-pop-500/30 bg-pop-500/10 px-4 py-2.5 text-sm font-medium text-pop-600 dark:text-pop-400;
+  }
+  .chip {
+    @apply rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+}
+
+/* Commit-grid squares in the hero: they pop in once, left to right. */
+@keyframes cell-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+}
+.grid-cell {
+  animation: cell-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  animation-delay: calc(var(--i) * 14ms);
+}
+
+/* A category opening, or a result arriving after a click. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+.rise {
+  animation: rise 360ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+/* Score bars fill from zero when a report loads. */
+@keyframes fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+.bar-fill {
+  transform-origin: left;
+  animation: fill 700ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
