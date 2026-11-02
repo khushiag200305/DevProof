@@ -2,7 +2,6 @@ import { GoogleLogin } from "@react-oauth/google";
 import type { CredentialResponse } from "@react-oauth/google";
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
-import { CommitGrid } from "../components/Hero";
 import { CheckIcon, GitHubIcon, LogoMark } from "../components/Icons";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { useAuth } from "../context/AuthContext";
@@ -13,6 +12,12 @@ interface SignInResponse {
   access_token: string;
   user: AuthUser;
 }
+
+const SAMPLE = [
+  { skill: "Python", score: 100, label: "Strong", bar: "bg-emerald-500", chip: "bg-emerald-500/15 text-emerald-700" },
+  { skill: "React", score: 70, label: "Good", bar: "bg-sun-400", chip: "bg-sun-400/25 text-amber-700" },
+  { skill: "Docker", score: 0, label: "Needs proof", bar: "bg-pop-500", chip: "bg-pop-500/10 text-pop-600" },
+];
 
 const POINTS = [
   "Every skill on the resume is checked against real code",
@@ -47,14 +52,14 @@ export function Login() {
   return (
     <div className="relative min-h-screen p-3 sm:p-4 lg:grid lg:grid-cols-[1.15fr_1fr] lg:gap-4">
       <section className="hero flex flex-col justify-between gap-10 p-7 sm:p-10 lg:min-h-[calc(100vh-2rem)]">
-        <div className="pointer-events-none absolute -bottom-32 -right-24 h-96 w-96 rounded-full bg-sun-400/30 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 -right-24 h-96 w-96 rounded-full bg-sun-400/25 blur-3xl" />
         <div className="relative flex items-center gap-3">
           <LogoMark className="h-11 w-11 drop-shadow-lg" />
           <span className="text-sm font-semibold text-white/85">Skill reports backed by GitHub</span>
         </div>
 
         <div className="relative">
-          <h1 className="font-display text-6xl font-extrabold leading-[0.9] sm:text-8xl">DevProof</h1>
+          <h1 className="font-display text-6xl font-extrabold leading-[0.9] sm:text-7xl xl:text-8xl">DevProof</h1>
           <p className="mt-5 max-w-md text-lg text-white/90 sm:text-xl">
             Evidence-backed skill reports from public GitHub activity.
           </p>
@@ -70,9 +75,33 @@ export function Login() {
           </ul>
         </div>
 
-        <div className="relative flex items-end justify-between gap-6">
-          <CommitGrid seed="devproof" weeks={26} className="max-w-full overflow-hidden" />
-          <GitHubIcon className="hidden h-10 w-10 shrink-0 opacity-80 sm:block" />
+        {/* A small sample report: what a recruiter sees after the analysis. */}
+        <div aria-hidden="true" className="relative w-full max-w-md rounded-2xl bg-white p-5 text-ink shadow-2xl shadow-black/25 lg:ml-auto lg:-rotate-2">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-pop-500 font-display font-bold text-white">
+                AS
+              </span>
+              <div>
+                <p className="font-display font-bold leading-tight">Sample report</p>
+                <p className="flex items-center gap-1 text-xs text-ink-mute">
+                  <GitHubIcon className="h-3 w-3" /> 10 repositories checked
+                </p>
+              </div>
+            </div>
+            <span className="font-display text-2xl font-extrabold text-brand-600">67%</span>
+          </div>
+          <ul className="mt-4 space-y-2.5 text-sm">
+            {SAMPLE.map((row) => (
+              <li key={row.skill} className="flex items-center gap-3">
+                <span className="w-16 font-semibold">{row.skill}</span>
+                <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
+                  <span className={`bar-fill block h-full rounded-full ${row.bar}`} style={{ width: `${Math.max(4, row.score)}%` }} />
+                </span>
+                <span className={`chip ${row.chip}`}>{row.label}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 

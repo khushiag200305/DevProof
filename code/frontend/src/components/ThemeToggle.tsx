@@ -23,7 +23,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       onClick={toggle}
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
       title={dark ? "Light mode" : "Dark mode"}
-      className={`relative flex h-9 w-16 shrink-0 items-center rounded-full border border-brand-100 bg-brand-50 p-1 transition-colors dark:border-night-600 dark:bg-night-700 ${className}`}
+      className={`flex h-9 w-16 shrink-0 items-center rounded-full border border-brand-100 bg-brand-50 p-1 transition-colors dark:border-night-600 dark:bg-night-700 ${className}`}
     >
       <span
         className={`flex h-7 w-7 items-center justify-center rounded-full shadow-md transition-transform duration-300 ${
