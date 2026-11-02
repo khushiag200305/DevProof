@@ -10,6 +10,24 @@ function hash(text: string): number {
   return h >>> 0;
 }
 
+/** Activity level (0-4) for each day cell, week by week. Same seed, same grid. */
+function gridLevels(seed: string, weeks: number): number[] {
+  let state = hash(seed) || 1;
+  const cells: number[] = [];
+  for (let w = 0; w < weeks; w++) {
+    // Activity ramps up towards recent weeks, like a real busy profile.
+    const ramp = 0.35 + (w / weeks) * 0.65;
+    for (let d = 0; d < 7; d++) {
+      state ^= state << 13;
+      state ^= state >>> 17;
+      state ^= state << 5;
+      const r = ((state >>> 0) / 4294967296) * ramp;
+      cells.push(r < 0.18 ? 0 : r < 0.32 ? 1 : r < 0.48 ? 2 : r < 0.62 ? 3 : 4);
+    }
+  }
+  return cells;
+}
+
 const LEVELS = ["bg-white/10", "bg-white/25", "bg-white/45", "bg-white/70", "bg-white"];
 
 /**
@@ -26,22 +44,7 @@ export function CommitGrid({
   weeks?: number;
   className?: string;
 }) {
-  let state = hash(seed) || 1;
-  const next = () => {
-    state ^= state << 13;
-    state ^= state >>> 17;
-    state ^= state << 5;
-    return (state >>> 0) / 4294967296;
-  };
-  const cells: number[] = [];
-  for (let w = 0; w < weeks; w++) {
-    // Activity ramps up towards recent weeks, like a real busy profile.
-    const ramp = 0.35 + (w / weeks) * 0.65;
-    for (let d = 0; d < 7; d++) {
-      const r = next() * ramp;
-      cells.push(r < 0.18 ? 0 : r < 0.32 ? 1 : r < 0.48 ? 2 : r < 0.62 ? 3 : 4);
-    }
-  }
+  const cells = gridLevels(seed, weeks);
   return (
     <div
       aria-hidden="true"
