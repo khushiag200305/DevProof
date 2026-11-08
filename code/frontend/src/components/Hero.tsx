@@ -22,13 +22,17 @@ function gridLevels(seed: string, weeks: number): number[] {
       state ^= state >>> 17;
       state ^= state << 5;
       const r = ((state >>> 0) / 4294967296) * ramp;
-      cells.push(r < 0.18 ? 0 : r < 0.32 ? 1 : r < 0.48 ? 2 : r < 0.62 ? 3 : 4);
+      cells.push(r < 0.3 ? 0 : r < 0.45 ? 1 : r < 0.58 ? 2 : r < 0.7 ? 3 : 4);
     }
   }
   return cells;
 }
 
-const LEVELS = ["bg-white/10", "bg-white/25", "bg-white/45", "bg-white/70", "bg-white"];
+const LEVELS = {
+  white: ["bg-white/10", "bg-white/25", "bg-white/45", "bg-white/70", "bg-white"],
+  // GitHub's contribution greens, tuned for a dark background.
+  green: ["bg-white/[0.07]", "bg-brand-900", "bg-brand-700", "bg-brand-500", "bg-brand-400"],
+};
 
 /**
  * A GitHub-style contribution grid, drawn from a seed (a name or page
@@ -38,10 +42,12 @@ const LEVELS = ["bg-white/10", "bg-white/25", "bg-white/45", "bg-white/70", "bg-
 export function CommitGrid({
   seed,
   weeks = 18,
+  tone = "white",
   className = "",
 }: {
   seed: string;
   weeks?: number;
+  tone?: keyof typeof LEVELS;
   className?: string;
 }) {
   const cells = gridLevels(seed, weeks);
@@ -53,7 +59,7 @@ export function CommitGrid({
       {cells.map((level, i) => (
         <span
           key={i}
-          className={`grid-cell h-3 w-3 rounded-[3px] sm:h-3.5 sm:w-3.5 ${LEVELS[level]}`}
+          className={`grid-cell h-3 w-3 rounded-[2px] sm:h-3.5 sm:w-3.5 ${LEVELS[tone][level]}`}
           style={{ "--i": Math.floor(i / 7) * 2 + (i % 7) } as CSSProperties}
         />
       ))}
@@ -66,6 +72,19 @@ export function CommitGrid({
  * optional aside (stats, a score) on the right, and the commit grid
  * glowing behind it.
  */
+/** "Less [] [] [] [] [] More" key under a commit grid, as on GitHub profiles. */
+export function GridLegend({ tone = "green" }: { tone?: keyof typeof LEVELS }) {
+  return (
+    <div aria-hidden="true" className="flex items-center gap-1 text-xs text-white/50">
+      <span className="mr-1">Less</span>
+      {LEVELS[tone].map((c) => (
+        <span key={c} className={`h-3 w-3 rounded-[2px] ${c}`} />
+      ))}
+      <span className="ml-1">More</span>
+    </div>
+  );
+}
+
 export function Hero({
   seed,
   children,

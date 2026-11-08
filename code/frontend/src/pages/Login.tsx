@@ -2,6 +2,7 @@ import { GoogleLogin } from "@react-oauth/google";
 import type { CredentialResponse } from "@react-oauth/google";
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
+import { CommitGrid, GridLegend } from "../components/Hero";
 import { LogoMark } from "../components/Icons";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { useAuth } from "../context/AuthContext";
@@ -45,7 +46,7 @@ export function Login() {
 
   return (
     <div className="relative min-h-screen p-3 sm:p-4 lg:grid lg:grid-cols-[1.1fr_1fr] lg:gap-4">
-      <section className="hero flex flex-col justify-between gap-12 p-7 sm:p-12 lg:min-h-[calc(100vh-2rem)]">
+      <section className="hero flex flex-col justify-between gap-10 p-7 sm:p-12 lg:min-h-[calc(100vh-2rem)]">
         <div className="relative flex items-center gap-2.5">
           <LogoMark className="h-8 w-8" />
           <h1 className="text-lg font-semibold tracking-tight">DevProof</h1>
@@ -58,6 +59,17 @@ export function Login() {
           <p className="mt-5 text-base text-white/70 sm:text-lg">
             Evidence-backed skill reports from public GitHub activity.
           </p>
+        </div>
+
+        {/* What DevProof reads: a year of commits, drawn like a GitHub profile. */}
+        <div className="relative">
+          <div className="overflow-hidden">
+            <CommitGrid seed="devproof-activity" weeks={33} tone="green" className="w-max" />
+          </div>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-white/50">
+            <span>Commits from public repositories, the evidence behind each score</span>
+            <GridLegend />
+          </div>
         </div>
 
         <ol className="relative grid gap-6 sm:grid-cols-3">
