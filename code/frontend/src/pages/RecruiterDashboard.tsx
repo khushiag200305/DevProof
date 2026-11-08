@@ -85,7 +85,7 @@ export function RecruiterDashboard() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search by name, email, or GitHub username"
               aria-label="Search candidates"
-              className="w-full rounded-full border-0 bg-white py-3.5 pl-12 pr-4 text-sm text-ink shadow-lg shadow-black/10 placeholder:text-ink-mute focus:outline-none focus:ring-4 focus:ring-white/40"
+              className="w-full rounded-md border-0 bg-white py-3.5 pl-12 pr-4 text-sm text-ink shadow-lg shadow-black/10 placeholder:text-ink-mute focus:outline-none focus:ring-4 focus:ring-white/40"
             />
           </div>
         </Hero>
@@ -159,7 +159,7 @@ export function RecruiterDashboard() {
                     </div>
                     <div className="mt-2 h-2 overflow-hidden rounded-full bg-brand-50 dark:bg-night-700">
                       <div
-                        className="bar-fill h-full rounded-full bg-gradient-to-r from-brand-500 via-pop-500 to-sun-400"
+                        className="bar-fill h-full rounded-full bg-brand-600"
                         style={{ width: `${Math.max(6, (c.skill_count / maxSkills) * 100)}%` }}
                       />
                     </div>

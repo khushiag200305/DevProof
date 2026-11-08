@@ -22,13 +22,17 @@ function gridLevels(seed: string, weeks: number): number[] {
       state ^= state >>> 17;
       state ^= state << 5;
       const r = ((state >>> 0) / 4294967296) * ramp;
-      cells.push(r < 0.18 ? 0 : r < 0.32 ? 1 : r < 0.48 ? 2 : r < 0.62 ? 3 : 4);
+      cells.push(r < 0.3 ? 0 : r < 0.45 ? 1 : r < 0.58 ? 2 : r < 0.7 ? 3 : 4);
     }
   }
   return cells;
 }
 
-const LEVELS = ["bg-white/10", "bg-white/25", "bg-white/45", "bg-white/70", "bg-white"];
+const LEVELS = {
+  white: ["bg-white/10", "bg-white/25", "bg-white/45", "bg-white/70", "bg-white"],
+  // GitHub's contribution greens, tuned for a dark background.
+  green: ["bg-white/[0.07]", "bg-brand-900", "bg-brand-700", "bg-brand-500", "bg-brand-400"],
+};
 
 /**
  * A GitHub-style contribution grid, drawn from a seed (a name or page
@@ -38,10 +42,12 @@ const LEVELS = ["bg-white/10", "bg-white/25", "bg-white/45", "bg-white/70", "bg-
 export function CommitGrid({
   seed,
   weeks = 18,
+  tone = "white",
   className = "",
 }: {
   seed: string;
   weeks?: number;
+  tone?: keyof typeof LEVELS;
   className?: string;
 }) {
   const cells = gridLevels(seed, weeks);
@@ -53,7 +59,7 @@ export function CommitGrid({
       {cells.map((level, i) => (
         <span
           key={i}
-          className={`grid-cell h-3 w-3 rounded-[3px] sm:h-3.5 sm:w-3.5 ${LEVELS[level]}`}
+          className={`grid-cell h-3 w-3 rounded-[2px] sm:h-3.5 sm:w-3.5 ${LEVELS[tone][level]}`}
           style={{ "--i": Math.floor(i / 7) * 2 + (i % 7) } as CSSProperties}
         />
       ))}
@@ -62,10 +68,23 @@ export function CommitGrid({
 }
 
 /**
- * The gradient banner at the top of each page: content on the left, an
+ * The banner at the top of each page: content on the left, an
  * optional aside (stats, a score) on the right, and the commit grid
  * glowing behind it.
  */
+/** "Less [] [] [] [] [] More" key under a commit grid, as on GitHub profiles. */
+export function GridLegend({ tone = "green" }: { tone?: keyof typeof LEVELS }) {
+  return (
+    <div aria-hidden="true" className="flex items-center gap-1 text-xs text-white/50">
+      <span className="mr-1">Less</span>
+      {LEVELS[tone].map((c) => (
+        <span key={c} className={`h-3 w-3 rounded-[2px] ${c}`} />
+      ))}
+      <span className="ml-1">More</span>
+    </div>
+  );
+}
+
 export function Hero({
   seed,
   children,
@@ -86,7 +105,6 @@ export function Hero({
           className="pointer-events-none absolute right-8 top-1/2 hidden -translate-y-1/2 opacity-50 [mask-image:linear-gradient(to_right,transparent,black_40%)] lg:grid"
         />
       )}
-      <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
       <div className="relative flex flex-col gap-6 p-6 sm:p-9 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0 max-w-2xl">{children}</div>
         {aside && <div className="relative shrink-0">{aside}</div>}
@@ -98,9 +116,9 @@ export function Hero({
 /** Frosted stat block used inside the hero. */
 export function HeroStat({ value, label }: { value: ReactNode; label: string }) {
   return (
-    <div className="rounded-2xl bg-white/15 px-4 py-3 backdrop-blur-md ring-1 ring-white/25">
+    <div className="rounded-lg border border-white/15 px-4 py-3">
       <p className="font-display text-2xl font-bold leading-none sm:text-3xl">{value}</p>
-      <p className="mt-1 text-xs font-medium text-white/80">{label}</p>
+      <p className="mt-1 text-xs font-medium text-white/60">{label}</p>
     </div>
   );
 }

@@ -129,7 +129,7 @@ export function StudentUpload() {
               >
                 <span
                   className={`flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-lg transition-transform group-hover:-translate-y-1 ${
-                    file ? "bg-emerald-500" : "bg-gradient-to-br from-brand-500 to-brand-700"
+                    file ? "bg-emerald-500" : "bg-ink dark:bg-night-600"
                   }`}
                 >
                   {file ? <FileIcon className="h-7 w-7" /> : <UploadIcon className="h-7 w-7" />}
@@ -228,7 +228,7 @@ export function StudentUpload() {
                     >
                       <span
                         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white ${
-                          i === 0 ? "bg-gradient-to-br from-brand-500 to-brand-700" : "bg-brand-300 dark:bg-night-600"
+                          i === 0 ? "bg-ink dark:bg-night-600" : "bg-brand-300 dark:bg-night-600"
                         }`}
                       >
                         <FileIcon className="h-4 w-4" />

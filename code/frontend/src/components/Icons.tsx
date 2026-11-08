@@ -114,13 +114,7 @@ export const LogoutIcon = (p: P) => (
 /** DevProof mark: a commit dot with a check through it. */
 export const LogoMark = ({ className = "h-9 w-9" }: P) => (
   <svg viewBox="0 0 40 40" className={className} aria-hidden="true">
-    <defs>
-      <linearGradient id="dp-mark" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stopColor="#7c47ff" />
-        <stop offset="1" stopColor="#3b23a3" />
-      </linearGradient>
-    </defs>
-    <rect width="40" height="40" rx="12" fill="url(#dp-mark)" />
+    <rect width="40" height="40" rx="9" fill="#1a7f37" />
     <path d="M4 20h7M29 20h7" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity="0.7" />
     <circle cx="20" cy="20" r="8.5" fill="none" stroke="#fff" strokeWidth="3" />
     <path d="M16.3 20.2l2.6 2.6 4.9-5" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />

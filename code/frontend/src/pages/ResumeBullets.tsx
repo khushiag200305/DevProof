@@ -133,7 +133,7 @@ export function ResumeBullets() {
                   <div className="mt-3">
                     <div className="h-3 overflow-hidden rounded-full bg-slate-100 dark:bg-night-600">
                       <div
-                        className="bar-fill h-full rounded-full bg-gradient-to-r from-brand-500 via-pop-500 to-sun-400"
+                        className="bar-fill h-full rounded-full bg-brand-600"
                         style={{ width: `${Math.max(3, match.readiness)}%` }}
                       />
                     </div>
