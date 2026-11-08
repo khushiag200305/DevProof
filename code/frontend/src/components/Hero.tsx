@@ -62,7 +62,7 @@ export function CommitGrid({
 }
 
 /**
- * The gradient banner at the top of each page: content on the left, an
+ * The banner at the top of each page: content on the left, an
  * optional aside (stats, a score) on the right, and the commit grid
  * glowing behind it.
  */
@@ -86,7 +86,6 @@ export function Hero({
           className="pointer-events-none absolute right-8 top-1/2 hidden -translate-y-1/2 opacity-50 [mask-image:linear-gradient(to_right,transparent,black_40%)] lg:grid"
         />
       )}
-      <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
       <div className="relative flex flex-col gap-6 p-6 sm:p-9 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0 max-w-2xl">{children}</div>
         {aside && <div className="relative shrink-0">{aside}</div>}
@@ -98,9 +97,9 @@ export function Hero({
 /** Frosted stat block used inside the hero. */
 export function HeroStat({ value, label }: { value: ReactNode; label: string }) {
   return (
-    <div className="rounded-2xl bg-white/15 px-4 py-3 backdrop-blur-md ring-1 ring-white/25">
+    <div className="rounded-lg border border-white/15 px-4 py-3">
       <p className="font-display text-2xl font-bold leading-none sm:text-3xl">{value}</p>
-      <p className="mt-1 text-xs font-medium text-white/80">{label}</p>
+      <p className="mt-1 text-xs font-medium text-white/60">{label}</p>
     </div>
   );
 }

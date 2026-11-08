@@ -6,34 +6,34 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Electric violet - primary actions, links, focus rings.
+        // Verified green - the one brand colour: links, selected states, evidence.
         brand: {
-          50: "#f3f0ff",
-          100: "#e8e1ff",
-          200: "#d3c6ff",
-          300: "#b49dff",
-          400: "#936cff",
-          500: "#7c47ff",
-          600: "#6c3bff",
-          700: "#5a24e6",
-          800: "#4a1fbd",
-          900: "#3d1c96",
-          950: "#230e5e",
+          50: "#eefbf1",
+          100: "#d5f5dd",
+          200: "#aee9be",
+          300: "#7bd696",
+          400: "#45bb6a",
+          500: "#23a04f",
+          600: "#1a7f37",
+          700: "#166b2e",
+          800: "#145527",
+          900: "#124622",
+          950: "#06260f",
         },
-        // Pink and amber: accents for status and categories.
-        pop: { 400: "#ff7aa8", 500: "#ff4f8b", 600: "#e8336f" },
-        sun: { 300: "#ffd36e", 400: "#ffc23d", 500: "#ffb627" },
+        // Rust and amber: "needs proof" and "good evidence".
+        pop: { 400: "#e2735a", 500: "#c9472b", 600: "#a8371f" },
+        sun: { 300: "#e7c35c", 400: "#d4a017", 500: "#b8860b" },
         // Text and surfaces. "paper" is the light page, "night" the dark one.
-        ink: { DEFAULT: "#170f2e", soft: "#4b4466", mute: "#7d7697" },
-        paper: "#f6f6fa",
-        night: { DEFAULT: "#0b0d17", 800: "#131624", 700: "#1b1f30", 600: "#2a2f44" },
+        ink: { DEFAULT: "#16181d", soft: "#454a54", mute: "#6b7280" },
+        paper: "#f6f6f4",
+        night: { DEFAULT: "#0e1013", 800: "#16191e", 700: "#1e2228", 600: "#2c313a" },
       },
       fontFamily: {
         display: ['"Geist"', "ui-sans-serif", "system-ui", "-apple-system", "sans-serif"],
         sans: ['"Geist"', "ui-sans-serif", "system-ui", "-apple-system", "sans-serif"],
       },
       borderRadius: {
-        hero: "1.25rem",
+        hero: "0.75rem",
       },
     },
   },

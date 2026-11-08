@@ -61,12 +61,12 @@ function statusTone(status: string | null): { badge: string; bar: string } {
 
 /** One colour per skill category, cycled in order. Full class names so Tailwind keeps them. */
 const ACCENTS = [
-  { dot: "bg-brand-500", bar: "from-brand-500 to-brand-400" },
-  { dot: "bg-pop-500", bar: "from-pop-500 to-pop-400" },
-  { dot: "bg-sun-400", bar: "from-sun-500 to-sun-300" },
-  { dot: "bg-emerald-500", bar: "from-emerald-500 to-emerald-400" },
-  { dot: "bg-sky-500", bar: "from-sky-500 to-sky-400" },
-  { dot: "bg-fuchsia-500", bar: "from-fuchsia-500 to-fuchsia-400" },
+  { dot: "bg-brand-600" },
+  { dot: "bg-sky-700" },
+  { dot: "bg-sun-400" },
+  { dot: "bg-pop-500" },
+  { dot: "bg-slate-500" },
+  { dot: "bg-teal-600" },
 ]
 
 interface SkillGroup {
@@ -114,7 +114,7 @@ function EvidenceRing({ percent }: { percent: number }) {
           cy="50"
           r={r}
           fill="none"
-          stroke="white"
+          stroke="#45bb6a"
           strokeWidth="9"
           strokeLinecap="round"
           strokeDasharray={c}
@@ -480,7 +480,7 @@ export function CandidateDetail() {
                           aria-pressed={active}
                           className={`flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-semibold transition lg:w-full ${
                             active
-                              ? "bg-brand-600 text-white"
+                              ? "bg-ink text-white dark:bg-white dark:text-ink"
                               : "bg-white text-ink-soft ring-1 ring-slate-200/70 hover:bg-slate-100 dark:bg-night-800 dark:text-slate-300 dark:ring-night-600 dark:hover:bg-night-700 lg:bg-transparent lg:ring-0 lg:dark:bg-transparent"
                           }`}
                         >
@@ -563,8 +563,8 @@ export function CandidateDetail() {
             {user?.role === "student" && (
               <div role="tabpanel" className={tab === "share" ? "mt-6 grid items-start gap-6 lg:grid-cols-[1fr_2fr]" : "hidden"}>
                 {candidate.analyzed ? (
-                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 p-6 text-white shadow-lg shadow-brand-600/20 sm:p-7">
-                    <SparkIcon className="absolute -right-5 -top-5 h-28 w-28 opacity-15" />
+                  <div className="relative overflow-hidden rounded-xl bg-ink p-6 text-white dark:bg-night-800 dark:ring-1 dark:ring-white/10 sm:p-7">
+                    <SparkIcon className="absolute -right-5 -top-5 h-28 w-28 text-brand-400 opacity-20" />
                     <h2 className="relative text-2xl font-bold">Resume bullet ideas</h2>
                     <p className="relative mt-2 text-sm text-white/90">
                       Resume lines written from your repositories, tailored to a job if you paste one.

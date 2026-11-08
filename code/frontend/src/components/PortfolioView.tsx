@@ -11,12 +11,7 @@ const GROUP_TONES = [
   "bg-sky-500/10 text-sky-700 dark:text-sky-300",
 ];
 
-const PROJECT_BANDS = [
-  "from-brand-500 to-brand-700",
-  "from-pop-500 to-sun-400",
-  "from-emerald-400 to-sky-500",
-  "from-sun-400 to-brand-500",
-];
+const PROJECT_BANDS = ["bg-brand-600", "bg-pop-500", "bg-sun-400", "bg-sky-700"];
 
 /** The portfolio page body, shared by the public page and the owner's preview. */
 export function PortfolioView({ data }: { data: PortfolioData }) {
@@ -109,7 +104,7 @@ export function PortfolioView({ data }: { data: PortfolioData }) {
                   className="tile group relative flex flex-col overflow-hidden p-5 transition hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-600/10"
                 >
                   <span
-                    className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${PROJECT_BANDS[i % PROJECT_BANDS.length]}`}
+                    className={`absolute inset-x-0 top-0 h-1 ${PROJECT_BANDS[i % PROJECT_BANDS.length]}`}
                     aria-hidden="true"
                   />
                   <div className="flex items-start justify-between gap-3">

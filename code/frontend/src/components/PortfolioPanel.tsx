@@ -64,7 +64,7 @@ export function PortfolioPanel({ candidateId, refreshKey }: Props) {
     <div className="panel h-full">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 text-white">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-white">
             <GlobeIcon className="h-5 w-5" />
           </span>
           <div>
