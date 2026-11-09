@@ -19,9 +19,9 @@ def _user(email: str, role: str) -> models.User:
         return user
 
 
-def _candidate(name: str, skills: dict, user_id=None, created=None, github="octocat") -> int:
+def _candidate(name: str, skills: dict, user_id=None, created=None, github=None) -> int:
     with SessionLocal() as db:
-        candidate = models.Candidate(user_id=user_id, name=name, github_username=github)
+        candidate = models.Candidate(user_id=user_id, name=name, github_username=github or name.lower())
         if created:
             candidate.created_at = created
         db.add(candidate)
@@ -83,15 +83,17 @@ def test_search_by_proven_skills(client):
     assert client.get("/api/talent/skills", headers=h).json() == ["Docker", "Python", "React"]
 
 
-def test_only_a_students_latest_upload_is_searched(client):
+def test_each_person_appears_once_even_if_one_account_uploaded_several(client):
     recruiter = _user("hr@acme.com", "recruiter")
     student = _user("k@thapar.edu", "student")
     now = datetime.now(timezone.utc)
-    _candidate("Khushi old", {"Python": (GOOD, 60)}, user_id=student.user_id, created=now - timedelta(days=20))
-    latest = _candidate("Khushi", {"Python": (STRONG, 100)}, user_id=student.user_id, created=now)
+    _candidate("Khushi", {"Python": (GOOD, 60)}, user_id=student.user_id, created=now - timedelta(days=20), github="khushi")
+    latest = _candidate("Khushi", {"Python": (STRONG, 100)}, user_id=student.user_id, created=now - timedelta(days=10), github="khushi")
+    # Same account later uploads a friend's resume: Khushi must still be found.
+    rohit = _candidate("Rohit", {"Python": (GOOD, 70)}, user_id=student.user_id, created=now, github="rohit")
 
     body = client.post("/api/talent/search", json={"skills": ["Python"]}, headers=_headers(recruiter)).json()
-    assert [r["candidate_id"] for r in body] == [latest]
+    assert [r["candidate_id"] for r in body] == [latest, rohit]
 
 
 def test_saved_search_counts_new_matches_and_resets_on_run(client):

@@ -157,24 +157,43 @@ def search(profiles: list[dict], raw_query: dict | None, now: datetime | None = 
     return sorted(results, key=_rank_key)
 
 
+def person_key(profile: dict) -> tuple:
+    """
+    Which person a resume belongs to. The same GitHub username is the same
+    person; without one, the same name uploaded from the same account is.
+    (One account can upload several people's resumes, e.g. while testing,
+    so the account alone doesn't identify the person.)
+    """
+    github = (profile.get("github_username") or "").strip().lower()
+    if github:
+        return ("github", github)
+    name = (profile.get("name") or "").strip().lower()
+    if name:
+        return ("name", profile.get("user_id"), name)
+    return ("candidate", profile["candidate_id"])
+
+
+def is_analyzed(profile: dict) -> bool:
+    """True once the GitHub analysis has scored at least one skill."""
+    return any(info.get("status") is not None for info in profile.get("skills", {}).values())
+
+
 def latest_per_student(profiles: list[dict]) -> list[dict]:
     """
-    A student can upload several resumes; search only their most recent
-    one so the same person doesn't appear several times. Profiles without
-    a user (uploaded before sign-in existed) are all kept.
+    A student can upload several resumes; search only one per person so
+    nobody appears several times. The newest analyzed upload wins, so an
+    unanalyzed re-upload doesn't hide a scored one; if none are analyzed,
+    the newest upload is used.
     """
-    latest: dict[int, dict] = {}
-    loose: list[dict] = []
+    epoch = datetime.min.replace(tzinfo=timezone.utc)
+    best: dict[tuple, dict] = {}
     for p in profiles:
-        user_id = p.get("user_id")
-        if user_id is None:
-            loose.append(p)
-            continue
-        current = latest.get(user_id)
-        created = _as_aware(p.get("created_at"))
-        if current is None or (created and created > (_as_aware(current.get("created_at")) or created)):
-            latest[user_id] = p
-    return list(latest.values()) + loose
+        key = person_key(p)
+        rank = (is_analyzed(p), _as_aware(p.get("created_at")) or epoch, p["candidate_id"])
+        current = best.get(key)
+        if current is None or rank > current[0]:
+            best[key] = (rank, p)
+    return [p for _, p in best.values()]
 
 
 def mark_new(results: list[dict], since: datetime | None) -> list[dict]:
