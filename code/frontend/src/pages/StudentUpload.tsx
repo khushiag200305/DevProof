@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { DragEvent } from "react";
 import { Link } from "react-router-dom";
 import { Hero, HeroStat } from "../components/Hero";
+import { JobFitPanel } from "../components/JobFitPanel";
 import { EyeIcon, FileIcon, GitHubIcon, TrashIcon, UploadIcon } from "../components/Icons";
 import { Navbar } from "../components/Navbar";
 import { ApiError, apiDelete, apiGet, apiPut, apiUpload } from "../lib/api";
@@ -61,15 +62,17 @@ export function StudentUpload() {
     loadHistory();
   }, []);
 
-  const makeVisible = async (candidateId: number) => {
+  const makeVisible = async (candidateId: number): Promise<boolean> => {
     setSwitching(candidateId);
     setError(null);
     try {
       await apiPut(`/api/candidates/${candidateId}/visible`, {});
       setHistory((h) => h.map((c) => ({ ...c, visible_to_recruiters: c.candidate_id === candidateId })));
-      if (result?.candidate_id === candidateId) setResult({ ...result, visible_to_recruiters: true });
+      setResult((r) => (r ? { ...r, visible_to_recruiters: r.candidate_id === candidateId } : r));
+      return true;
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not change which resume recruiters see.");
+      return false;
     } finally {
       setSwitching(null);
     }
@@ -271,6 +274,8 @@ export function StudentUpload() {
                 )}
               </div>
             )}
+
+            {(history.length > 0 || result) && <JobFitPanel onMakeVisible={makeVisible} />}
           </div>
 
           <aside className="panel h-fit">

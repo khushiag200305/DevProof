@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { Hero } from "../components/Hero";
 import { ArrowLeftIcon, CheckIcon, CopyIcon, SparkIcon } from "../components/Icons";
 import { Navbar } from "../components/Navbar";
@@ -51,7 +51,11 @@ function Chips({ label, items, tone }: { label: string; items: string[]; tone: s
 /** Suggested resume lines for the candidate's projects, optionally tailored to a job. */
 export function ResumeBullets() {
   const { candidateId } = useParams<{ candidateId: string }>();
-  const [jobDescription, setJobDescription] = useState("");
+  // Coming from "Match a job" on My resumes: start with that job filled in.
+  const location = useLocation();
+  const [jobDescription, setJobDescription] = useState<string>(
+    (location.state as { jobDescription?: string } | null)?.jobDescription ?? ""
+  );
   const [report, setReport] = useState<BulletReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
