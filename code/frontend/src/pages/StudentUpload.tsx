@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import type { DragEvent } from "react";
 import { Link } from "react-router-dom";
 import { Hero, HeroStat } from "../components/Hero";
-import { FileIcon, GitHubIcon, TrashIcon, UploadIcon } from "../components/Icons";
+import { EyeIcon, FileIcon, GitHubIcon, TrashIcon, UploadIcon } from "../components/Icons";
 import { Navbar } from "../components/Navbar";
-import { ApiError, apiDelete, apiGet, apiUpload } from "../lib/api";
+import { ApiError, apiDelete, apiGet, apiPut, apiUpload } from "../lib/api";
 
 interface UploadResult {
   candidate_id: number;
@@ -15,6 +15,7 @@ interface UploadResult {
   projects?: string[];
   github_url?: string | null;
   github_username?: string | null;
+  visible_to_recruiters?: boolean;
   error?: string;
 }
 
@@ -24,6 +25,7 @@ interface CandidateSummary {
   github_username: string | null;
   created_at: string;
   skill_count: number;
+  visible_to_recruiters?: boolean;
 }
 
 const CHIP_TONES = [
@@ -44,6 +46,8 @@ export function StudentUpload() {
   const [dragging, setDragging] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [switching, setSwitching] = useState<number | null>(null);
+  const [visibilityAnswered, setVisibilityAnswered] = useState(false);
 
   const loadHistory = () => {
     setHistoryLoading(true);
@@ -57,6 +61,20 @@ export function StudentUpload() {
     loadHistory();
   }, []);
 
+  const makeVisible = async (candidateId: number) => {
+    setSwitching(candidateId);
+    setError(null);
+    try {
+      await apiPut(`/api/candidates/${candidateId}/visible`, {});
+      setHistory((h) => h.map((c) => ({ ...c, visible_to_recruiters: c.candidate_id === candidateId })));
+      if (result?.candidate_id === candidateId) setResult({ ...result, visible_to_recruiters: true });
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not change which resume recruiters see.");
+    } finally {
+      setSwitching(null);
+    }
+  };
+
   const deleteUpload = async (candidateId: number) => {
     setDeleting(true);
     setError(null);
@@ -64,6 +82,7 @@ export function StudentUpload() {
       await apiDelete(`/api/candidates/${candidateId}`);
       setHistory((h) => h.filter((c) => c.candidate_id !== candidateId));
       if (result?.candidate_id === candidateId) setResult(null);
+      loadHistory(); // the visible resume may have changed
       setConfirmDelete(null);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not delete the upload. Please try again.");
@@ -94,6 +113,7 @@ export function StudentUpload() {
     try {
       const data = await apiUpload<UploadResult>("/api/resume/upload", formData);
       setResult(data);
+      setVisibilityAnswered(false);
       loadHistory();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Upload failed. Please try again.");
@@ -207,6 +227,32 @@ export function StudentUpload() {
                   </Link>
                 </div>
 
+                {result.visible_to_recruiters ? (
+                  <p className="mt-4 inline-flex items-center gap-1.5 rounded-md bg-brand-600/10 px-3 py-1.5 text-sm font-medium text-brand-700 dark:text-brand-300">
+                    <EyeIcon className="h-4 w-4" /> Visible to recruiters
+                  </p>
+                ) : (
+                  !visibilityAnswered && (
+                    <div className="mt-4 rounded-lg border border-slate-200 p-4 dark:border-night-600">
+                      <p className="text-sm font-medium">
+                        Make this resume visible to recruiters instead of your current one?
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                          onClick={() => makeVisible(result.candidate_id)}
+                          disabled={switching !== null}
+                          className="btn-primary px-3 py-1.5 text-xs"
+                        >
+                          Yes, make visible
+                        </button>
+                        <button onClick={() => setVisibilityAnswered(true)} className="btn-ghost px-3 py-1.5 text-xs">
+                          Keep current
+                        </button>
+                      </div>
+                    </div>
+                  )
+                )}
+
                 {result.extracted_skills && result.extracted_skills.length > 0 && (
                   <div className="mt-5">
                     <p className="label">Detected skills</p>
@@ -260,6 +306,11 @@ export function StudentUpload() {
                           <span className="muted block text-xs">
                             {new Date(c.created_at).toLocaleString()}
                           </span>
+                          {c.visible_to_recruiters && (
+                            <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-brand-700 dark:text-brand-300">
+                              <EyeIcon className="h-3.5 w-3.5" /> Visible to recruiters
+                            </span>
+                          )}
                         </span>
                         <span className="chip shrink-0 bg-brand-600/10 text-brand-700 dark:bg-brand-500/20 dark:text-brand-200">
                           {c.skill_count} skills
@@ -270,10 +321,21 @@ export function StudentUpload() {
                         onClick={() => setConfirmDelete(confirming ? null : c.candidate_id)}
                         aria-label={`Delete upload ${name}`}
                         title="Delete this upload"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-ink-mute opacity-60 transition hover:bg-pop-500/10 hover:text-pop-600 hover:opacity-100 focus:opacity-100 group-hover/row:opacity-100"
+                        className="absolute right-2 top-3 rounded-md p-2 text-ink-mute opacity-60 transition hover:bg-pop-500/10 hover:text-pop-600 hover:opacity-100 focus:opacity-100 group-hover/row:opacity-100"
                       >
                         <TrashIcon className="h-4 w-4" />
                       </button>
+                      {!c.visible_to_recruiters && (
+                        <button
+                          type="button"
+                          onClick={() => makeVisible(c.candidate_id)}
+                          disabled={switching !== null}
+                          aria-label={`Make ${name} uploaded ${new Date(c.created_at).toLocaleDateString()} visible to recruiters`}
+                          className="mb-2 ml-[3.75rem] rounded-md border border-slate-200 px-2.5 py-1 text-xs font-semibold text-ink-soft transition hover:border-brand-600 hover:text-brand-700 disabled:opacity-50 dark:border-night-600 dark:text-slate-300 dark:hover:text-brand-300"
+                        >
+                          {switching === c.candidate_id ? "Switching..." : "Make visible"}
+                        </button>
+                      )}
                       {confirming && (
                         <div role="alert" className="rise mx-3 mb-2 mt-1 rounded-lg border border-pop-500/30 bg-pop-500/5 p-3 text-sm">
                           <p>

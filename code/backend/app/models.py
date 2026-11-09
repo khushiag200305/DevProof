@@ -37,6 +37,9 @@ class User(Base):
     picture_url = Column(String, nullable=True)
     role = Column(String, nullable=False)  # "student" | "recruiter"
     created_at = Column(DateTime(timezone=True), default=_utcnow, nullable=False)
+    # Students: which upload recruiters see (see app/services/visibility.py).
+    # A plain id, not a foreign key, so deleting that upload never fails.
+    visible_candidate_id = Column(Integer, nullable=True)
 
     candidates = relationship("Candidate", back_populates="user")
 

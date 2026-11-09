@@ -83,17 +83,20 @@ def test_search_by_proven_skills(client):
     assert client.get("/api/talent/skills", headers=h).json() == ["Docker", "Python", "React"]
 
 
-def test_each_person_appears_once_even_if_one_account_uploaded_several(client):
+def test_only_each_students_visible_resume_is_searched(client):
     recruiter = _user("hr@acme.com", "recruiter")
     student = _user("k@thapar.edu", "student")
     now = datetime.now(timezone.utc)
-    _candidate("Khushi", {"Python": (GOOD, 60)}, user_id=student.user_id, created=now - timedelta(days=20), github="khushi")
-    latest = _candidate("Khushi", {"Python": (STRONG, 100)}, user_id=student.user_id, created=now - timedelta(days=10), github="khushi")
-    # Same account later uploads a friend's resume: Khushi must still be found.
-    rohit = _candidate("Rohit", {"Python": (GOOD, 70)}, user_id=student.user_id, created=now, github="rohit")
+    older = _candidate("Khushi", {"Python": (STRONG, 100)}, user_id=student.user_id, created=now - timedelta(days=20))
+    _candidate("Khushi", {"Python": (GOOD, 60)}, user_id=student.user_id, created=now)
 
+    # No choice yet: the newest upload is the visible one.
     body = client.post("/api/talent/search", json={"skills": ["Python"]}, headers=_headers(recruiter)).json()
-    assert [r["candidate_id"] for r in body] == [latest, rohit]
+    assert [r["match_score"] for r in body] == [60]
+
+    client.put(f"/api/candidates/{older}/visible", headers=_headers(student))
+    body = client.post("/api/talent/search", json={"skills": ["Python"]}, headers=_headers(recruiter)).json()
+    assert [r["candidate_id"] for r in body] == [older]
 
 
 def test_saved_search_counts_new_matches_and_resets_on_run(client):

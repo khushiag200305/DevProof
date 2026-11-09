@@ -17,6 +17,7 @@ from ..services.analysis import SUPPORTING_REPO, GitHubUnavailableError, analyze
 from ..services.project_links import match_repo
 from ..services.resume_parser import extract_project_details, read_resume_text
 from ..services.scoring import default_interview_question
+from ..services.visibility import visible_candidate_id, visible_for_candidate, visible_ids
 from ..skills_dictionary import (
     NOT_CHECKABLE,
     category_of,
@@ -118,13 +119,32 @@ def _candidate_detail(candidate: models.Candidate) -> dict:
     }
 
 
+def _detail_for(db: Session, candidate: models.Candidate) -> dict:
+    """The report, plus which of the student's resumes recruiters see."""
+    visible = visible_for_candidate(db, candidate)
+    return {
+        **_candidate_detail(candidate),
+        "visible_to_recruiters": visible == candidate.candidate_id,
+        "visible_candidate_id": visible,
+    }
+
+
 @router.get("")
 def list_candidates(
     db: Session = Depends(get_db),
     _recruiter: models.User = Depends(require_role("recruiter")),
 ):
-    """Recruiter-only: every candidate who has uploaded a resume."""
-    candidates = db.query(models.Candidate).order_by(models.Candidate.created_at.desc()).all()
+    """
+    Recruiter-only: every student who has uploaded a resume, each with the
+    one resume they made visible to recruiters.
+    """
+    shown = visible_ids(db)
+    candidates = (
+        db.query(models.Candidate)
+        .filter(models.Candidate.candidate_id.in_(shown))
+        .order_by(models.Candidate.created_at.desc())
+        .all()
+    )
     return [_candidate_summary(c) for c in candidates]
 
 
@@ -140,7 +160,29 @@ def list_my_candidates(
         .order_by(models.Candidate.created_at.desc())
         .all()
     )
-    return [_candidate_summary(c) for c in candidates]
+    visible = visible_candidate_id(db, student)
+    return [
+        {**_candidate_summary(c), "visible_to_recruiters": c.candidate_id == visible}
+        for c in candidates
+    ]
+
+
+@router.put("/{candidate_id}/visible")
+def make_visible(
+    candidate_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """A student chooses which of their uploads recruiters see."""
+    candidate = db.query(models.Candidate).filter_by(candidate_id=candidate_id).first()
+    if candidate is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Candidate not found.")
+    if candidate.user_id is None or candidate.user_id != current_user.user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "You can only choose between your own uploads.")
+    student = db.get(models.User, current_user.user_id)
+    student.visible_candidate_id = candidate_id
+    db.commit()
+    return {"visible_candidate_id": candidate_id}
 
 
 def _get_visible_candidate(
@@ -170,7 +212,7 @@ def get_candidate(
     """
     Recruiters can open any candidate; a student can only open their own.
     """
-    return _candidate_detail(_get_visible_candidate(candidate_id, db, current_user))
+    return _detail_for(db, _get_visible_candidate(candidate_id, db, current_user))
 
 
 @router.delete("/{candidate_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -191,6 +233,9 @@ def delete_candidate(
         raise HTTPException(status.HTTP_403_FORBIDDEN, "You can only delete your own uploads.")
 
     pdf = resolve_resume_path(candidate.resume_path)
+    student = db.get(models.User, current_user.user_id)
+    if student.visible_candidate_id == candidate_id:
+        student.visible_candidate_id = None  # the newest remaining upload becomes visible
     db.query(models.ShortlistEntry).filter_by(candidate_id=candidate_id).delete()
     db.delete(candidate)
     db.commit()
@@ -261,4 +306,4 @@ async def analyze(
     except GitHubUnavailableError as exc:
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(exc)) from exc
 
-    return _candidate_detail(candidate)
+    return _detail_for(db, candidate)
