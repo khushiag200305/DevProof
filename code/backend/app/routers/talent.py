@@ -15,6 +15,7 @@ from .. import models
 from ..database import get_db
 from ..dependencies import require_role
 from ..services import talent_search
+from ..services.visibility import visible_for_candidate, visible_ids
 from ..skills_dictionary import category_of
 
 router = APIRouter(prefix="/api/talent", tags=["talent"])
@@ -81,18 +82,46 @@ def _load_candidates(db: Session, ids: list[int] | None = None) -> list[models.C
     return q.all()
 
 
-def _shortlisted_ids(db: Session, recruiter: models.User) -> set[int]:
-    rows = db.query(models.ShortlistEntry.candidate_id).filter_by(recruiter_id=recruiter.user_id)
-    return {r.candidate_id for r in rows}
+def _searchable_profiles(db: Session) -> list[dict]:
+    """
+    One profile per student: the resume they made visible to recruiters.
+    Uploads without an account are grouped by person instead.
+    """
+    shown = visible_ids(db)
+    profiles = [_profile(c) for c in _load_candidates(db, list(shown))]
+    owned = [p for p in profiles if p["user_id"] is not None]
+    loose = [p for p in profiles if p["user_id"] is None]
+    return owned + talent_search.latest_per_student(loose)
+
+
+def _starred(db: Session, recruiter: models.User) -> tuple[set[int], set[int]]:
+    """Shortlisted candidate ids, and the students they belong to."""
+    rows = (
+        db.query(models.ShortlistEntry.candidate_id, models.Candidate.user_id)
+        .join(models.Candidate, models.Candidate.candidate_id == models.ShortlistEntry.candidate_id)
+        .filter(models.ShortlistEntry.recruiter_id == recruiter.user_id)
+        .all()
+    )
+    return {r.candidate_id for r in rows}, {r.user_id for r in rows if r.user_id is not None}
 
 
 def _run_search(db: Session, recruiter: models.User, query: dict) -> list[dict]:
-    profiles = talent_search.latest_per_student([_profile(c) for c in _load_candidates(db)])
+    profiles = _searchable_profiles(db)
+    owner = {p["candidate_id"]: p["user_id"] for p in profiles}
     results = talent_search.search(profiles, query)
-    starred = _shortlisted_ids(db, recruiter)
+    starred_ids, starred_users = _starred(db, recruiter)
     for r in results:
-        r["shortlisted"] = r["candidate_id"] in starred
+        # A shortlist follows the student, whichever resume they now show.
+        r["shortlisted"] = r["candidate_id"] in starred_ids or owner.get(r["candidate_id"]) in starred_users
     return results
+
+
+def _same_student_ids(db: Session, candidate: models.Candidate) -> list[int]:
+    """All upload ids of this candidate's student (just itself if account-less)."""
+    if candidate.user_id is None:
+        return [candidate.candidate_id]
+    rows = db.query(models.Candidate.candidate_id).filter_by(user_id=candidate.user_id).all()
+    return [r.candidate_id for r in rows]
 
 
 def _saved_dict(saved: models.SavedSearch) -> dict:
@@ -148,7 +177,7 @@ def list_saved(db: Session = Depends(get_db), recruiter: models.User = Depends(r
     )
     if not saved:
         return []
-    profiles = talent_search.latest_per_student([_profile(c) for c in _load_candidates(db)])
+    profiles = _searchable_profiles(db)
     out = []
     for s in saved:
         item = _saved_dict(s)
@@ -216,12 +245,18 @@ def list_shortlist(db: Session = Depends(get_db), recruiter: models.User = Depen
         .order_by(models.ShortlistEntry.created_at.desc())
         .all()
     )
-    by_id = {c.candidate_id: c for c in _load_candidates(db, [e.candidate_id for e in entries])}
+    # Show each shortlisted student's currently visible resume.
+    shown_for = {
+        e.candidate_id: visible_for_candidate(db, e.candidate) or e.candidate_id for e in entries
+    }
+    by_id = {c.candidate_id: c for c in _load_candidates(db, list(set(shown_for.values())))}
     out = []
+    seen: set[int] = set()
     for e in entries:
-        candidate = by_id.get(e.candidate_id)
-        if candidate is None:
+        candidate = by_id.get(shown_for[e.candidate_id])
+        if candidate is None or candidate.candidate_id in seen:
             continue
+        seen.add(candidate.candidate_id)
         profile = _profile(candidate)
         backed = [
             {"skill": name, "status": info["status"], "score": info["score"]}
@@ -250,18 +285,32 @@ def add_to_shortlist(
     db: Session = Depends(get_db),
     recruiter: models.User = Depends(recruiter_only),
 ):
-    """Star a candidate, or update the note on one already starred."""
-    if db.query(models.Candidate).filter_by(candidate_id=candidate_id).first() is None:
+    """
+    Star a candidate, or update the note on one already starred. The
+    shortlist is per student: starring another resume of the same student
+    moves the existing entry (and its note) instead of adding a second.
+    """
+    candidate = db.query(models.Candidate).filter_by(candidate_id=candidate_id).first()
+    if candidate is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Candidate not found.")
-    entry = (
+    existing = (
         db.query(models.ShortlistEntry)
-        .filter_by(recruiter_id=recruiter.user_id, candidate_id=candidate_id)
-        .first()
+        .filter(
+            models.ShortlistEntry.recruiter_id == recruiter.user_id,
+            models.ShortlistEntry.candidate_id.in_(_same_student_ids(db, candidate)),
+        )
+        .all()
     )
-    if entry is None:
-        entry = models.ShortlistEntry(recruiter_id=recruiter.user_id, candidate_id=candidate_id)
-        db.add(entry)
+    for old in existing:
+        db.delete(old)
+    db.flush()
+    entry = models.ShortlistEntry(
+        recruiter_id=recruiter.user_id,
+        candidate_id=candidate_id,
+        created_at=min((e.created_at for e in existing), default=datetime.now(timezone.utc)),
+    )
     entry.note = (body.note or "").strip() or None
+    db.add(entry)
     db.commit()
     return {"candidate_id": candidate_id, "note": entry.note, "shortlisted": True}
 
@@ -272,9 +321,12 @@ def remove_from_shortlist(
     db: Session = Depends(get_db),
     recruiter: models.User = Depends(recruiter_only),
 ):
-    db.query(models.ShortlistEntry).filter_by(
-        recruiter_id=recruiter.user_id, candidate_id=candidate_id
-    ).delete()
+    candidate = db.query(models.Candidate).filter_by(candidate_id=candidate_id).first()
+    ids = _same_student_ids(db, candidate) if candidate else [candidate_id]
+    db.query(models.ShortlistEntry).filter(
+        models.ShortlistEntry.recruiter_id == recruiter.user_id,
+        models.ShortlistEntry.candidate_id.in_(ids),
+    ).delete(synchronize_session=False)
     db.commit()
 
 

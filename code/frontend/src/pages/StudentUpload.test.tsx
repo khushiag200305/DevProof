@@ -88,10 +88,13 @@ describe("StudentUpload page", () => {
   });
 
   it("deletes an upload from the history after confirming", async () => {
-    vi.spyOn(api, "apiGet").mockResolvedValue([
-      { candidate_id: 4, name: "Rohit Singhal", github_username: null, created_at: "2026-10-15T08:00:00Z", skill_count: 18 },
-      { candidate_id: 2, name: "Khushi Agarwal", github_username: "k", created_at: "2026-10-11T08:00:00Z", skill_count: 36 },
-    ]);
+    const khushi = { candidate_id: 2, name: "Khushi Agarwal", github_username: "k", created_at: "2026-10-11T08:00:00Z", skill_count: 36, visible_to_recruiters: true };
+    vi.spyOn(api, "apiGet")
+      .mockResolvedValueOnce([
+        { candidate_id: 4, name: "Rohit Singhal", github_username: null, created_at: "2026-10-15T08:00:00Z", skill_count: 18, visible_to_recruiters: false },
+        khushi,
+      ])
+      .mockResolvedValue([khushi]);
     const del = vi.spyOn(api, "apiDelete").mockResolvedValue();
     const user = userEvent.setup();
     renderPage();
@@ -105,5 +108,40 @@ describe("StudentUpload page", () => {
     expect(del).toHaveBeenCalledWith("/api/candidates/4");
     await waitFor(() => expect(screen.queryByText("Rohit Singhal")).not.toBeInTheDocument());
     expect(screen.getByText("Khushi Agarwal")).toBeInTheDocument();
+  });
+
+  it("makes another upload visible to recruiters", async () => {
+    vi.spyOn(api, "apiGet").mockResolvedValue([
+      { candidate_id: 5, name: "New resume", github_username: "k", created_at: "2026-11-01T08:00:00Z", skill_count: 20, visible_to_recruiters: false },
+      { candidate_id: 2, name: "Old resume", github_username: "k", created_at: "2026-10-11T08:00:00Z", skill_count: 36, visible_to_recruiters: true },
+    ]);
+    const put = vi.spyOn(api, "apiPut").mockResolvedValue({ visible_candidate_id: 5 });
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole("button", { name: /^Make New resume uploaded .* visible to recruiters$/ }));
+
+    expect(put).toHaveBeenCalledWith("/api/candidates/5/visible", {});
+    expect(await screen.findByRole("button", { name: /^Make Old resume uploaded/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Make New resume uploaded/ })).not.toBeInTheDocument();
+    expect(screen.getAllByText("Visible to recruiters")).toHaveLength(1);
+  });
+
+  it("asks whether a new upload should replace the visible resume", async () => {
+    vi.spyOn(api, "apiUpload").mockResolvedValue({
+      candidate_id: 9, filename: "resume.pdf", status: "parsed", name: "Khushi Agarwal",
+      extracted_skills: ["Python"], visible_to_recruiters: false,
+    });
+    const put = vi.spyOn(api, "apiPut").mockResolvedValue({ visible_candidate_id: 9 });
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.upload(screen.getByLabelText(/resume pdf/i), pdfFile());
+    await user.click(screen.getByRole("button", { name: /upload & analyze/i }));
+
+    expect(await screen.findByText(/make this resume visible to recruiters instead/i)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Yes, make visible" }));
+    expect(put).toHaveBeenCalledWith("/api/candidates/9/visible", {});
+    expect(await screen.findByText("Visible to recruiters")).toBeInTheDocument();
   });
 });

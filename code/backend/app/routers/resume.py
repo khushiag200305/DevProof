@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from .. import models
 from ..database import get_db
 from ..dependencies import require_role
+from ..services.visibility import visible_candidate_id
 from ..services.resume_parser import (
     extract_github_url,
     extract_github_username,
@@ -92,6 +93,9 @@ async def upload_resume(
     with open(resume_path, "wb") as out_file:
         out_file.write(contents)
 
+    student = db.get(models.User, current_user.user_id)
+    previous_visible = visible_candidate_id(db, student)
+
     candidate = models.Candidate(
         user_id=current_user.user_id,
         name=name,
@@ -109,10 +113,17 @@ async def upload_resume(
         skill = _get_or_create_skill(db, skill_name)
         db.add(models.CandidateSkill(candidate_id=candidate.candidate_id, skill_id=skill.skill_id))
 
+    # The first upload is visible to recruiters straight away; later ones
+    # only when the student chooses (the frontend asks after the upload).
+    # The previous choice is pinned, so a new upload never silently
+    # replaces what recruiters see.
+    is_visible = previous_visible is None
+    student.visible_candidate_id = candidate.candidate_id if is_visible else previous_visible
     db.commit()
 
     return {
         "candidate_id": candidate.candidate_id,
+        "visible_to_recruiters": is_visible,
         "filename": file.filename,
         "status": "parsed",
         "name": name,

@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Avatar } from "../components/Avatar";
 import { Hero } from "../components/Hero";
-import { ArrowLeftIcon, ChatIcon, ChevronIcon, ExternalIcon, GitHubIcon, SparkIcon } from "../components/Icons";
+import { ArrowLeftIcon, ChatIcon, ChevronIcon, ExternalIcon, EyeIcon, GitHubIcon, SparkIcon } from "../components/Icons";
 import { Navbar } from "../components/Navbar";
 import { PortfolioPanel } from "../components/PortfolioPanel";
 import { useAuth } from "../context/AuthContext";
-import { ApiError, apiGet, apiPost } from "../lib/api";
+import { ApiError, apiGet, apiPost, apiPut } from "../lib/api";
 
 interface SupportingRepo {
   repo: string;
@@ -44,6 +44,9 @@ interface CandidateDetailData {
   analyzed: boolean;
   skills: SkillEntry[];
   projects: ProjectEntry[];
+  /** Is this the resume the student made visible to recruiters? */
+  visible_to_recruiters?: boolean;
+  visible_candidate_id?: number | null;
 }
 
 /** Badge and score-bar colours for an evidence status. */
@@ -277,6 +280,16 @@ export function CandidateDetail() {
       .finally(() => setLoading(false));
   }, [candidateId]);
 
+  const makeVisible = async () => {
+    if (!candidate) return;
+    try {
+      await apiPut(`/api/candidates/${candidate.candidate_id}/visible`, {});
+      setCandidate({ ...candidate, visible_to_recruiters: true, visible_candidate_id: candidate.candidate_id });
+    } catch (err) {
+      setAnalyzeError(err instanceof ApiError ? err.message : "Could not change which resume recruiters see.");
+    }
+  };
+
   const runAnalysis = async () => {
     if (!candidateId) return;
     setAnalyzing(true);
@@ -402,6 +415,39 @@ export function CandidateDetail() {
             </Hero>
 
             {analyzeError && <p className="alert mt-4">{analyzeError}</p>}
+
+            {candidate.visible_to_recruiters !== undefined &&
+              (user?.role === "student" ? (
+                <div
+                  className={`mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3 text-sm ${
+                    candidate.visible_to_recruiters
+                      ? "border-brand-600/30 bg-brand-600/5"
+                      : "border-slate-200 bg-white dark:border-night-600 dark:bg-night-800"
+                  }`}
+                >
+                  <p className="flex items-center gap-2 font-medium">
+                    <EyeIcon className={`h-4 w-4 ${candidate.visible_to_recruiters ? "text-brand-600 dark:text-brand-300" : "text-ink-mute"}`} />
+                    {candidate.visible_to_recruiters
+                      ? "Recruiters see this resume"
+                      : "Recruiters see a different resume"}
+                  </p>
+                  {!candidate.visible_to_recruiters && (
+                    <button onClick={makeVisible} className="btn-primary px-3 py-1.5 text-xs">
+                      Make this one visible
+                    </button>
+                  )}
+                </div>
+              ) : (
+                !candidate.visible_to_recruiters &&
+                candidate.visible_candidate_id && (
+                  <p className="mt-4 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm dark:border-night-600 dark:bg-night-800">
+                    This student has chosen a different resume for recruiters.{" "}
+                    <Link to={`/candidate/${candidate.visible_candidate_id}`} className="link">
+                      Open it
+                    </Link>
+                  </p>
+                )
+              ))}
 
             <div role="tablist" aria-label="Report sections" className="mt-6 flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-night-600">
               {tabs.map((t) => (
