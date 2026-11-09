@@ -31,7 +31,7 @@ def _upload(owner: models.User, pdf_path: str | None = None) -> int:
         repo = models.Repository(candidate_id=candidate.candidate_id, repo_name="devproof", repo_url="https://github.com/k/devproof", is_fork=False, commit_count=3)
         db.add(repo)
         db.flush()
-        db.add(models.Evidence(candidate_id=candidate.candidate_id, skill_id=skill.skill_id, repo_id=repo.repo_id, evidence_type="source_files", description="12 Python files"))
+        db.add(models.Evidence(candidate_id=candidate.candidate_id, skill_id=skill.skill_id, repo_id=repo.repo_id, evidence_type="source_files", description="12 Python files", weight=40))
         db.commit()
         return candidate.candidate_id
 
