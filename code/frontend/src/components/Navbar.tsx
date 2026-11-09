@@ -13,7 +13,13 @@ export function Navbar() {
   };
 
   const homePath = user?.role === "recruiter" ? "/dashboard" : "/upload";
-  const homeLabel = user?.role === "recruiter" ? "Candidates" : "My resumes";
+  const links =
+    user?.role === "recruiter"
+      ? [
+          { to: "/dashboard", label: "Candidates" },
+          { to: "/talent", label: "Talent search" },
+        ]
+      : [{ to: "/upload", label: "My resumes" }];
 
   return (
     <header className="sticky top-0 z-20 border-b border-brand-100/70 bg-paper/80 backdrop-blur-xl dark:border-night-600/70 dark:bg-night/80">
@@ -24,19 +30,22 @@ export function Navbar() {
             <span className="text-lg font-semibold tracking-tight">DevProof</span>
           </Link>
           {user && (
-            <nav className="hidden sm:block">
-              <NavLink
-                to={homePath}
-                className={({ isActive }) =>
-                  `rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-                    isActive
-                      ? "bg-slate-200/70 text-ink dark:bg-night-700 dark:text-white"
-                      : "text-ink-soft hover:bg-brand-50 dark:text-slate-300 dark:hover:bg-night-700"
-                  }`
-                }
-              >
-                {homeLabel}
-              </NavLink>
+            <nav className="hidden gap-1 sm:flex">
+              {links.map((l) => (
+                <NavLink
+                  key={l.to}
+                  to={l.to}
+                  className={({ isActive }) =>
+                    `rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                      isActive
+                        ? "bg-slate-200/70 text-ink dark:bg-night-700 dark:text-white"
+                        : "text-ink-soft hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-night-700"
+                    }`
+                  }
+                >
+                  {l.label}
+                </NavLink>
+              ))}
             </nav>
           )}
         </div>

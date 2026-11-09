@@ -63,3 +63,11 @@ export async function apiUpload<T>(path: string, formData: FormData): Promise<T>
   });
   return handle<T>(response);
 }
+
+export async function apiDelete(path: string): Promise<void> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!response.ok) await handle<unknown>(response);
+}

@@ -201,3 +201,34 @@ class InterviewQuestion(Base):
     question = Column(Text, nullable=False)
 
     candidate = relationship("Candidate", back_populates="questions")
+
+
+class SavedSearch(Base):
+    """
+    A recruiter's named talent search (e.g. "Backend interns 2026"), kept
+    so it can be re-run in one click. `query` is the JSON search sent by
+    the frontend; `last_run_at` lets the results flag candidates who
+    uploaded since the recruiter last looked.
+    """
+
+    __tablename__ = "saved_searches"
+
+    search_id = Column(Integer, primary_key=True, index=True)
+    recruiter_id = Column(Integer, ForeignKey("users.user_id"), nullable=False, index=True)
+    name = Column(String, nullable=False)
+    query = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=_utcnow, nullable=False)
+    last_run_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class ShortlistEntry(Base):
+    """A candidate a recruiter has starred, with an optional private note."""
+
+    __tablename__ = "shortlist_entries"
+
+    recruiter_id = Column(Integer, ForeignKey("users.user_id"), primary_key=True)
+    candidate_id = Column(Integer, ForeignKey("candidates.candidate_id", ondelete="CASCADE"), primary_key=True)
+    note = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=_utcnow, nullable=False)
+
+    candidate = relationship("Candidate")
