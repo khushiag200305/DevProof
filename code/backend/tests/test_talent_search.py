@@ -92,12 +92,22 @@ def test_empty_skill_list_returns_everyone_passing_filters():
     assert len(results) == 2 and all(r["match_score"] == 0 for r in results)
 
 
-def test_only_latest_upload_per_student_is_searched():
-    old = _profile(10, "Khushi Agarwal", {"Python": (GOOD, 60)}, user_id=7, created=NOW - timedelta(days=30))
-    latest = _profile(11, "Khushi Agarwal", {"Python": (STRONG, 100)}, user_id=7, created=NOW - timedelta(days=1))
-    loose = _profile(12, "No Account", {"Python": (STRONG, 80)})
-    kept = latest_per_student([old, latest, loose])
-    assert sorted(p["candidate_id"] for p in kept) == [11, 12]
+def test_one_result_per_person_preferring_the_newest_analyzed_upload():
+    old = _profile(10, "Khushi Agarwal", {"Python": (GOOD, 60)}, github="khushi", user_id=7, created=NOW - timedelta(days=30))
+    newer = _profile(11, "Khushi Agarwal", {"Python": (STRONG, 100)}, github="Khushi", user_id=7, created=NOW - timedelta(days=5))
+    not_analyzed = _profile(12, "Khushi Agarwal", {"Python": (None, None)}, github="khushi", user_id=7, created=NOW)
+    kept = latest_per_student([old, newer, not_analyzed])
+    assert [p["candidate_id"] for p in kept] == [11]
+
+
+def test_one_account_uploading_several_peoples_resumes_keeps_each_person():
+    # Khushi's account also uploaded Rohit's resume while testing.
+    khushi = _profile(20, "Khushi Agarwal", {"Python": (STRONG, 100)}, github="khushi", user_id=7, created=NOW - timedelta(days=20))
+    rohit = _profile(21, "Rohit Singhal", {"Python": (STRONG, 90)}, github="rohit", user_id=7, created=NOW - timedelta(days=2))
+    no_github_a = _profile(22, "Aditi Sharma", {}, github=None, user_id=7)
+    no_github_b = _profile(23, "Arjun Mehta", {}, github=None, user_id=7)
+    kept = latest_per_student([khushi, rohit, no_github_a, no_github_b])
+    assert sorted(p["candidate_id"] for p in kept) == [20, 21, 22, 23]
 
 
 def test_new_matches_since_last_run_are_flagged():
