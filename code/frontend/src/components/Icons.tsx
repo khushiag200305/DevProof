@@ -126,3 +126,36 @@ export const ChevronIcon = (p: P) => (
     <path d="M6 9l6 6 6-6" />
   </Icon>
 );
+
+export const StarIcon = ({ className = "h-5 w-5", filled = false }: P & { filled?: boolean }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill={filled ? "currentColor" : "none"}
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />
+  </svg>
+);
+
+export const BookmarkIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M6 4h12v16l-6-4-6 4z" />
+  </Icon>
+);
+
+export const XIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M6 6l12 12M18 6L6 18" />
+  </Icon>
+);
+
+export const ColumnsIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <path d="M9 4v16M15 4v16" />
+  </Icon>
+);

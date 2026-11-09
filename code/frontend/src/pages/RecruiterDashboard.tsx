@@ -88,6 +88,12 @@ export function RecruiterDashboard() {
               className="w-full rounded-md border-0 bg-white py-3.5 pl-12 pr-4 text-sm text-ink shadow-lg shadow-black/10 placeholder:text-ink-mute focus:outline-none focus:ring-4 focus:ring-white/40"
             />
           </div>
+          <p className="mt-3 text-sm text-white/70">
+            Looking for specific skills?{" "}
+            <Link to="/talent" className="font-semibold text-brand-300 underline-offset-4 hover:underline">
+              Search by proven skills
+            </Link>
+          </p>
         </Hero>
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
