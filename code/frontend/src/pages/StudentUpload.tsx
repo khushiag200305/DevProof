@@ -321,7 +321,7 @@ export function StudentUpload() {
                         onClick={() => setConfirmDelete(confirming ? null : c.candidate_id)}
                         aria-label={`Delete upload ${name}`}
                         title="Delete this upload"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-ink-mute opacity-60 transition hover:bg-pop-500/10 hover:text-pop-600 hover:opacity-100 focus:opacity-100 group-hover/row:opacity-100"
+                        className="absolute right-2 top-3 rounded-md p-2 text-ink-mute opacity-60 transition hover:bg-pop-500/10 hover:text-pop-600 hover:opacity-100 focus:opacity-100 group-hover/row:opacity-100"
                       >
                         <TrashIcon className="h-4 w-4" />
                       </button>
@@ -331,7 +331,7 @@ export function StudentUpload() {
                           onClick={() => makeVisible(c.candidate_id)}
                           disabled={switching !== null}
                           aria-label={`Make ${name} uploaded ${new Date(c.created_at).toLocaleDateString()} visible to recruiters`}
-                          className="mx-3 mb-1 rounded-md border border-slate-200 px-2.5 py-1 text-xs font-semibold text-ink-soft transition hover:border-brand-600 hover:text-brand-700 disabled:opacity-50 dark:border-night-600 dark:text-slate-300 dark:hover:text-brand-300"
+                          className="mb-2 ml-[3.75rem] rounded-md border border-slate-200 px-2.5 py-1 text-xs font-semibold text-ink-soft transition hover:border-brand-600 hover:text-brand-700 disabled:opacity-50 dark:border-night-600 dark:text-slate-300 dark:hover:text-brand-300"
                         >
                           {switching === c.candidate_id ? "Switching..." : "Make visible"}
                         </button>
