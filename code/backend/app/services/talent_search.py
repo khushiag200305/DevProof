@@ -157,43 +157,69 @@ def search(profiles: list[dict], raw_query: dict | None, now: datetime | None = 
     return sorted(results, key=_rank_key)
 
 
-def person_key(profile: dict) -> tuple:
-    """
-    Which person a resume belongs to. The same GitHub username is the same
-    person; without one, the same name uploaded from the same account is.
-    (One account can upload several people's resumes, e.g. while testing,
-    so the account alone doesn't identify the person.)
-    """
-    github = (profile.get("github_username") or "").strip().lower()
-    if github:
-        return ("github", github)
-    name = (profile.get("name") or "").strip().lower()
-    if name:
-        return ("name", profile.get("user_id"), name)
-    return ("candidate", profile["candidate_id"])
-
-
 def is_analyzed(profile: dict) -> bool:
     """True once the GitHub analysis has scored at least one skill."""
     return any(info.get("status") is not None for info in profile.get("skills", {}).values())
 
 
+def _name(profile: dict) -> str:
+    return " ".join((profile.get("name") or "").lower().split())
+
+
+def group_by_person(profiles: list[dict]) -> list[list[dict]]:
+    """
+    Group resumes that belong to the same person: the same GitHub
+    username, or the same name uploaded from the same account (a resume
+    whose GitHub link wasn't found joins that account's resume with the
+    same name that has one). One account can upload several people's
+    resumes, e.g. while testing, so the account alone isn't the person.
+    """
+    groups: list[list[dict]] = []
+    by_github: dict[str, int] = {}
+    by_name: dict[tuple, int] = {}
+
+    def index_for(p: dict) -> int | None:
+        github = (p.get("github_username") or "").strip().lower()
+        if github and github in by_github:
+            return by_github[github]
+        name_key = (p.get("user_id"), _name(p))
+        if _name(p) and name_key in by_name:
+            i = by_name[name_key]
+            # Two different GitHub usernames are two different people.
+            other = {(q.get("github_username") or "").strip().lower() for q in groups[i]} - {""}
+            if not github or not other:
+                return i
+        return None
+
+    # Resumes with a GitHub username first, so name-only ones can join them.
+    for p in sorted(profiles, key=lambda p: not p.get("github_username")):
+        i = index_for(p)
+        if i is None:
+            groups.append([p])
+            i = len(groups) - 1
+        else:
+            groups[i].append(p)
+        github = (p.get("github_username") or "").strip().lower()
+        if github:
+            by_github.setdefault(github, i)
+        if _name(p):
+            by_name.setdefault((p.get("user_id"), _name(p)), i)
+    return groups
+
+
 def latest_per_student(profiles: list[dict]) -> list[dict]:
     """
-    A student can upload several resumes; search only one per person so
-    nobody appears several times. The newest analyzed upload wins, so an
-    unanalyzed re-upload doesn't hide a scored one; if none are analyzed,
-    the newest upload is used.
+    One resume per person, so nobody appears several times: the newest
+    analyzed upload wins (an unanalyzed re-upload doesn't hide a scored
+    one); if none are analyzed, the newest upload with a GitHub username,
+    then the newest overall.
     """
     epoch = datetime.min.replace(tzinfo=timezone.utc)
-    best: dict[tuple, dict] = {}
-    for p in profiles:
-        key = person_key(p)
-        rank = (is_analyzed(p), _as_aware(p.get("created_at")) or epoch, p["candidate_id"])
-        current = best.get(key)
-        if current is None or rank > current[0]:
-            best[key] = (rank, p)
-    return [p for _, p in best.values()]
+
+    def rank(p: dict) -> tuple:
+        return (is_analyzed(p), bool(p.get("github_username")), _as_aware(p.get("created_at")) or epoch, p["candidate_id"])
+
+    return [max(group, key=rank) for group in group_by_person(profiles)]
 
 
 def mark_new(results: list[dict], since: datetime | None) -> list[dict]:

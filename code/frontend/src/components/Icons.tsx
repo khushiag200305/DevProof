@@ -159,3 +159,9 @@ export const ColumnsIcon = (p: P) => (
     <path d="M9 4v16M15 4v16" />
   </Icon>
 );
+
+export const TrashIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
+  </Icon>
+);

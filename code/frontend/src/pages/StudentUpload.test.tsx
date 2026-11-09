@@ -86,4 +86,24 @@ describe("StudentUpload page", () => {
       expect(screen.getByText("Not a student account.")).toBeInTheDocument()
     );
   });
+
+  it("deletes an upload from the history after confirming", async () => {
+    vi.spyOn(api, "apiGet").mockResolvedValue([
+      { candidate_id: 4, name: "Rohit Singhal", github_username: null, created_at: "2026-10-15T08:00:00Z", skill_count: 18 },
+      { candidate_id: 2, name: "Khushi Agarwal", github_username: "k", created_at: "2026-10-11T08:00:00Z", skill_count: 36 },
+    ]);
+    const del = vi.spyOn(api, "apiDelete").mockResolvedValue();
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole("button", { name: "Delete upload Rohit Singhal" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Delete Rohit Singhal?");
+    expect(del).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Delete upload" }));
+
+    expect(del).toHaveBeenCalledWith("/api/candidates/4");
+    await waitFor(() => expect(screen.queryByText("Rohit Singhal")).not.toBeInTheDocument());
+    expect(screen.getByText("Khushi Agarwal")).toBeInTheDocument();
+  });
 });
