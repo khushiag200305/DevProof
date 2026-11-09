@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import type { DragEvent } from "react";
 import { Link } from "react-router-dom";
 import { Hero, HeroStat } from "../components/Hero";
-import { FileIcon, GitHubIcon, UploadIcon } from "../components/Icons";
+import { FileIcon, GitHubIcon, TrashIcon, UploadIcon } from "../components/Icons";
 import { Navbar } from "../components/Navbar";
-import { ApiError, apiGet, apiUpload } from "../lib/api";
+import { ApiError, apiDelete, apiGet, apiUpload } from "../lib/api";
 
 interface UploadResult {
   candidate_id: number;
@@ -42,6 +42,8 @@ export function StudentUpload() {
   const [history, setHistory] = useState<CandidateSummary[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [dragging, setDragging] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadHistory = () => {
     setHistoryLoading(true);
@@ -54,6 +56,21 @@ export function StudentUpload() {
   useEffect(() => {
     loadHistory();
   }, []);
+
+  const deleteUpload = async (candidateId: number) => {
+    setDeleting(true);
+    setError(null);
+    try {
+      await apiDelete(`/api/candidates/${candidateId}`);
+      setHistory((h) => h.filter((c) => c.candidate_id !== candidateId));
+      if (result?.candidate_id === candidateId) setResult(null);
+      setConfirmDelete(null);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not delete the upload. Please try again.");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const onDrop = (e: DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
@@ -220,33 +237,67 @@ export function StudentUpload() {
               </p>
             ) : (
               <ul className="mt-4 space-y-2">
-                {history.map((c, i) => (
-                  <li key={c.candidate_id}>
-                    <Link
-                      to={`/candidate/${c.candidate_id}`}
-                      className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-brand-50 dark:hover:bg-night-700"
-                    >
-                      <span
-                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white ${
-                          i === 0 ? "bg-ink dark:bg-night-600" : "bg-brand-300 dark:bg-night-600"
-                        }`}
+                {history.map((c, i) => {
+                  const name = c.name ?? `Candidate #${c.candidate_id}`;
+                  const confirming = confirmDelete === c.candidate_id;
+                  return (
+                    <li key={c.candidate_id} className="group/row relative">
+                      <Link
+                        to={`/candidate/${c.candidate_id}`}
+                        className="group flex items-center gap-3 rounded-lg py-2.5 pl-3 pr-12 transition hover:bg-slate-100 dark:hover:bg-night-700"
                       >
-                        <FileIcon className="h-4 w-4" />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate font-semibold group-hover:text-brand-700 dark:group-hover:text-brand-300">
-                          {c.name ?? `Candidate #${c.candidate_id}`}
+                        <span
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white ${
+                            i === 0 ? "bg-ink dark:bg-night-600" : "bg-slate-400 dark:bg-night-600"
+                          }`}
+                        >
+                          <FileIcon className="h-4 w-4" />
                         </span>
-                        <span className="muted block text-xs">
-                          {new Date(c.created_at).toLocaleString()}
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-semibold group-hover:text-brand-700 dark:group-hover:text-brand-300">
+                            {name}
+                          </span>
+                          <span className="muted block text-xs">
+                            {new Date(c.created_at).toLocaleString()}
+                          </span>
                         </span>
-                      </span>
-                      <span className="chip shrink-0 bg-brand-600/10 text-brand-700 dark:bg-brand-500/20 dark:text-brand-200">
-                        {c.skill_count} skills
-                      </span>
-                    </Link>
-                  </li>
-                ))}
+                        <span className="chip shrink-0 bg-brand-600/10 text-brand-700 dark:bg-brand-500/20 dark:text-brand-200">
+                          {c.skill_count} skills
+                        </span>
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDelete(confirming ? null : c.candidate_id)}
+                        aria-label={`Delete upload ${name}`}
+                        title="Delete this upload"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-ink-mute opacity-60 transition hover:bg-pop-500/10 hover:text-pop-600 hover:opacity-100 focus:opacity-100 group-hover/row:opacity-100"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
+                      {confirming && (
+                        <div role="alert" className="rise mx-3 mb-2 mt-1 rounded-lg border border-pop-500/30 bg-pop-500/5 p-3 text-sm">
+                          <p>
+                            Delete <span className="font-semibold">{name}</span>? Its report and resume PDF are removed and
+                            can't be recovered.
+                          </p>
+                          <div className="mt-2.5 flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => deleteUpload(c.candidate_id)}
+                              disabled={deleting}
+                              className="rounded-md bg-pop-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-pop-500 disabled:opacity-50"
+                            >
+                              {deleting ? "Deleting..." : "Delete upload"}
+                            </button>
+                            <button type="button" onClick={() => setConfirmDelete(null)} className="btn-ghost px-3 py-1.5 text-xs">
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </aside>

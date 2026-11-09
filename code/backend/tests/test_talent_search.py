@@ -110,6 +110,20 @@ def test_one_account_uploading_several_peoples_resumes_keeps_each_person():
     assert sorted(p["candidate_id"] for p in kept) == [20, 21, 22, 23]
 
 
+def test_upload_without_github_joins_the_same_name_from_the_same_account():
+    with_github = _profile(30, "Rohit Singhal", {"Python": (STRONG, 90)}, github="rohiitsinghal", user_id=7, created=NOW - timedelta(days=12))
+    without = _profile(31, "rohit  singhal", {"Python": (None, None)}, github=None, user_id=7, created=NOW - timedelta(days=11))
+    other_account = _profile(32, "Rohit Singhal", {}, github=None, user_id=8)
+    kept = latest_per_student([without, with_github, other_account])
+    assert sorted(p["candidate_id"] for p in kept) == [30, 32]
+
+
+def test_same_name_with_different_githubs_are_different_people():
+    a = _profile(40, "Aditi Sharma", {}, github="aditi-a", user_id=7)
+    b = _profile(41, "Aditi Sharma", {}, github="aditi-b", user_id=7)
+    assert len(latest_per_student([a, b])) == 2
+
+
 def test_new_matches_since_last_run_are_flagged():
     results = search([ADITI, ROHIT], {"skills": ["Python"]}, NOW)
     flagged = {r["name"]: r["is_new"] for r in mark_new(results, NOW - timedelta(days=1, hours=12))}

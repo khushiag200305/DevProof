@@ -173,6 +173,36 @@ def get_candidate(
     return _candidate_detail(_get_visible_candidate(candidate_id, db, current_user))
 
 
+@router.delete("/{candidate_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_candidate(
+    candidate_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """
+    A student deletes one of their own uploads: the resume, its report
+    (skills, projects, repositories, evidence, questions, portfolio) and
+    the stored PDF. Recruiters can't delete students' uploads.
+    """
+    candidate = db.query(models.Candidate).filter_by(candidate_id=candidate_id).first()
+    if candidate is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Candidate not found.")
+    if candidate.user_id is None or candidate.user_id != current_user.user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "You can only delete your own uploads.")
+
+    pdf = resolve_resume_path(candidate.resume_path)
+    db.query(models.ShortlistEntry).filter_by(candidate_id=candidate_id).delete()
+    db.delete(candidate)
+    db.commit()
+
+    # Only remove files inside the uploads folder.
+    if pdf and os.path.realpath(pdf).startswith(os.path.realpath(UPLOAD_DIR) + os.sep):
+        try:
+            os.remove(pdf)
+        except OSError:
+            pass
+
+
 def resolve_resume_path(stored: str | None, upload_dir: str | None = None) -> str | None:
     """
     Where a candidate's resume PDF is now. The database keeps the full
