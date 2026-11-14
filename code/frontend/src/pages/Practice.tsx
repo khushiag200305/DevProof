@@ -6,6 +6,7 @@ import { QuizResultView } from "../components/QuizResultView";
 import { QuizRunner } from "../components/QuizRunner";
 import { ApiError, apiGet, apiPost } from "../lib/api";
 import type { AttemptSummary, QuizInProgress, QuizResult, QuizSkill } from "../lib/quiz";
+import { STATUS_LABEL, STATUS_STYLE, type SkillTest } from "../lib/skillTests";
 
 interface SkillsResponse {
   skills: QuizSkill[];
@@ -24,16 +25,55 @@ export function Practice() {
   const [history, setHistory] = useState<AttemptSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
+  const [tests, setTests] = useState<SkillTest[]>([]);
+  /** Set while taking (or reviewing) a recruiter's test rather than practice. */
+  const [fromTest, setFromTest] = useState(false);
 
   const loadHistory = () =>
     apiGet<AttemptSummary[]>("/api/quiz/attempts").then(setHistory).catch(() => setHistory([]));
+  const loadTests = () =>
+    apiGet<SkillTest[]>("/api/skill-tests/mine")
+      .then((t) => setTests(Array.isArray(t) ? t : []))
+      .catch(() => setTests([]));
 
   useEffect(() => {
     apiGet<SkillsResponse>("/api/quiz/skills")
       .then(setCatalog)
       .catch(() => setError("Could not load practice skills."));
     loadHistory();
+    loadTests();
   }, []);
+
+  const startTest = async (t: SkillTest) => {
+    setStarting(true);
+    setError(null);
+    try {
+      const started = await apiPost<QuizInProgress>(`/api/skill-tests/${t.test_id}/start`);
+      setResult(null);
+      setFromTest(true);
+      setAttempt(started);
+      window.scrollTo?.({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not start the test.");
+      loadTests();
+    } finally {
+      setStarting(false);
+    }
+  };
+
+  const openTestResult = async (t: SkillTest) => {
+    if (!t.attempt_id) return;
+    try {
+      const past = await apiGet<QuizResult>(`/api/quiz/attempts/${t.attempt_id}`);
+      setAttempt(null);
+      setFromTest(true);
+      setResult(past);
+    } catch {
+      setError("Could not open that test.");
+    }
+  };
+
+  const openTests = tests.filter((t) => t.status === "waiting" || t.status === "in_progress");
 
   const byCategory = useMemo(() => {
     const groups: Record<string, QuizSkill[]> = {};
@@ -50,6 +90,7 @@ export function Practice() {
     try {
       const started = await apiPost<QuizInProgress>("/api/quiz/practice", { skills, count, timed });
       setResult(null);
+      setFromTest(false);
       setAttempt(started);
       window.scrollTo?.({ top: 0, behavior: "smooth" });
     } catch (err) {
@@ -62,6 +103,7 @@ export function Practice() {
   const openPast = async (id: number) => {
     try {
       const past = await apiGet<QuizResult | QuizInProgress>(`/api/quiz/attempts/${id}`);
+      setFromTest(false);
       if (past.status === "submitted") {
         setAttempt(null);
         setResult(past);
@@ -108,6 +150,7 @@ export function Practice() {
                   setAttempt(null);
                   setResult(r);
                   loadHistory();
+                  loadTests();
                 }}
               />
             ) : result ? (
@@ -117,12 +160,46 @@ export function Practice() {
                     Practise these skills again
                   </button>
                   <button onClick={() => setResult(null)} className="btn-ghost">
-                    New practice
+                    {fromTest ? "Back" : "New practice"}
                   </button>
                 </div>
+                {fromTest && (
+                  <p className="muted mb-4 text-sm">This was a recruiter's skill test. They can see this score.</p>
+                )}
                 <QuizResultView result={result} />
               </>
             ) : (
+              <>
+              {openTests.length > 0 && (
+                <section aria-label="Skill tests from recruiters" className="panel mb-6 border-l-4 border-l-brand-600">
+                  <h2 className="text-xl font-bold">Skill tests from recruiters</h2>
+                  <p className="muted mt-1 text-sm">
+                    You can take each test once. The timer starts when you press Start and the recruiter sees your score.
+                  </p>
+                  <ul className="mt-4 space-y-3">
+                    {openTests.map((t) => (
+                      <li
+                        key={t.test_id}
+                        aria-label={`Skill test on ${t.skills.join(", ")}`}
+                        className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 p-4 dark:border-night-600"
+                      >
+                        <div className="min-w-0">
+                          <p className="font-semibold">{t.skills.join(", ")}</p>
+                          <p className="muted text-xs">
+                            {t.question_count} questions, {t.time_limit_minutes} minutes
+                            {t.from_domain ? `, from a recruiter at ${t.from_domain}` : ""}
+                            , due by {new Date(t.expires_at).toLocaleDateString()}
+                          </p>
+                          {t.message && <p className="mt-2 text-sm">"{t.message}"</p>}
+                        </div>
+                        <button onClick={() => startTest(t)} disabled={starting} className="btn-primary">
+                          {t.status === "in_progress" ? "Continue test" : "Start test"}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
               <section aria-label="Start a practice quiz" className="panel">
                 <h2 className="text-xl font-bold">Start a practice quiz</h2>
 
@@ -202,9 +279,39 @@ export function Practice() {
                   </span>
                 </div>
               </section>
+              </>
             )}
           </div>
 
+          <div className="space-y-6">
+          {tests.some((t) => !(t.status === "waiting" || t.status === "in_progress")) && (
+            <aside aria-label="Recruiter tests taken" className="panel h-fit p-5 sm:p-5">
+              <h2 className="text-lg font-bold">Recruiter tests</h2>
+              <ul className="mt-3 space-y-1">
+                {tests
+                  .filter((t) => !(t.status === "waiting" || t.status === "in_progress"))
+                  .map((t) => (
+                    <li key={t.test_id}>
+                      <button
+                        onClick={() => openTestResult(t)}
+                        disabled={t.score === null}
+                        className="flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left transition hover:bg-slate-100 disabled:cursor-default disabled:hover:bg-transparent dark:hover:bg-night-700"
+                      >
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-semibold">{t.skills.join(", ")}</span>
+                          <span className={`chip mt-1 py-0.5 text-[11px] ${STATUS_STYLE[t.status]}`}>{STATUS_LABEL[t.status]}</span>
+                        </span>
+                        {t.score !== null && (
+                          <span className="shrink-0 text-sm font-semibold tabular-nums">
+                            {t.score}/{t.total}
+                          </span>
+                        )}
+                      </button>
+                    </li>
+                  ))}
+              </ul>
+            </aside>
+          )}
           <aside aria-label="Past practice" className="panel h-fit p-5 sm:p-5">
             <h2 className="text-lg font-bold">Past practice</h2>
             {history.length === 0 ? (
@@ -230,6 +337,7 @@ export function Practice() {
               </ul>
             )}
           </aside>
+          </div>
         </div>
       </main>
     </div>

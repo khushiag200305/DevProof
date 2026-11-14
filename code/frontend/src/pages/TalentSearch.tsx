@@ -18,6 +18,7 @@ import {
   type TalentQuery,
   type TalentResult,
 } from "../lib/talent";
+import { STATUS_LABEL, STATUS_STYLE, type SkillTest } from "../lib/skillTests";
 
 const LEVELS: { id: EvidenceLevel; label: string }[] = [
   { id: "strong", label: "Strong" },
@@ -34,7 +35,7 @@ const ACTIVITY: { value: string; label: string }[] = [
 
 const MAX_COMPARE = 4;
 
-type Tab = "search" | "shortlist";
+type Tab = "search" | "shortlist" | "tests";
 
 /** A row of mutually exclusive buttons, e.g. the evidence level. */
 function Segmented<T extends string>({
@@ -164,6 +165,7 @@ export function TalentSearch() {
   const [notes, setNotes] = useState<Record<number, string>>({});
   const [selected, setSelected] = useState<number[]>([]);
   const [comparison, setComparison] = useState<Comparison | null>(null);
+  const [sentTests, setSentTests] = useState<SkillTest[]>([]);
 
   const loadSaved = () =>
     apiGet<SavedSearch[]>("/api/talent/saved-searches").then(setSaved).catch(() => setSaved([]));
@@ -191,6 +193,9 @@ export function TalentSearch() {
     apiGet<string[]>("/api/talent/skills").then(setKnownSkills).catch(() => setKnownSkills([]));
     loadSaved();
     loadShortlist();
+    apiGet<SkillTest[]>("/api/skill-tests/sent")
+      .then((t) => setSentTests(Array.isArray(t) ? t : []))
+      .catch(() => setSentTests([]));
     runSearch(EMPTY_QUERY);
   }, []);
 
@@ -315,6 +320,7 @@ export function TalentSearch() {
             [
               { id: "search", label: "Search", count: results?.length },
               { id: "shortlist", label: "Shortlist", count: shortlist.length },
+              { id: "tests", label: "Tests sent", count: sentTests.length },
             ] as { id: Tab; label: string; count?: number }[]
           ).map((t) => (
             <button
@@ -691,6 +697,51 @@ export function TalentSearch() {
                 );
               })}
             </ul>
+          )}
+        </div>
+        {/* Tests sent: skill tests this recruiter sent, with scores. */}
+        <div role="tabpanel" className={tab === "tests" ? "mt-6" : "hidden"}>
+          {sentTests.length === 0 ? (
+            <Empty title="No skill tests sent yet">
+              Open a candidate's report and use the Skill tests tab to send a short timed quiz.
+            </Empty>
+          ) : (
+            <div className="panel overflow-x-auto p-0 sm:p-0">
+              <table className="w-full min-w-[40rem] text-left text-sm">
+                <thead className="border-b border-slate-200 text-xs text-ink-mute dark:border-night-600 dark:text-slate-400">
+                  <tr>
+                    <th className="px-4 py-3 font-semibold">Student</th>
+                    <th className="px-4 py-3 font-semibold">Skills</th>
+                    <th className="px-4 py-3 font-semibold">Sent</th>
+                    <th className="px-4 py-3 font-semibold">Status</th>
+                    <th className="px-4 py-3 text-right font-semibold">Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sentTests.map((t) => (
+                    <tr key={t.test_id} className="border-b border-slate-100 last:border-0 dark:border-night-700">
+                      <td className="px-4 py-3 font-medium">
+                        {t.candidate_id ? (
+                          <Link to={`/candidate/${t.candidate_id}`} className="hover:text-brand-700 dark:hover:text-brand-300">
+                            {t.student_name ?? `Candidate #${t.candidate_id}`}
+                          </Link>
+                        ) : (
+                          t.student_name ?? "Student"
+                        )}
+                      </td>
+                      <td className="px-4 py-3">{t.skills.join(", ")}</td>
+                      <td className="muted px-4 py-3">{new Date(t.created_at).toLocaleDateString()}</td>
+                      <td className="px-4 py-3">
+                        <span className={`chip py-1 ${STATUS_STYLE[t.status]}`}>{STATUS_LABEL[t.status]}</span>
+                      </td>
+                      <td className="px-4 py-3 text-right font-semibold tabular-nums">
+                        {t.score === null ? "-" : `${t.score}/${t.total}`}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </main>

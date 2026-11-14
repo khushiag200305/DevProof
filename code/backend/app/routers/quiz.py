@@ -170,5 +170,9 @@ def submit(attempt_id: int, body: SubmitIn, db: Session = Depends(get_db), stude
     if attempt.submitted_at:
         raise HTTPException(status.HTTP_409_CONFLICT, "This quiz was already submitted.")
     submit_attempt(attempt, body.answers)
+    if attempt.kind == "test":
+        from .skill_tests import on_test_submitted  # imported here to avoid a circular import
+
+        on_test_submitted(db, attempt)
     db.commit()
     return _finished(attempt)
