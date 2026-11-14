@@ -37,7 +37,8 @@ describe("SkillTestsPanel", () => {
     expect(screen.queryByRole("button", { name: "Kubernetes" })).not.toBeInTheDocument();
 
     const existing = await screen.findByRole("listitem", { name: "Test on Python" });
-    expect(within(existing).getByText("4/5")).toBeInTheDocument();
+    expect(within(existing).getAllByText("4/5").length).toBeGreaterThan(0);
+    expect(within(existing).getByText("Done")).toBeInTheDocument();
 
     await user.type(screen.getByLabelText(/Message/), "See you Friday");
     await user.click(screen.getByRole("button", { name: "Send test" }));
