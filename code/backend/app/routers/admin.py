@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from .. import models
 from ..database import get_db
 from ..dependencies import require_admin
+from ..services import notifications
 from ..services.approval import PENDING, STATUSES, effective_status, is_admin_email
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -58,5 +59,7 @@ def set_recruiter_status(
     if is_admin_email(user.email):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Admins are always approved.")
     user.recruiter_status = body.status
+    if body.status == "approved":
+        notifications.recruiter_approved(db, user)
     db.commit()
     return _recruiter_dict(user)

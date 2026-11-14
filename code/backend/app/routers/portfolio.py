@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from .. import models
 from ..database import get_db
 from ..dependencies import get_approved_user
+from ..services import notifications
 from ..services.portfolio import make_slug, portfolio_from_candidate
 from .candidates import _get_visible_candidate
 
@@ -83,4 +84,6 @@ def get_public_portfolio(slug: str, db: Session = Depends(get_db)):
     portfolio = db.query(models.Portfolio).filter_by(slug=slug).first()
     if portfolio is None or not portfolio.is_public:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Portfolio not found.")
+    notifications.portfolio_viewed(db, portfolio.candidate)
+    db.commit()
     return portfolio_from_candidate(portfolio.candidate)

@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session, selectinload
 from .. import models
 from ..database import get_db
 from ..dependencies import require_role
-from ..services import talent_search
+from ..services import notifications, talent_search
 from ..services.visibility import visible_for_candidate, visible_ids
 from ..skills_dictionary import category_of
 
@@ -311,6 +311,8 @@ def add_to_shortlist(
     )
     entry.note = (body.note or "").strip() or None
     db.add(entry)
+    if not existing:
+        notifications.shortlisted(db, candidate, recruiter)
     db.commit()
     return {"candidate_id": candidate_id, "note": entry.note, "shortlisted": True}
 

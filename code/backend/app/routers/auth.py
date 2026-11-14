@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from .. import models
 from ..database import get_db
 from ..dependencies import get_current_user
+from ..services import notifications
 from ..services.approval import effective_status, initial_status, is_admin_email
 from ..services.auth import (
     GoogleTokenError,
@@ -76,6 +77,9 @@ def sign_in_with_google(body: GoogleSignInRequest, db: Session = Depends(get_db)
             recruiter_status=initial_status(email, derive_role(email)),
         )
         db.add(user)
+        db.flush()
+        if user.recruiter_status == "pending":
+            notifications.recruiter_requested(db, user)
     else:
         # Keep display fields fresh; role is intentionally left as-is
         # once assigned (see module docstring).

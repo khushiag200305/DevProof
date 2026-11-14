@@ -1,6 +1,7 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { LogoMark, LogoutIcon } from "./Icons";
+import { NotificationBell } from "./NotificationBell";
 import { ThemeToggle } from "./ThemeToggle";
 
 export function Navbar() {
@@ -55,6 +56,7 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          {user && !waiting && <NotificationBell />}
           <ThemeToggle />
           {user && (
             <>

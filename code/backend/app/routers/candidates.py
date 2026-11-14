@@ -16,6 +16,7 @@ from ..dependencies import get_approved_user, require_role
 from ..services.analysis import SUPPORTING_REPO, GitHubUnavailableError, analyze_candidate
 from ..services.project_links import match_repo
 from ..services.resume_parser import extract_project_details, read_resume_text
+from ..services import notifications
 from ..services.scoring import default_interview_question
 from ..services.visibility import visible_candidate_id, visible_for_candidate, visible_ids
 from ..skills_dictionary import (
@@ -181,6 +182,8 @@ def make_visible(
         raise HTTPException(status.HTTP_403_FORBIDDEN, "You can only choose between your own uploads.")
     student = db.get(models.User, current_user.user_id)
     student.visible_candidate_id = candidate_id
+    db.flush()
+    notifications.new_search_matches(db, candidate)
     db.commit()
     return {"visible_candidate_id": candidate_id}
 
@@ -306,4 +309,8 @@ async def analyze(
     except GitHubUnavailableError as exc:
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(exc)) from exc
 
+    db.refresh(candidate)
+    notifications.analysis_ready(db, candidate)
+    notifications.new_search_matches(db, candidate)
+    db.commit()
     return _detail_for(db, candidate)

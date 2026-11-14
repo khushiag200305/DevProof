@@ -89,12 +89,17 @@ describe("StudentUpload page", () => {
 
   it("deletes an upload from the history after confirming", async () => {
     const khushi = { candidate_id: 2, name: "Khushi Agarwal", github_username: "k", created_at: "2026-10-11T08:00:00Z", skill_count: 36, visible_to_recruiters: true };
-    vi.spyOn(api, "apiGet")
-      .mockResolvedValueOnce([
-        { candidate_id: 4, name: "Rohit Singhal", github_username: null, created_at: "2026-10-15T08:00:00Z", skill_count: 18, visible_to_recruiters: false },
-        khushi,
-      ])
-      .mockResolvedValue([khushi]);
+    let historyCalls = 0;
+    vi.spyOn(api, "apiGet").mockImplementation(async (path: string) => {
+      if (path !== "/api/candidates/me") return { unread: 0, items: [] };
+      historyCalls += 1;
+      return historyCalls === 1
+        ? [
+            { candidate_id: 4, name: "Rohit Singhal", github_username: null, created_at: "2026-10-15T08:00:00Z", skill_count: 18, visible_to_recruiters: false },
+            khushi,
+          ]
+        : [khushi];
+    });
     const del = vi.spyOn(api, "apiDelete").mockResolvedValue();
     const user = userEvent.setup();
     renderPage();
