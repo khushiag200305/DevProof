@@ -5,15 +5,16 @@ DB-backed caching so re-opening a candidate doesn't re-hit the GitHub
 API - see services/github_client.py's module docstring).
 """
 import httpx
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from ..dependencies import require_role
 from ..services.fingerprinting import fingerprint_repo
 from ..services.github_client import fetch_github_repos
 
 router = APIRouter(prefix="/github", tags=["github"])
 
 
-@router.get("/{username}/repos")
+@router.get("/{username}/repos", dependencies=[Depends(require_role("recruiter"))])
 async def get_github_repos(username: str):
     """
     Returns simplified public repository evidence for a GitHub username.
@@ -41,7 +42,7 @@ async def get_github_repos(username: str):
     }
 
 
-@router.get("/{username}/{repo}/fingerprint")
+@router.get("/{username}/{repo}/fingerprint", dependencies=[Depends(require_role("recruiter"))])
 async def get_repo_fingerprint(username: str, repo: str):
     """
     Runs technology fingerprinting on a single repository: checks for

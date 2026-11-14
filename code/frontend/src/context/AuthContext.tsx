@@ -10,6 +10,9 @@ export interface AuthUser {
   name: string | null;
   picture_url: string | null;
   role: Role;
+  /** Recruiters only: an admin must approve them before they see student data. */
+  recruiter_status?: "pending" | "approved" | "rejected" | null;
+  is_admin?: boolean;
 }
 
 interface AuthContextValue {
@@ -17,6 +20,8 @@ interface AuthContextValue {
   loading: boolean;
   login: (token: string, user: AuthUser) => void;
   logout: () => void;
+  /** Re-reads the signed-in user (e.g. to see if an admin approved them). */
+  refresh?: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -64,7 +69,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
-  const value = useMemo(() => ({ user, loading, login, logout }), [user, loading]);
+  const refresh = async () => {
+    const freshUser = await apiGet<AuthUser>("/api/auth/me");
+    setUser(freshUser);
+    localStorage.setItem(USER_KEY, JSON.stringify(freshUser));
+  };
+
+  const value = useMemo(() => ({ user, loading, login, logout, refresh }), [user, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

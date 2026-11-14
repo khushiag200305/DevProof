@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from .. import models
 from ..database import get_db
-from ..dependencies import get_current_user, require_role
+from ..dependencies import get_approved_user, require_role
 from ..services.analysis import SUPPORTING_REPO, GitHubUnavailableError, analyze_candidate
 from ..services.project_links import match_repo
 from ..services.resume_parser import extract_project_details, read_resume_text
@@ -171,7 +171,7 @@ def list_my_candidates(
 def make_visible(
     candidate_id: int,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_approved_user),
 ):
     """A student chooses which of their uploads recruiters see."""
     candidate = db.query(models.Candidate).filter_by(candidate_id=candidate_id).first()
@@ -207,7 +207,7 @@ def _get_visible_candidate(
 def get_candidate(
     candidate_id: int,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_approved_user),
 ):
     """
     Recruiters can open any candidate; a student can only open their own.
@@ -219,7 +219,7 @@ def get_candidate(
 def delete_candidate(
     candidate_id: int,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_approved_user),
 ):
     """
     A student deletes one of their own uploads: the resume, its report
@@ -289,7 +289,7 @@ def refresh_projects_from_resume(db: Session, candidate: models.Candidate) -> bo
 async def analyze(
     candidate_id: int,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_approved_user),
 ):
     """
     Runs the GitHub evidence engine (repos -> fingerprinting -> scoring)

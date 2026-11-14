@@ -40,6 +40,8 @@ class User(Base):
     # Students: which upload recruiters see (see app/services/visibility.py).
     # A plain id, not a foreign key, so deleting that upload never fails.
     visible_candidate_id = Column(Integer, nullable=True)
+    # Recruiters: "pending" until an admin approves (see app/services/approval.py).
+    recruiter_status = Column(String, nullable=True)
 
     candidates = relationship("Candidate", back_populates="user")
 

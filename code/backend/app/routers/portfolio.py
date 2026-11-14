@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from .. import models
 from ..database import get_db
-from ..dependencies import get_current_user
+from ..dependencies import get_approved_user
 from ..services.portfolio import make_slug, portfolio_from_candidate
 from .candidates import _get_visible_candidate
 
@@ -38,7 +38,7 @@ def _settings(candidate: models.Candidate) -> dict:
 def get_portfolio_settings(
     candidate_id: int,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_approved_user),
 ):
     """Preview of the portfolio page plus whether it is published."""
     return _settings(_get_visible_candidate(candidate_id, db, current_user))
@@ -49,7 +49,7 @@ def update_portfolio_settings(
     candidate_id: int,
     body: PortfolioSettings,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_approved_user),
 ):
     """
     Only the student who owns the candidate record can publish, unpublish

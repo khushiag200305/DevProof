@@ -8,6 +8,7 @@ import { RecruiterDashboard } from "./pages/RecruiterDashboard";
 import { ResumeBullets } from "./pages/ResumeBullets";
 import { StudentUpload } from "./pages/StudentUpload";
 import { TalentSearch } from "./pages/TalentSearch";
+import { AdminRecruiters } from "./pages/AdminRecruiters";
 
 function Home() {
   const { user, loading } = useAuth();
@@ -35,6 +36,14 @@ function App() {
         element={
           <ProtectedRoute role="recruiter">
             <RecruiterDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute admin>
+            <AdminRecruiters />
           </ProtectedRoute>
         }
       />

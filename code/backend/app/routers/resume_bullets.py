@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from .. import models
 from ..database import get_db
-from ..dependencies import get_current_user
+from ..dependencies import get_approved_user
 from ..services.portfolio import repo_dicts, skill_dicts
 from ..services.resume_bullets import bullet_report
 from .candidates import _get_visible_candidate
@@ -29,7 +29,7 @@ def resume_bullets(
     candidate_id: int,
     body: BulletRequest,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_approved_user),
 ):
     candidate = _get_visible_candidate(candidate_id, db, current_user)
     if not candidate.repositories:

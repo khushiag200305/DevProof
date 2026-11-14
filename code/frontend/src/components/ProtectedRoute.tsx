@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import type { Role } from "../context/AuthContext";
 import { LogoMark } from "./Icons";
+import { RecruiterPending } from "../pages/RecruiterPending";
 
 /**
  * Gates a route behind sign-in, and optionally a specific role. A
@@ -11,9 +12,12 @@ import { LogoMark } from "./Icons";
  */
 export function ProtectedRoute({
   role,
+  admin = false,
   children,
 }: {
   role?: Role;
+  /** Only admins (ADMIN_EMAILS on the backend) may open this page. */
+  admin?: boolean;
   children: ReactNode;
 }) {
   const { user, loading } = useAuth();
@@ -29,6 +33,15 @@ export function ProtectedRoute({
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (admin && !user.is_admin) {
+    return <Navigate to={user.role === "student" ? "/upload" : "/dashboard"} replace />;
+  }
+
+  // Recruiters see nothing about students until an admin approves them.
+  if (user.role === "recruiter" && !admin && user.recruiter_status && user.recruiter_status !== "approved") {
+    return <RecruiterPending />;
   }
 
   if (role && user.role !== role) {
