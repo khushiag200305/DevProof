@@ -33,6 +33,7 @@ export function Navbar() {
         ]
       : [
           { to: "/upload", label: "My resumes" },
+          { to: "/jobs", label: "Match a job" },
           { to: "/practice", label: "Practice" },
         ];
   if (user?.is_admin) links.push({ to: "/admin", label: "Recruiter requests" });

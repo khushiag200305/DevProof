@@ -9,6 +9,7 @@ import { ResumeBullets } from "./pages/ResumeBullets";
 import { StudentUpload } from "./pages/StudentUpload";
 import { TalentSearch } from "./pages/TalentSearch";
 import { AdminRecruiters } from "./pages/AdminRecruiters";
+import { MatchJob } from "./pages/MatchJob";
 import { Practice } from "./pages/Practice";
 
 function Home() {
@@ -37,6 +38,14 @@ function App() {
         element={
           <ProtectedRoute role="recruiter">
             <RecruiterDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/jobs"
+        element={
+          <ProtectedRoute role="student">
+            <MatchJob />
           </ProtectedRoute>
         }
       />

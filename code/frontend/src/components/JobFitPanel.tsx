@@ -143,9 +143,11 @@ function Chips({ items, tone, label }: { items: string[]; tone: string; label: s
  */
 export function JobFitPanel({
   onMakeVisible,
+  title = "Match a job",
 }: {
   /** Makes an upload visible to recruiters; resolves once saved. */
   onMakeVisible: (candidateId: number) => Promise<boolean>;
+  title?: string;
 }) {
   const [job, setJob] = useState("");
   const [mode, setMode] = useState<"job" | "role">("job");
@@ -196,7 +198,7 @@ export function JobFitPanel({
   return (
     <section aria-labelledby="job-fit-heading" className="panel">
       <h2 id="job-fit-heading" className="text-xl font-bold">
-        Match a job
+        {title}
       </h2>
       <p className="muted mt-1 text-sm">
         See which of your resumes fits a job best, and get a roadmap for the skills you still need to prove.
