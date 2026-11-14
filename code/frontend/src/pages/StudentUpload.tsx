@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import type { DragEvent } from "react";
 import { Link } from "react-router-dom";
 import { Hero, HeroStat } from "../components/Hero";
-import { JobFitPanel } from "../components/JobFitPanel";
 import { EyeIcon, FileIcon, GitHubIcon, TrashIcon, UploadIcon } from "../components/Icons";
 import { Navbar } from "../components/Navbar";
 import { ApiError, apiDelete, apiGet, apiPut, apiUpload } from "../lib/api";
@@ -275,7 +274,19 @@ export function StudentUpload() {
               </div>
             )}
 
-            {(history.length > 0 || result) && <JobFitPanel onMakeVisible={makeVisible} />}
+            {(history.length > 0 || result) && (
+              <div className="panel flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-bold">Applying for a job?</h2>
+                  <p className="muted mt-0.5 text-sm">
+                    See which resume fits it best and get a roadmap for the skills you still need to prove.
+                  </p>
+                </div>
+                <Link to="/jobs" className="btn-primary">
+                  Match a job
+                </Link>
+              </div>
+            )}
           </div>
 
           <aside className="panel h-fit">
