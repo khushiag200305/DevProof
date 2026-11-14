@@ -32,6 +32,7 @@ from .routers import resume_bullets as resume_bullets_router  # noqa: E402
 from .routers import score as score_router  # noqa: E402
 from .routers import admin as admin_router  # noqa: E402
 from .routers import job_fit as job_fit_router  # noqa: E402
+from .routers import notifications as notifications_router  # noqa: E402
 from .routers import talent as talent_router  # noqa: E402
 
 
@@ -76,3 +77,4 @@ app.include_router(resume_bullets_router.router)
 app.include_router(talent_router.router)
 app.include_router(job_fit_router.router)
 app.include_router(admin_router.router)
+app.include_router(notifications_router.router)

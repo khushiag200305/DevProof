@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from .. import models
 from ..database import get_db
 from ..dependencies import require_role
+from ..services import notifications
 from ..services.visibility import visible_candidate_id
 from ..services.resume_parser import (
     extract_github_url,
@@ -119,6 +120,9 @@ async def upload_resume(
     # replaces what recruiters see.
     is_visible = previous_visible is None
     student.visible_candidate_id = candidate.candidate_id if is_visible else previous_visible
+    db.flush()
+    db.refresh(candidate)
+    notifications.new_search_matches(db, candidate)
     db.commit()
 
     return {

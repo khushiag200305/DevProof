@@ -11,7 +11,7 @@ have a stable schema to build against instead of migrating mid-project.
 """
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from .database import Base
@@ -237,3 +237,24 @@ class ShortlistEntry(Base):
     created_at = Column(DateTime(timezone=True), default=_utcnow, nullable=False)
 
     candidate = relationship("Candidate")
+
+
+class Notification(Base):
+    """
+    An in-app notification shown under the bell in the top bar.
+    `dedupe_key` (unique per user) stops the same event being announced
+    twice, e.g. the same student matching the same saved search.
+    """
+
+    __tablename__ = "notifications"
+    __table_args__ = (UniqueConstraint("user_id", "dedupe_key", name="uq_notification_dedupe"),)
+
+    notification_id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False, index=True)
+    kind = Column(String, nullable=False)
+    title = Column(String, nullable=False)
+    body = Column(Text, nullable=True)
+    link = Column(String, nullable=True)
+    dedupe_key = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=_utcnow, nullable=False)
+    read_at = Column(DateTime(timezone=True), nullable=True)
