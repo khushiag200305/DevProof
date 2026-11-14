@@ -23,7 +23,10 @@ export function Navbar() {
           { to: "/dashboard", label: "Candidates" },
           { to: "/talent", label: "Talent search" },
         ]
-      : [{ to: "/upload", label: "My resumes" }];
+      : [
+          { to: "/upload", label: "My resumes" },
+          { to: "/practice", label: "Practice" },
+        ];
   if (user?.is_admin) links.push({ to: "/admin", label: "Recruiter requests" });
 
   return (
