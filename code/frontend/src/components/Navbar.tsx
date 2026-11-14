@@ -1,12 +1,20 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { LogoMark, LogoutIcon } from "./Icons";
+import { LogoMark, LogoutIcon, MenuIcon, XIcon } from "./Icons";
 import { NotificationBell } from "./NotificationBell";
 import { ThemeToggle } from "./ThemeToggle";
 
 export function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Close the phone menu after navigating.
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     logout();
@@ -29,6 +37,13 @@ export function Navbar() {
         ];
   if (user?.is_admin) links.push({ to: "/admin", label: "Recruiter requests" });
 
+  const linkClass = ({ isActive }: { isActive: boolean }, size = "py-1.5 text-sm") =>
+    `rounded-lg px-3 ${size} font-medium transition ${
+      isActive
+        ? "bg-slate-200/70 text-ink dark:bg-night-700 dark:text-white"
+        : "text-ink-soft hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-night-700"
+    }`;
+
   return (
     <header className="sticky top-0 z-20 border-b border-brand-100/70 bg-paper/80 backdrop-blur-xl dark:border-night-600/70 dark:bg-night/80">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
@@ -40,17 +55,7 @@ export function Navbar() {
           {user && (
             <nav className="hidden gap-1 sm:flex">
               {links.map((l) => (
-                <NavLink
-                  key={l.to}
-                  to={l.to}
-                  className={({ isActive }) =>
-                    `rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-                      isActive
-                        ? "bg-slate-200/70 text-ink dark:bg-night-700 dark:text-white"
-                        : "text-ink-soft hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-night-700"
-                    }`
-                  }
-                >
+                <NavLink key={l.to} to={l.to} className={(a) => linkClass(a)}>
                   {l.label}
                 </NavLink>
               ))}
@@ -59,6 +64,18 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          {user && links.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-expanded={menuOpen}
+              aria-controls="phone-menu"
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              className="rounded-md p-2 text-ink-soft transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-night-700 sm:hidden"
+            >
+              {menuOpen ? <XIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
+            </button>
+          )}
           {user && !waiting && <NotificationBell />}
           <ThemeToggle />
           {user && (
@@ -92,6 +109,26 @@ export function Navbar() {
           )}
         </div>
       </div>
+      {user && menuOpen && (
+        <nav
+          id="phone-menu"
+          aria-label="Menu"
+          className="border-t border-slate-200 bg-paper px-4 py-2 dark:border-night-600 dark:bg-night sm:hidden"
+        >
+          <ul className="flex flex-col gap-1">
+            {links.map((l) => (
+              <li key={l.to}>
+                <NavLink to={l.to} className={(a) => `block ${linkClass(a, "py-2.5 text-base")}`}>
+                  {l.label}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+          <p className="muted border-t border-slate-200 px-3 pb-1 pt-3 text-xs dark:border-night-600">
+            Signed in as {user.name ?? user.email} ({user.role})
+          </p>
+        </nav>
+      )}
     </header>
   );
 }

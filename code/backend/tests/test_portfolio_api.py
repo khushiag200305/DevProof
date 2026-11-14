@@ -63,7 +63,7 @@ def _fake_github(monkeypatch):
     async def fake_repos(username: str):
         return REPOS
 
-    async def fake_inspect(owner: str, repo: str):
+    async def fake_inspect(owner: str, repo: str, pushed_at=None):
         return {
             "technologies": {"Docker": ["Dockerfile present"], "Python": ["12 Python files"]},
             "signals": {"has_tests": True, "has_ci": False, "source_files": 12},

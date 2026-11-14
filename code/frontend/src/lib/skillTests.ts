@@ -45,3 +45,25 @@ export const STATUS_STYLE: Record<TestStatus, string> = {
   timed_out: "bg-pop-500/10 text-pop-600 dark:text-pop-400",
   expired: "bg-slate-500/10 text-ink-mute dark:text-slate-400",
 };
+
+/** The latest finished skill test result for one skill. */
+export interface SkillTestScore {
+  correct: number;
+  total: number;
+  late: boolean;
+  date: string | null;
+}
+
+/** Latest finished score per skill, from tests listed newest first. */
+export function latestTestScores(tests: SkillTest[]): Record<string, SkillTestScore> {
+  const out: Record<string, SkillTestScore> = {};
+  for (const t of tests) {
+    for (const p of t.per_skill ?? []) {
+      if (!(p.skill in out)) {
+        out[p.skill] = { correct: p.correct, total: p.total, late: t.status === "late", date: t.submitted_at };
+      }
+    }
+  }
+  return out;
+}
+

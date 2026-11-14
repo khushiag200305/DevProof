@@ -90,7 +90,7 @@ def _fake_github(monkeypatch):
     async def fake_fetch_repos(username: str):
         return FAKE_REPOS
 
-    async def fake_inspect(owner: str, repo: str):
+    async def fake_inspect(owner: str, repo: str, pushed_at=None):
         return {
             "technologies": FAKE_FINGERPRINTS[repo],
             "signals": FAKE_SIGNALS,
@@ -231,7 +231,7 @@ def test_other_supporting_repos_are_saved_and_returned(client, monkeypatch):
     async def fake_fetch_repos(username: str):
         return repos
 
-    async def fake_inspect(owner: str, repo: str):
+    async def fake_inspect(owner: str, repo: str, pushed_at=None):
         return {"technologies": fingerprints[repo], "signals": {}, "commit_count": 0}
 
     monkeypatch.setattr("app.services.analysis.fetch_github_repos", fake_fetch_repos)

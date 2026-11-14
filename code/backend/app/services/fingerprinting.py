@@ -15,7 +15,14 @@ import asyncio
 
 import httpx
 
-from .github_client import fetch_commit_count, fetch_file_content, fetch_repo_tree
+from .github_client import (
+    INSPECTION_TTL,
+    cache_get,
+    cache_put,
+    fetch_commit_count,
+    fetch_file_content,
+    fetch_repo_tree,
+)
 from .repo_profile import project_signals
 from .tech_rules import TECH_RULES, detect_technologies, manifest_paths
 
@@ -46,7 +53,7 @@ async def fingerprint_repo(owner: str, repo: str) -> dict[str, list[str]]:
     return detect_technologies(paths, manifests)
 
 
-async def inspect_repo(owner: str, repo: str) -> dict:
+async def inspect_repo(owner: str, repo: str, pushed_at: str | None = None) -> dict:
     """
     Everything the analysis keeps about one repository, from the same
     tree request fingerprint_repo makes plus one commit-count request:
@@ -55,7 +62,15 @@ async def inspect_repo(owner: str, repo: str) -> dict:
     - "signals":      tests / CI / README / frontend+backend / size
                       (services/repo_profile.py)
     - "commit_count": commits authored by `owner` on the default branch
+
+    Cached per repo and last push time, so re-analysing only re-reads
+    repositories that changed.
     """
+    key = ("inspect", owner.lower(), repo, pushed_at)
+    if pushed_at:
+        cached = cache_get(key)
+        if cached is not None:
+            return cached
     async with httpx.AsyncClient() as client:
         paths = await fetch_repo_tree(owner, repo, client)
         to_read = manifest_paths(paths, MAX_MANIFESTS_PER_REPO)
@@ -66,8 +81,11 @@ async def inspect_repo(owner: str, repo: str) -> dict:
 
     contents, commit_count = results[:-1], results[-1]
     manifests = {path: text for path, text in zip(to_read, contents) if text}
-    return {
+    result = {
         "technologies": detect_technologies(paths, manifests),
         "signals": project_signals(paths),
         "commit_count": commit_count,
     }
+    if pushed_at:
+        cache_put(key, result, INSPECTION_TTL)
+    return result

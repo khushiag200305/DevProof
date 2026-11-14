@@ -10,7 +10,8 @@ from pydantic import BaseModel
 
 from ..dependencies import require_role
 from ..services.fingerprinting import fingerprint_repo
-from ..services.github_client import fetch_github_repos
+from ..services.analysis import rate_limit_message
+from ..services.github_client import GitHubRateLimitError, fetch_github_repos
 from ..services.scoring import score_skill
 
 router = APIRouter(tags=["score"])
@@ -31,6 +32,8 @@ async def score_candidate(request: ScoreRequest):
     """
     try:
         repos = await fetch_github_repos(request.username)
+    except GitHubRateLimitError as exc:
+        return {"status": "error", "error": rate_limit_message(exc)}
     except httpx.HTTPStatusError as exc:
         return {"status": "error", "error": f"GitHub API error: {exc.response.status_code}"}
     except httpx.RequestError as exc:
@@ -40,7 +43,10 @@ async def score_candidate(request: ScoreRequest):
 
     fingerprints = {}
     for repo in repos_to_check:
-        raw_evidence = await fingerprint_repo(request.username, repo["name"])
+        try:
+            raw_evidence = await fingerprint_repo(request.username, repo["name"])
+        except GitHubRateLimitError as exc:
+            return {"status": "error", "error": rate_limit_message(exc)}
         fingerprints[repo["name"]] = {
             "detected_technologies": {tech: items for tech, items in raw_evidence.items() if items}
         }

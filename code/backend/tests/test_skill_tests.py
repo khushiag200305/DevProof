@@ -138,3 +138,17 @@ def test_recruiter_sees_testable_skills_and_whether_a_resume_has_an_account(clie
     owned, orphan = _candidate(student), _candidate(None)
     assert client.get(f"/api/candidates/{owned}", headers=_h(recruiter)).json()["has_account"] is True
     assert client.get(f"/api/candidates/{orphan}", headers=_h(recruiter)).json()["has_account"] is False
+
+
+def test_a_test_avoids_questions_the_student_already_practised(client):
+    recruiter = _user("hr4@acme.com", "recruiter")
+    student = _user("s4@thapar.edu", "student")
+    candidate_id = _candidate(student)
+    practice = client.post("/api/quiz/practice", json={"skills": ["Docker"], "count": 5}, headers=_h(student)).json()
+    seen = {q["id"] for q in practice["questions"]}
+
+    test = client.post(
+        "/api/skill-tests", json={"candidate_id": candidate_id, "skills": ["Docker"], "question_count": 5}, headers=_h(recruiter)
+    ).json()
+    asked = {q["id"] for q in client.post(f"/api/skill-tests/{test['test_id']}/start", headers=_h(student)).json()["questions"]}
+    assert len(asked) == 5 and not asked & seen

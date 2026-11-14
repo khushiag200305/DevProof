@@ -86,7 +86,12 @@ def start_attempt(db: Session, user: models.User, kind: str, skills: list[str], 
     chosen = quiz.known_skills(skills)
     if not chosen:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Pick at least one skill that has questions.")
-    items = quiz.pick_questions(chosen, count)
+    avoid: set[str] = set()
+    if kind == "test":
+        # A recruiter's test prefers questions the student hasn't practised.
+        for (questions,) in db.query(models.QuizAttempt.questions).filter_by(user_id=user.user_id).all():
+            avoid.update(item["id"] for item in json.loads(questions or "[]"))
+    items = quiz.pick_questions(chosen, count, avoid=avoid)
     attempt = models.QuizAttempt(
         user_id=user.user_id, kind=kind, skills=json.dumps(chosen), questions=json.dumps(items),
         total=len(items), time_limit_seconds=time_limit_seconds,

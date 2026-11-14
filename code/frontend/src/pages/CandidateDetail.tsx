@@ -8,6 +8,7 @@ import { PortfolioPanel } from "../components/PortfolioPanel";
 import { SkillTestsPanel } from "../components/SkillTestsPanel";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, apiGet, apiPost, apiPut } from "../lib/api";
+import { latestTestScores, type SkillTest, type SkillTestScore } from "../lib/skillTests";
 
 interface SupportingRepo {
   repo: string;
@@ -137,7 +138,24 @@ function EvidenceRing({ percent }: { percent: number }) {
 }
 
 /** A skill as one compact row; clicking it opens the evidence underneath. */
-function SkillRow({ skill: s, open, onToggle }: { skill: SkillEntry; open: boolean; onToggle: () => void }) {
+function testTone(t: SkillTestScore): string {
+  const ratio = t.total ? t.correct / t.total : 0;
+  if (ratio >= 0.7) return "border-emerald-500/40 text-emerald-700 dark:text-emerald-300";
+  if (ratio >= 0.4) return "border-sun-400/60 text-amber-700 dark:text-sun-300";
+  return "border-pop-500/40 text-pop-600 dark:text-pop-400";
+}
+
+function SkillRow({
+  skill: s,
+  open,
+  onToggle,
+  test,
+}: {
+  skill: SkillEntry;
+  open: boolean;
+  onToggle: () => void;
+  test?: SkillTestScore;
+}) {
   const tone = statusTone(s.status);
   return (
     <li className="border-t border-slate-100 first:border-t-0 dark:border-night-600">
@@ -155,6 +173,14 @@ function SkillRow({ skill: s, open, onToggle }: { skill: SkillEntry; open: boole
             <span className={`bar-fill block h-full rounded-full ${tone.bar}`} style={{ width: `${Math.max(4, s.score)}%` }} />
           </span>
         )}
+        {test && (
+          <span
+            className={`chip shrink-0 border bg-transparent py-1 tabular-nums ${testTone(test)}`}
+            title="Latest skill test score"
+          >
+            Test {test.correct}/{test.total}
+          </span>
+        )}
         <span className={`chip shrink-0 py-1 ${tone.badge}`}>
           {s.status ?? "Pending Analysis"}
           {s.score !== null && ` · ${s.score}/100`}
@@ -164,6 +190,13 @@ function SkillRow({ skill: s, open, onToggle }: { skill: SkillEntry; open: boole
         />
       </button>
       <div className={open ? "rise pb-4" : "hidden"}>
+        {test && (
+          <p className="mb-2 text-sm">
+            <span className="font-semibold">Skill test:</span> {test.correct} of {test.total} correct
+            {test.date ? ` on ${new Date(test.date).toLocaleDateString()}` : ""}
+            {test.late ? " (submitted after the time limit)" : ""}.
+          </p>
+        )}
         {s.reasons.length > 0 &&
           (s.checkable ? (
             <ul className="space-y-1 text-sm text-ink-soft dark:text-slate-300">
@@ -265,6 +298,7 @@ export function CandidateDetail() {
   const [category, setCategory] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("skills");
   const [openSkills, setOpenSkills] = useState<Set<string>>(new Set());
+  const [testScores, setTestScores] = useState<Record<string, SkillTestScore>>({});
 
   useEffect(() => {
     if (!candidateId) return;
@@ -282,6 +316,17 @@ export function CandidateDetail() {
       )
       .finally(() => setLoading(false));
   }, [candidateId]);
+
+  // Skill test scores shown beside each verdict: the recruiter's own tests,
+  // or every test a student has taken. Reloaded when coming back to Skills.
+  const canHaveTests = !!candidate && (user?.role === "student" || !!candidate.has_account);
+  useEffect(() => {
+    if (!canHaveTests || tab !== "skills" || !candidateId) return;
+    const path = user?.role === "student" ? "/api/skill-tests/mine" : `/api/skill-tests/candidate/${candidateId}`;
+    apiGet<SkillTest[]>(path)
+      .then((t) => setTestScores(latestTestScores(Array.isArray(t) ? t : [])))
+      .catch(() => setTestScores({}));
+  }, [canHaveTests, tab, candidateId, user?.role]);
 
   const makeVisible = async () => {
     if (!candidate) return;
@@ -582,6 +627,7 @@ export function CandidateDetail() {
                                   skill={s}
                                   open={openSkills.has(s.skill_name)}
                                   onToggle={() => toggleSkill(s.skill_name)}
+                                  test={testScores[s.skill_name]}
                                 />
                               ))}
                             </ul>

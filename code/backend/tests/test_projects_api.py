@@ -35,7 +35,7 @@ def _setup(client, monkeypatch) -> tuple[models.User, int]:
     async def fake_repos(username: str):
         return [_repo("credit-card-fraud-detection"), _repo("DSA-assignment")]
 
-    async def fake_inspect(owner: str, repo: str):
+    async def fake_inspect(owner: str, repo: str, pushed_at=None):
         return {"technologies": {"Python": ["12 Python files"]}, "signals": {}, "commit_count": 3}
 
     monkeypatch.setattr("app.services.analysis.fetch_github_repos", fake_repos)

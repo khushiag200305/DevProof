@@ -5,12 +5,12 @@ import random
 from app.services import quiz
 
 
-def test_every_catalog_skill_has_five_valid_questions():
+def test_every_catalog_skill_has_ten_valid_questions():
     catalog = {s["name"] for s in json.load(open("app/skills_catalog.json"))["skills"]}
     assert set(quiz.BANK) == catalog
     ids = set()
     for skill, questions in quiz.BANK.items():
-        assert len(questions) == 5, skill
+        assert len(questions) == 10, skill
         for q in questions:
             assert len(q["options"]) == 4 and len(set(q["options"])) == 4
             assert 0 <= q["answer"] < 4 and q["explanation"]
@@ -27,7 +27,7 @@ def test_questions_are_spread_across_skills_and_options_shuffled():
 
 
 def test_count_is_capped_by_available_questions():
-    assert len(quiz.pick_questions(["Python"], 15)) == 5
+    assert len(quiz.pick_questions(["Python"], 15)) == 10
     assert quiz.pick_questions(["Not a skill"], 5) == []
 
 
@@ -52,3 +52,15 @@ def test_grading_uses_the_shown_option_order():
     graded = {q["id"]: q for q in result["questions"]}
     assert graded[first]["is_correct"] is False and graded[first]["correct"] == right[first]
     assert graded[second]["chosen"] is None and graded[second]["explanation"]
+
+
+def test_avoided_questions_are_used_last():
+    import random
+
+    seen = {q["id"] for q in quiz.BANK["Docker"][:7]}
+    for seed in range(20):
+        picked = {i["id"] for i in quiz.pick_questions(["Docker"], 3, random.Random(seed), avoid=seen)}
+        assert not picked & seen
+    # With more questions asked than unseen ones, seen questions fill the rest.
+    picked = [i["id"] for i in quiz.pick_questions(["Docker"], 5, random.Random(1), avoid=seen)]
+    assert len(picked) == 5 and len(set(picked) - seen) == 3
