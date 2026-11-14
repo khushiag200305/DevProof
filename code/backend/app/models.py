@@ -258,3 +258,27 @@ class Notification(Base):
     dedupe_key = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=_utcnow, nullable=False)
     read_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class QuizAttempt(Base):
+    """
+    One go at a quiz: student practice, or (later) a recruiter's skill test.
+    `questions` is JSON [{"id", "order"}] (see app/services/quiz.py);
+    `answers` and `result` are filled in on submit.
+    """
+
+    __tablename__ = "quiz_attempts"
+
+    attempt_id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False, index=True)
+    kind = Column(String, nullable=False, default="practice")
+    skills = Column(Text, nullable=False)  # JSON list
+    questions = Column(Text, nullable=False)  # JSON list
+    time_limit_seconds = Column(Integer, nullable=True)
+    started_at = Column(DateTime(timezone=True), default=_utcnow, nullable=False)
+    submitted_at = Column(DateTime(timezone=True), nullable=True)
+    answers = Column(Text, nullable=True)  # JSON {question id: shown option index}
+    result = Column(Text, nullable=True)  # JSON from quiz.grade
+    score = Column(Integer, nullable=True)
+    total = Column(Integer, nullable=False, default=0)
+    over_time = Column(Boolean, default=False, nullable=False)
