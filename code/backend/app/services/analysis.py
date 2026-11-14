@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 
 from .. import models
 from .fingerprinting import inspect_repo
-from .github_client import fetch_github_repos
+from .github_client import GitHubRateLimitError, fetch_github_repos
 from .scoring import score_skill
 
 # Most recently updated repositories to fingerprint. Each one costs a few
@@ -48,6 +48,14 @@ def _parse_github_datetime(value: str | None) -> datetime | None:
         return None
 
 
+def rate_limit_message(exc: GitHubRateLimitError) -> str:
+    wait = f"about {exc.minutes_left} minute{'s' if exc.minutes_left != 1 else ''}" if exc.minutes_left else "a few minutes"
+    return (
+        "GitHub's hourly request limit has been reached, so the analysis couldn't finish. "
+        f"Please try again in {wait}. Results already checked are saved and won't need re-checking."
+    )
+
+
 async def _collect_evidence(username: str) -> tuple[list[dict], dict[str, dict]]:
     """
     Fetch the user's repos and inspect the most recent ones in parallel.
@@ -58,6 +66,8 @@ async def _collect_evidence(username: str) -> tuple[list[dict], dict[str, dict]]
     """
     try:
         repos = await fetch_github_repos(username)
+    except GitHubRateLimitError as exc:
+        raise GitHubUnavailableError(rate_limit_message(exc)) from exc
     except httpx.HTTPStatusError as exc:
         code = exc.response.status_code
         hint = " (rate limit reached: set GITHUB_TOKEN in .env)" if code in (403, 429) else ""
@@ -69,8 +79,10 @@ async def _collect_evidence(username: str) -> tuple[list[dict], dict[str, dict]]
 
     try:
         results = await asyncio.gather(
-            *(inspect_repo(username, repo["name"]) for repo in repos)
+            *(inspect_repo(username, repo["name"], repo.get("pushed_at")) for repo in repos)
         )
+    except GitHubRateLimitError as exc:
+        raise GitHubUnavailableError(rate_limit_message(exc)) from exc
     except httpx.RequestError as exc:
         raise GitHubUnavailableError(f"Could not reach GitHub: {exc}") from exc
 

@@ -87,6 +87,24 @@ describe("CandidateDetail page", () => {
     expect(api.apiGet).toHaveBeenCalledWith("/api/candidates/7");
   });
 
+  it("shows the latest skill test score next to the GitHub verdict", async () => {
+    vi.spyOn(api, "apiGet").mockImplementation(async (path: string) => {
+      if (path === "/api/candidates/7") return { ...analyzedCandidate, has_account: true };
+      if (path === "/api/skill-tests/candidate/7") {
+        return [
+          { test_id: 2, status: "done", submitted_at: "2026-11-12T10:00:00Z", per_skill: [{ skill: "React", correct: 4, total: 5 }] },
+          { test_id: 1, status: "done", submitted_at: "2026-11-01T10:00:00Z", per_skill: [{ skill: "React", correct: 1, total: 5 }] },
+        ];
+      }
+      return { unread: 0, items: [] };
+    });
+    renderPage();
+
+    expect(await screen.findByText("Test 4/5")).toBeInTheDocument();
+    expect(screen.queryByText("Test 1/5")).not.toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /skill tests/i })).toBeInTheDocument();
+  });
+
   it("runs the analysis and shows scores, reasons and interview questions", async () => {
     vi.spyOn(api, "apiGet").mockResolvedValue(baseCandidate);
     vi.spyOn(api, "apiPost").mockResolvedValue(analyzedCandidate);

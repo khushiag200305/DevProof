@@ -179,3 +179,9 @@ export const BellIcon = (p: P) => (
     <path d="M10.3 20a2 2 0 0 0 3.4 0" />
   </Icon>
 );
+
+export const MenuIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M4 7h16M4 12h16M4 17h16" />
+  </Icon>
+);

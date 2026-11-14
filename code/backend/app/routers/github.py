@@ -9,7 +9,8 @@ from fastapi import APIRouter, Depends
 
 from ..dependencies import require_role
 from ..services.fingerprinting import fingerprint_repo
-from ..services.github_client import fetch_github_repos
+from ..services.analysis import rate_limit_message
+from ..services.github_client import GitHubRateLimitError, fetch_github_repos
 
 router = APIRouter(prefix="/github", tags=["github"])
 
@@ -21,6 +22,8 @@ async def get_github_repos(username: str):
     """
     try:
         repos = await fetch_github_repos(username)
+    except GitHubRateLimitError as exc:
+        return {"username": username, "status": "error", "error": rate_limit_message(exc)}
     except httpx.HTTPStatusError as exc:
         return {
             "username": username,

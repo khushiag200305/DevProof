@@ -1,5 +1,5 @@
 {
- "version": 1,
+ "version": 2,
  "skills": {
   "Python": [
    {
@@ -61,6 +61,66 @@
     ],
     "answer": 1,
     "explanation": "Default values are created once when the function is defined, so every call reuses the same list."
+   },
+   {
+    "id": "python-6",
+    "question": "What does `'a,b,c'.split(',')` return?",
+    "options": [
+     "'abc'",
+     "['a', 'b', 'c']",
+     "('a', 'b', 'c')",
+     "['a,b,c']"
+    ],
+    "answer": 1,
+    "explanation": "split returns a list of the pieces between separators."
+   },
+   {
+    "id": "python-7",
+    "question": "Which keyword is used to handle an exception in Python?",
+    "options": [
+     "catch",
+     "except",
+     "rescue",
+     "handle"
+    ],
+    "answer": 1,
+    "explanation": "Python uses try / except / finally."
+   },
+   {
+    "id": "python-8",
+    "question": "What does `{1, 2, 2, 3}` evaluate to?",
+    "options": [
+     "[1, 2, 2, 3]",
+     "{1, 2, 3}",
+     "(1, 2, 3)",
+     "An error"
+    ],
+    "answer": 1,
+    "explanation": "Sets keep only unique values."
+   },
+   {
+    "id": "python-9",
+    "question": "What is a Python virtual environment for?",
+    "options": [
+     "Running Python in a browser",
+     "Keeping each project's installed packages separate",
+     "Speeding up Python",
+     "Encrypting code"
+    ],
+    "answer": 1,
+    "explanation": "Create one with `python -m venv .venv` so projects don't clash over package versions."
+   },
+   {
+    "id": "python-10",
+    "question": "What does the `with open('f.txt') as f:` pattern guarantee?",
+    "options": [
+     "The file is read faster",
+     "The file is closed even if an error happens",
+     "The file is created",
+     "The file is locked for others"
+    ],
+    "answer": 1,
+    "explanation": "The context manager closes the file when the block ends."
    }
   ],
   "Java": [
@@ -123,6 +183,66 @@
     ],
     "answer": 1,
     "explanation": "javac produces bytecode; the Java Virtual Machine runs it on any platform."
+   },
+   {
+    "id": "java-6",
+    "question": "Which method is the entry point of a Java application?",
+    "options": [
+     "public void run()",
+     "public static void main(String[] args)",
+     "static int start()",
+     "void init()"
+    ],
+    "answer": 1,
+    "explanation": "The JVM looks for main with this exact signature."
+   },
+   {
+    "id": "java-7",
+    "question": "What is the difference between an interface and an abstract class (Java 8+)?",
+    "options": [
+     "No difference",
+     "A class can implement many interfaces but extend only one class",
+     "Interfaces can have constructors",
+     "Abstract classes can't have methods"
+    ],
+    "answer": 1,
+    "explanation": "Java has single inheritance for classes and multiple for interfaces."
+   },
+   {
+    "id": "java-8",
+    "question": "Which exception is thrown when you call a method on a null reference?",
+    "options": [
+     "IOException",
+     "NullPointerException",
+     "ClassCastException",
+     "ArithmeticException"
+    ],
+    "answer": 1,
+    "explanation": "Check for null or use Optional to avoid it."
+   },
+   {
+    "id": "java-9",
+    "question": "Which keyword is used to inherit from a class?",
+    "options": [
+     "implements",
+     "extends",
+     "inherits",
+     "super"
+    ],
+    "answer": 1,
+    "explanation": "implements is for interfaces."
+   },
+   {
+    "id": "java-10",
+    "question": "Why are Java Strings immutable important for HashMap keys?",
+    "options": [
+     "They use less memory",
+     "Their hash code can't change after being stored",
+     "They sort faster",
+     "They can be null"
+    ],
+    "answer": 1,
+    "explanation": "A key whose hash changed would be lost in the map."
    }
   ],
   "C": [
@@ -185,6 +305,66 @@
     ],
     "answer": 1,
     "explanation": "Both operands are int, so integer division truncates to 3."
+   },
+   {
+    "id": "c-6",
+    "question": "What does the `&` operator give when placed before a variable, as in `&x`?",
+    "options": [
+     "Its value",
+     "Its memory address",
+     "Its size",
+     "Its bitwise NOT"
+    ],
+    "answer": 1,
+    "explanation": "&x is a pointer to x."
+   },
+   {
+    "id": "c-7",
+    "question": "Which header declares `printf`?",
+    "options": [
+     "<stdlib.h>",
+     "<stdio.h>",
+     "<string.h>",
+     "<math.h>"
+    ],
+    "answer": 1,
+    "explanation": "Standard input/output functions live in stdio.h."
+   },
+   {
+    "id": "c-8",
+    "question": "What is a dangling pointer?",
+    "options": [
+     "A pointer set to NULL",
+     "A pointer to memory that has already been freed",
+     "A pointer to a function",
+     "A pointer to a pointer"
+    ],
+    "answer": 1,
+    "explanation": "Using it is undefined behaviour; set pointers to NULL after free."
+   },
+   {
+    "id": "c-9",
+    "question": "What does `strcmp(a, b)` return when the strings are equal?",
+    "options": [
+     "1",
+     "0",
+     "-1",
+     "true"
+    ],
+    "answer": 1,
+    "explanation": "0 means equal; negative or positive give the order."
+   },
+   {
+    "id": "c-10",
+    "question": "Which loop always runs its body at least once?",
+    "options": [
+     "for",
+     "while",
+     "do-while",
+     "None"
+    ],
+    "answer": 2,
+    "explanation": "The condition is checked after the body."
    }
   ],
   "C++": [
@@ -247,6 +427,66 @@
     ],
     "answer": 1,
     "explanation": "A const reference refers to the caller's object without copying and forbids changes."
+   },
+   {
+    "id": "cpp-6",
+    "question": "What is the difference between `new` and `malloc` in C++?",
+    "options": [
+     "No difference",
+     "new calls the constructor; malloc only allocates raw memory",
+     "malloc is type-safe",
+     "new can't fail"
+    ],
+    "answer": 1,
+    "explanation": "Use delete with new and free with malloc, never mixed."
+   },
+   {
+    "id": "cpp-7",
+    "question": "What does a reference (`int& r = x;`) do?",
+    "options": [
+     "Copies x",
+     "Creates another name for x",
+     "Allocates new memory",
+     "Makes x constant"
+    ],
+    "answer": 1,
+    "explanation": "Changing r changes x."
+   },
+   {
+    "id": "cpp-8",
+    "question": "What is function overloading?",
+    "options": [
+     "A function calling itself",
+     "Several functions with the same name but different parameters",
+     "Overriding a virtual function",
+     "Inline expansion"
+    ],
+    "answer": 1,
+    "explanation": "The compiler picks one by argument types."
+   },
+   {
+    "id": "cpp-9",
+    "question": "What is `std::vector`?",
+    "options": [
+     "A fixed-size array",
+     "A dynamic array that grows as needed",
+     "A linked list",
+     "A hash map"
+    ],
+    "answer": 1,
+    "explanation": "push_back adds elements; memory is managed for you."
+   },
+   {
+    "id": "cpp-10",
+    "question": "What does a destructor do?",
+    "options": [
+     "Creates an object",
+     "Cleans up when an object's lifetime ends",
+     "Copies an object",
+     "Compares objects"
+    ],
+    "answer": 1,
+    "explanation": "It runs automatically, which is the basis of RAII."
    }
   ],
   "JavaScript": [
@@ -309,6 +549,66 @@
     ],
     "answer": 1,
     "explanation": "await yields to the event loop and resumes when the promise resolves or rejects."
+   },
+   {
+    "id": "javascript-6",
+    "question": "What does `JSON.parse('{\"a\":1}')` return?",
+    "options": [
+     "The string unchanged",
+     "An object { a: 1 }",
+     "An array",
+     "undefined"
+    ],
+    "answer": 1,
+    "explanation": "JSON.stringify goes the other way."
+   },
+   {
+    "id": "javascript-7",
+    "question": "What is a closure?",
+    "options": [
+     "A way to close the browser",
+     "A function that remembers variables from the scope it was created in",
+     "A syntax error",
+     "A loop"
+    ],
+    "answer": 1,
+    "explanation": "Inner functions keep access to outer variables after the outer function returns."
+   },
+   {
+    "id": "javascript-8",
+    "question": "What does `[1, 2, 3].filter(x => x > 1)` return?",
+    "options": [
+     "[1]",
+     "[2, 3]",
+     "true",
+     "2"
+    ],
+    "answer": 1,
+    "explanation": "filter keeps elements for which the callback returns true."
+   },
+   {
+    "id": "javascript-9",
+    "question": "What does `0.1 + 0.2 === 0.3` evaluate to?",
+    "options": [
+     "true",
+     "false",
+     "undefined",
+     "An error"
+    ],
+    "answer": 1,
+    "explanation": "Floating point gives 0.30000000000000004."
+   },
+   {
+    "id": "javascript-10",
+    "question": "What does the spread syntax `[...a, 4]` do when a = [1, 2, 3]?",
+    "options": [
+     "Creates [[1, 2, 3], 4]",
+     "Creates [1, 2, 3, 4]",
+     "Changes a",
+     "Throws an error"
+    ],
+    "answer": 1,
+    "explanation": "Spread copies the elements into a new array."
    }
   ],
   "React": [
@@ -371,6 +671,66 @@
     ],
     "answer": 1,
     "explanation": "JSX is compiled (e.g. by Babel or esbuild) into JavaScript function calls."
+   },
+   {
+    "id": "react-6",
+    "question": "What are props in React?",
+    "options": [
+     "Internal state of a component",
+     "Inputs passed from a parent component",
+     "CSS styles",
+     "Browser events"
+    ],
+    "answer": 1,
+    "explanation": "Props are read-only inside the child."
+   },
+   {
+    "id": "react-7",
+    "question": "Why shouldn't you change state directly, like `state.count = 5`?",
+    "options": [
+     "It's slower",
+     "React won't know to re-render; use the setter instead",
+     "It throws an error",
+     "It deletes the state"
+    ],
+    "answer": 1,
+    "explanation": "Always call setCount (or setState) with a new value."
+   },
+   {
+    "id": "react-8",
+    "question": "What does `useMemo` do?",
+    "options": [
+     "Stores data on the server",
+     "Remembers a computed value until its dependencies change",
+     "Fetches data",
+     "Creates a ref"
+    ],
+    "answer": 1,
+    "explanation": "It avoids recomputing expensive values on every render."
+   },
+   {
+    "id": "react-9",
+    "question": "What is a controlled input?",
+    "options": [
+     "An input with no value",
+     "An input whose value comes from React state and updates through onChange",
+     "A disabled input",
+     "An input inside a form tag"
+    ],
+    "answer": 1,
+    "explanation": "State is the single source of truth for its value."
+   },
+   {
+    "id": "react-10",
+    "question": "What does React Router's `<Link>` do instead of a normal `<a>`?",
+    "options": [
+     "Opens a new tab",
+     "Changes the page without a full browser reload",
+     "Downloads a file",
+     "Submits a form"
+    ],
+    "answer": 1,
+    "explanation": "It updates the URL and renders the new route client-side."
    }
   ],
   "Node.js": [
@@ -433,6 +793,66 @@
     ],
     "answer": 1,
     "explanation": "--save-dev adds it under devDependencies in package.json."
+   },
+   {
+    "id": "node-js-6",
+    "question": "What does `require` or `import` do in Node.js?",
+    "options": [
+     "Deletes a module",
+     "Loads another module so you can use its exports",
+     "Starts a server",
+     "Installs a package"
+    ],
+    "answer": 1,
+    "explanation": "npm install downloads packages; import loads them."
+   },
+   {
+    "id": "node-js-7",
+    "question": "What is `package-lock.json` for?",
+    "options": [
+     "Storing passwords",
+     "Recording exact installed versions so installs are repeatable",
+     "Listing scripts",
+     "Configuring ESLint"
+    ],
+    "answer": 1,
+    "explanation": "Commit it so everyone gets the same dependency tree."
+   },
+   {
+    "id": "node-js-8",
+    "question": "Which built-in module creates a basic web server?",
+    "options": [
+     "fs",
+     "http",
+     "path",
+     "os"
+    ],
+    "answer": 1,
+    "explanation": "http.createServer handles requests; frameworks like Express build on it."
+   },
+   {
+    "id": "node-js-9",
+    "question": "What does an unhandled rejected Promise do in recent Node versions?",
+    "options": [
+     "Nothing",
+     "Crashes the process by default",
+     "Retries automatically",
+     "Logs nothing"
+    ],
+    "answer": 1,
+    "explanation": "Always catch errors from async code."
+   },
+   {
+    "id": "node-js-10",
+    "question": "Where do `npm run dev` style commands come from?",
+    "options": [
+     "Node's built-in commands",
+     "The scripts section of package.json",
+     "The .env file",
+     "The node_modules folder name"
+    ],
+    "answer": 1,
+    "explanation": "npm run <name> runs the matching script."
    }
   ],
   "Express": [
@@ -495,6 +915,66 @@
     ],
     "answer": 1,
     "explanation": "Without next() or a response, the request never finishes."
+   },
+   {
+    "id": "express-6",
+    "question": "How do you read `?page=2` from a request URL in Express?",
+    "options": [
+     "req.body.page",
+     "req.query.page",
+     "req.params.page",
+     "req.page"
+    ],
+    "answer": 1,
+    "explanation": "Query string values are in req.query."
+   },
+   {
+    "id": "express-7",
+    "question": "What does `app.use(express.static('public'))` do?",
+    "options": [
+     "Blocks the public folder",
+     "Serves files in the public folder directly",
+     "Parses JSON",
+     "Logs requests"
+    ],
+    "answer": 1,
+    "explanation": "Useful for images, CSS and built frontends."
+   },
+   {
+    "id": "express-8",
+    "question": "How do you send JSON from an Express route?",
+    "options": [
+     "res.send.json()",
+     "res.json(data)",
+     "res.write(json)",
+     "return data"
+    ],
+    "answer": 1,
+    "explanation": "res.json sets the content type and serialises the data."
+   },
+   {
+    "id": "express-9",
+    "question": "How is error-handling middleware recognised?",
+    "options": [
+     "Its name starts with error",
+     "It takes four arguments (err, req, res, next)",
+     "It is registered first",
+     "It returns false"
+    ],
+    "answer": 1,
+    "explanation": "Express calls it when next(err) is used."
+   },
+   {
+    "id": "express-10",
+    "question": "What does `express.Router()` help with?",
+    "options": [
+     "Speeding up responses",
+     "Grouping related routes into separate modules",
+     "Connecting to a database",
+     "Serving HTTPS"
+    ],
+    "answer": 1,
+    "explanation": "e.g. a users router mounted at /api/users."
    }
   ],
   "Flask": [
@@ -557,6 +1037,66 @@
     ],
     "answer": 0,
     "explanation": "Flask keeps the core small; you add extensions for things like databases and auth."
+   },
+   {
+    "id": "flask-6",
+    "question": "How do you read a URL query parameter `?q=python` in Flask?",
+    "options": [
+     "request.form['q']",
+     "request.args.get('q')",
+     "request.json['q']",
+     "session['q']"
+    ],
+    "answer": 1,
+    "explanation": "Query string values are in request.args."
+   },
+   {
+    "id": "flask-7",
+    "question": "What is a Flask Blueprint?",
+    "options": [
+     "A database model",
+     "A way to organise routes into reusable groups",
+     "A template",
+     "A deployment tool"
+    ],
+    "answer": 1,
+    "explanation": "Register blueprints on the app to split a large project."
+   },
+   {
+    "id": "flask-8",
+    "question": "How do you return JSON from a Flask view?",
+    "options": [
+     "return str(data)",
+     "return jsonify(data)",
+     "render_template(data)",
+     "print(data)"
+    ],
+    "answer": 1,
+    "explanation": "Modern Flask also turns a returned dict into JSON."
+   },
+   {
+    "id": "flask-9",
+    "question": "What does `url_for('profile', name='k')` do?",
+    "options": [
+     "Redirects immediately",
+     "Builds the URL for the profile view",
+     "Fetches a URL",
+     "Deletes a route"
+    ],
+    "answer": 1,
+    "explanation": "It avoids hard-coding paths in templates and code."
+   },
+   {
+    "id": "flask-10",
+    "question": "Where does Flask look for HTML templates by default?",
+    "options": [
+     "static/",
+     "templates/",
+     "views/",
+     "html/"
+    ],
+    "answer": 1,
+    "explanation": "Static files like CSS go in static/."
    }
   ],
   "FastAPI": [
@@ -619,6 +1159,66 @@
     ],
     "answer": 1,
     "explanation": "Type hints are enforced: 'abc' is not an int, so the request is rejected."
+   },
+   {
+    "id": "fastapi-6",
+    "question": "What status code does FastAPI return when request validation fails?",
+    "options": [
+     "400",
+     "422",
+     "500",
+     "404"
+    ],
+    "answer": 1,
+    "explanation": "422 Unprocessable Entity, with details of each invalid field."
+   },
+   {
+    "id": "fastapi-7",
+    "question": "How do you raise a 404 from a FastAPI endpoint?",
+    "options": [
+     "return 404",
+     "raise HTTPException(status_code=404, detail='Not found')",
+     "abort(404)",
+     "throw NotFound()"
+    ],
+    "answer": 1,
+    "explanation": "HTTPException becomes a JSON error response."
+   },
+   {
+    "id": "fastapi-8",
+    "question": "What does `response_model` on a route do?",
+    "options": [
+     "Sets the URL",
+     "Filters and validates the response against a Pydantic model",
+     "Adds authentication",
+     "Caches the response"
+    ],
+    "answer": 1,
+    "explanation": "It also documents the response shape in /docs."
+   },
+   {
+    "id": "fastapi-9",
+    "question": "Why define an endpoint with `async def`?",
+    "options": [
+     "It's required",
+     "So it can await I/O like HTTP calls without blocking other requests",
+     "To make CPU work faster",
+     "To enable CORS"
+    ],
+    "answer": 1,
+    "explanation": "Plain def endpoints run in a thread pool instead."
+   },
+   {
+    "id": "fastapi-10",
+    "question": "Which middleware lets a React app on another origin call your FastAPI backend?",
+    "options": [
+     "GZipMiddleware",
+     "CORSMiddleware",
+     "SessionMiddleware",
+     "HTTPSRedirectMiddleware"
+    ],
+    "answer": 1,
+    "explanation": "Allow the frontend's origin explicitly."
    }
   ],
   "Django": [
@@ -681,6 +1281,66 @@
     ],
     "answer": 1,
     "explanation": "filter returns a lazy QuerySet; get() returns a single object."
+   },
+   {
+    "id": "django-6",
+    "question": "Which command applies migrations to the database?",
+    "options": [
+     "python manage.py makemigrations",
+     "python manage.py migrate",
+     "python manage.py runserver",
+     "python manage.py sync"
+    ],
+    "answer": 1,
+    "explanation": "makemigrations writes migration files; migrate runs them."
+   },
+   {
+    "id": "django-7",
+    "question": "What is the Django admin?",
+    "options": [
+     "A hosting service",
+     "An automatic web interface for managing your models' data",
+     "A CSS framework",
+     "A testing tool"
+    ],
+    "answer": 1,
+    "explanation": "Register models in admin.py to manage them there."
+   },
+   {
+    "id": "django-8",
+    "question": "In Django's MVT pattern, what does the Template handle?",
+    "options": [
+     "Database access",
+     "The HTML shown to the user",
+     "URL routing",
+     "Authentication"
+    ],
+    "answer": 1,
+    "explanation": "Models hold data, views hold logic, templates render HTML."
+   },
+   {
+    "id": "django-9",
+    "question": "What does `get_object_or_404(Book, pk=1)` do when no book exists?",
+    "options": [
+     "Returns None",
+     "Raises Http404 so the user sees a Not Found page",
+     "Creates a book",
+     "Crashes the server"
+    ],
+    "answer": 1,
+    "explanation": "A shortcut that avoids writing try/except DoesNotExist."
+   },
+   {
+    "id": "django-10",
+    "question": "Which setting must list your domain before deploying with DEBUG=False?",
+    "options": [
+     "INSTALLED_APPS",
+     "ALLOWED_HOSTS",
+     "MIDDLEWARE",
+     "STATIC_URL"
+    ],
+    "answer": 1,
+    "explanation": "Requests for other hosts are rejected."
    }
   ],
   "SQL": [
@@ -743,6 +1403,66 @@
     ],
     "answer": 1,
     "explanation": "Parameters keep data separate from SQL code, preventing SQL injection."
+   },
+   {
+    "id": "sql-6",
+    "question": "Which clause sorts results?",
+    "options": [
+     "GROUP BY",
+     "ORDER BY",
+     "SORT BY",
+     "HAVING"
+    ],
+    "answer": 1,
+    "explanation": "Add DESC for descending order."
+   },
+   {
+    "id": "sql-7",
+    "question": "What does an INNER JOIN return?",
+    "options": [
+     "All rows from both tables",
+     "Only rows with matching values in both tables",
+     "Rows only from the left table",
+     "Rows with NULLs"
+    ],
+    "answer": 1,
+    "explanation": "Unmatched rows are dropped."
+   },
+   {
+    "id": "sql-8",
+    "question": "Which query returns the highest salary in `employees`?",
+    "options": [
+     "SELECT TOP salary FROM employees",
+     "SELECT MAX(salary) FROM employees",
+     "SELECT salary FROM employees LIMIT MAX",
+     "SELECT HIGH(salary) FROM employees"
+    ],
+    "answer": 1,
+    "explanation": "MAX, MIN, SUM, AVG and COUNT are aggregate functions."
+   },
+   {
+    "id": "sql-9",
+    "question": "What does `WHERE name LIKE 'A%'` match?",
+    "options": [
+     "Names ending with A",
+     "Names starting with A",
+     "Names containing only A",
+     "Names equal to 'A%'"
+    ],
+    "answer": 1,
+    "explanation": "% matches any sequence of characters."
+   },
+   {
+    "id": "sql-10",
+    "question": "How do you check for a missing value in SQL?",
+    "options": [
+     "= NULL",
+     "IS NULL",
+     "== NULL",
+     "EMPTY()"
+    ],
+    "answer": 1,
+    "explanation": "Comparisons with NULL using = are never true."
    }
   ],
   "MySQL": [
@@ -805,6 +1525,66 @@
     ],
     "answer": 1,
     "explanation": "Indexes let the database find rows without scanning the whole table, at some cost to writes."
+   },
+   {
+    "id": "mysql-6",
+    "question": "Which command shows the columns of the `users` table?",
+    "options": [
+     "SHOW users",
+     "DESCRIBE users",
+     "LIST users",
+     "COLUMNS users"
+    ],
+    "answer": 1,
+    "explanation": "SHOW COLUMNS FROM users works too."
+   },
+   {
+    "id": "mysql-7",
+    "question": "Which tool creates a backup of a MySQL database as SQL statements?",
+    "options": [
+     "mysqlbackup",
+     "mysqldump",
+     "mysqlcopy",
+     "mysqlsave"
+    ],
+    "answer": 1,
+    "explanation": "Restore by running the dump file with mysql."
+   },
+   {
+    "id": "mysql-8",
+    "question": "Which MySQL type is best for storing money amounts exactly?",
+    "options": [
+     "FLOAT",
+     "DECIMAL",
+     "DOUBLE",
+     "TEXT"
+    ],
+    "answer": 1,
+    "explanation": "Floating point types introduce rounding errors."
+   },
+   {
+    "id": "mysql-9",
+    "question": "What does `LIMIT 10 OFFSET 20` return?",
+    "options": [
+     "Rows 1 to 10",
+     "Rows 21 to 30",
+     "Rows 10 to 20",
+     "The first 20 rows"
+    ],
+    "answer": 1,
+    "explanation": "Skip 20 rows, then take 10, often used for pagination."
+   },
+   {
+    "id": "mysql-10",
+    "question": "Which statement gives a user permissions on a database?",
+    "options": [
+     "ALLOW",
+     "GRANT",
+     "PERMIT",
+     "SET ROLE"
+    ],
+    "answer": 1,
+    "explanation": "REVOKE removes them."
    }
   ],
   "PostgreSQL": [
@@ -867,6 +1647,66 @@
     ],
     "answer": 1,
     "explanation": "BEGIN ... COMMIT is atomic: on error you ROLLBACK and nothing is half-applied."
+   },
+   {
+    "id": "postgresql-6",
+    "question": "How do you connect to a database named shop with psql?",
+    "options": [
+     "psql use shop",
+     "psql -d shop",
+     "psql --open shop",
+     "pg shop"
+    ],
+    "answer": 1,
+    "explanation": "Add -U for the user and -h for the host."
+   },
+   {
+    "id": "postgresql-7",
+    "question": "What does `EXPLAIN ANALYZE` show?",
+    "options": [
+     "Table sizes",
+     "The query plan with actual run times",
+     "All indexes",
+     "User permissions"
+    ],
+    "answer": 1,
+    "explanation": "It actually runs the query, so be careful with writes."
+   },
+   {
+    "id": "postgresql-8",
+    "question": "Which PostgreSQL feature allows storing a list in one column?",
+    "options": [
+     "Arrays (e.g. TEXT[])",
+     "Sequences",
+     "Schemas",
+     "Views"
+    ],
+    "answer": 0,
+    "explanation": "Postgres supports array types and operators on them."
+   },
+   {
+    "id": "postgresql-9",
+    "question": "What is a PostgreSQL schema?",
+    "options": [
+     "A backup",
+     "A namespace that groups tables inside a database",
+     "A user",
+     "A query plan"
+    ],
+    "answer": 1,
+    "explanation": "The default schema is public."
+   },
+   {
+    "id": "postgresql-10",
+    "question": "Which command makes a backup of one PostgreSQL database?",
+    "options": [
+     "pg_backup",
+     "pg_dump",
+     "pg_export",
+     "pg_copy"
+    ],
+    "answer": 1,
+    "explanation": "Restore with psql or pg_restore."
    }
   ],
   "MongoDB": [
@@ -929,6 +1769,66 @@
     ],
     "answer": 1,
     "explanation": "Each stage passes its output documents to the next."
+   },
+   {
+    "id": "mongodb-6",
+    "question": "Which method adds one document to a collection?",
+    "options": [
+     "add()",
+     "insertOne()",
+     "push()",
+     "create()"
+    ],
+    "answer": 1,
+    "explanation": "insertMany adds several."
+   },
+   {
+    "id": "mongodb-7",
+    "question": "What does `db.users.updateOne({name: 'K'}, {$set: {age: 21}})` do?",
+    "options": [
+     "Replaces the whole document",
+     "Sets age to 21 on the first matching document",
+     "Deletes the age field",
+     "Updates every user"
+    ],
+    "answer": 1,
+    "explanation": "$set changes only the listed fields."
+   },
+   {
+    "id": "mongodb-8",
+    "question": "Why create an index on a MongoDB field?",
+    "options": [
+     "To store more data",
+     "To make queries on that field faster",
+     "To encrypt the field",
+     "To make it unique always"
+    ],
+    "answer": 1,
+    "explanation": "Without an index MongoDB scans the whole collection."
+   },
+   {
+    "id": "mongodb-9",
+    "question": "What is Mongoose?",
+    "options": [
+     "A MongoDB hosting service",
+     "A Node.js library for schemas and models on top of MongoDB",
+     "A query language",
+     "A backup tool"
+    ],
+    "answer": 1,
+    "explanation": "It adds validation and structure to documents."
+   },
+   {
+    "id": "mongodb-10",
+    "question": "What is MongoDB Atlas?",
+    "options": [
+     "A GUI only",
+     "MongoDB's managed cloud database service",
+     "A data type",
+     "A shell command"
+    ],
+    "answer": 1,
+    "explanation": "It hosts clusters on AWS, Azure or GCP."
    }
   ],
   "Database Design": [
@@ -991,6 +1891,66 @@
     ],
     "answer": 1,
     "explanation": "Derived data goes stale; compute it in queries or views instead."
+   },
+   {
+    "id": "database-design-6",
+    "question": "What is a composite key?",
+    "options": [
+     "A key made of text",
+     "A primary key made of two or more columns together",
+     "A foreign key to two tables",
+     "An encrypted key"
+    ],
+    "answer": 1,
+    "explanation": "e.g. (student_id, course_id) in an enrolment table."
+   },
+   {
+    "id": "database-design-7",
+    "question": "What is a surrogate key?",
+    "options": [
+     "A key from real-world data like email",
+     "An artificial key such as an auto-increment ID",
+     "A backup key",
+     "A deleted key"
+    ],
+    "answer": 1,
+    "explanation": "It never needs to change even if real data does."
+   },
+   {
+    "id": "database-design-8",
+    "question": "Which relationship needs a foreign key on the 'many' side?",
+    "options": [
+     "One-to-many",
+     "Many-to-many only",
+     "None",
+     "One-to-one only"
+    ],
+    "answer": 0,
+    "explanation": "Each order row stores the customer_id it belongs to."
+   },
+   {
+    "id": "database-design-9",
+    "question": "Why add a UNIQUE constraint on a column like email?",
+    "options": [
+     "To speed up inserts",
+     "So no two rows can have the same value",
+     "To allow NULLs",
+     "To encrypt it"
+    ],
+    "answer": 1,
+    "explanation": "The database enforces it even if the application forgets."
+   },
+   {
+    "id": "database-design-10",
+    "question": "What is the purpose of an ER diagram?",
+    "options": [
+     "Measuring query speed",
+     "Showing entities, their attributes and how they relate",
+     "Listing users",
+     "Backing up data"
+    ],
+    "answer": 1,
+    "explanation": "It's usually drawn before creating tables."
    }
   ],
   "Normalization": [
@@ -1053,6 +2013,66 @@
     ],
     "answer": 1,
     "explanation": "Reporting and read-heavy systems often trade some redundancy for fewer joins."
+   },
+   {
+    "id": "normalization-6",
+    "question": "A column holding 'Python, Java, SQL' in one cell breaks which normal form?",
+    "options": [
+     "1NF",
+     "2NF",
+     "3NF",
+     "BCNF only"
+    ],
+    "answer": 0,
+    "explanation": "1NF needs one atomic value per cell."
+   },
+   {
+    "id": "normalization-7",
+    "question": "What is a transitive dependency?",
+    "options": [
+     "A key depending on itself",
+     "A non-key column depending on another non-key column",
+     "Two tables sharing a key",
+     "A foreign key"
+    ],
+    "answer": 1,
+    "explanation": "e.g. student -> dept_id -> dept_name; 3NF removes it."
+   },
+   {
+    "id": "normalization-8",
+    "question": "What is BCNF?",
+    "options": [
+     "A weaker form than 1NF",
+     "A stricter version of 3NF where every determinant is a candidate key",
+     "A backup format",
+     "A type of index"
+    ],
+    "answer": 1,
+    "explanation": "Boyce-Codd Normal Form."
+   },
+   {
+    "id": "normalization-9",
+    "question": "What is an update anomaly?",
+    "options": [
+     "A slow update",
+     "Having to change the same fact in many rows, risking inconsistency",
+     "A failed transaction",
+     "A locked table"
+    ],
+    "answer": 1,
+    "explanation": "Normalisation stores each fact once."
+   },
+   {
+    "id": "normalization-10",
+    "question": "What is a partial dependency?",
+    "options": [
+     "A column depending on only part of a composite primary key",
+     "A column with NULLs",
+     "A missing foreign key",
+     "A duplicate row"
+    ],
+    "answer": 0,
+    "explanation": "2NF removes partial dependencies."
    }
   ],
   "CRUD Operations": [
@@ -1115,6 +2135,66 @@
     ],
     "answer": 1,
     "explanation": "Use PATCH for partial updates."
+   },
+   {
+    "id": "crud-operations-6",
+    "question": "Which HTTP method is used to Read data in a REST API?",
+    "options": [
+     "POST",
+     "GET",
+     "PUT",
+     "DELETE"
+    ],
+    "answer": 1,
+    "explanation": "GET requests shouldn't change data."
+   },
+   {
+    "id": "crud-operations-7",
+    "question": "What status code usually means a resource was created?",
+    "options": [
+     "200",
+     "201",
+     "204",
+     "404"
+    ],
+    "answer": 1,
+    "explanation": "201 Created, often with the new resource in the body."
+   },
+   {
+    "id": "crud-operations-8",
+    "question": "Which SQL statement performs the 'Create' in CRUD?",
+    "options": [
+     "SELECT",
+     "INSERT",
+     "UPDATE",
+     "CREATE ROW"
+    ],
+    "answer": 1,
+    "explanation": "CREATE TABLE makes a table; INSERT adds rows."
+   },
+   {
+    "id": "crud-operations-9",
+    "question": "What is a 'soft delete'?",
+    "options": [
+     "Deleting slowly",
+     "Marking a row as deleted (e.g. deleted_at) instead of removing it",
+     "Deleting from cache only",
+     "Deleting with a warning"
+    ],
+    "answer": 1,
+    "explanation": "The data can be restored and history is kept."
+   },
+   {
+    "id": "crud-operations-10",
+    "question": "What does status 204 No Content usually mean after a DELETE?",
+    "options": [
+     "The delete failed",
+     "The delete worked and there's nothing to return",
+     "The resource was moved",
+     "Not authorised"
+    ],
+    "answer": 1,
+    "explanation": "A common success response for deletes."
    }
   ],
   "Docker": [
@@ -1177,6 +2257,66 @@
     ],
     "answer": 1,
     "explanation": "Docker caches layers; unchanged steps are reused."
+   },
+   {
+    "id": "docker-6",
+    "question": "What does `docker ps` show?",
+    "options": [
+     "All images",
+     "Running containers",
+     "Docker's version",
+     "Network settings"
+    ],
+    "answer": 1,
+    "explanation": "Add -a to include stopped containers."
+   },
+   {
+    "id": "docker-7",
+    "question": "What is a Docker volume used for?",
+    "options": [
+     "Making images smaller",
+     "Keeping data after a container is removed",
+     "Limiting CPU",
+     "Opening ports"
+    ],
+    "answer": 1,
+    "explanation": "e.g. a database's data directory."
+   },
+   {
+    "id": "docker-8",
+    "question": "Which instruction sets the default command a container runs?",
+    "options": [
+     "RUN",
+     "CMD",
+     "FROM",
+     "COPY"
+    ],
+    "answer": 1,
+    "explanation": "RUN executes at build time; CMD at container start."
+   },
+   {
+    "id": "docker-9",
+    "question": "Which instruction picks the base image?",
+    "options": [
+     "BASE",
+     "FROM",
+     "IMAGE",
+     "START"
+    ],
+    "answer": 1,
+    "explanation": "e.g. FROM python:3.12-slim."
+   },
+   {
+    "id": "docker-10",
+    "question": "What is Docker Hub?",
+    "options": [
+     "A local folder",
+     "A public registry for sharing images",
+     "A container runtime",
+     "A monitoring tool"
+    ],
+    "answer": 1,
+    "explanation": "docker pull fetches images from it by default."
    }
   ],
   "AWS": [
@@ -1239,6 +2379,66 @@
     ],
     "answer": 1,
     "explanation": "Roles give temporary credentials without storing secrets."
+   },
+   {
+    "id": "aws-6",
+    "question": "Which AWS service is object storage for files?",
+    "options": [
+     "EBS",
+     "S3",
+     "RDS",
+     "Lambda"
+    ],
+    "answer": 1,
+    "explanation": "EBS is block storage attached to EC2."
+   },
+   {
+    "id": "aws-7",
+    "question": "What is an Availability Zone?",
+    "options": [
+     "A pricing tier",
+     "One or more separate data centres within a Region",
+     "A user group",
+     "A backup"
+    ],
+    "answer": 1,
+    "explanation": "Spreading across AZs protects against a data-centre failure."
+   },
+   {
+    "id": "aws-8",
+    "question": "Which service monitors metrics and logs for AWS resources?",
+    "options": [
+     "CloudFront",
+     "CloudWatch",
+     "CloudFormation",
+     "Route 53"
+    ],
+    "answer": 1,
+    "explanation": "Set alarms on CPU, errors and more."
+   },
+   {
+    "id": "aws-9",
+    "question": "What does CloudFormation do?",
+    "options": [
+     "Monitors costs",
+     "Creates AWS resources from template files (infrastructure as code)",
+     "Stores files",
+     "Sends email"
+    ],
+    "answer": 1,
+    "explanation": "The same template recreates the same setup."
+   },
+   {
+    "id": "aws-10",
+    "question": "Which AWS service handles DNS?",
+    "options": [
+     "Route 53",
+     "VPC",
+     "IAM",
+     "SNS"
+    ],
+    "answer": 0,
+    "explanation": "It maps domain names to resources."
    }
   ],
   "AWS Lambda": [
@@ -1301,6 +2501,66 @@
     ],
     "answer": 2,
     "explanation": "Long jobs need another service such as ECS or Step Functions."
+   },
+   {
+    "id": "aws-lambda-6",
+    "question": "What is a Lambda 'handler'?",
+    "options": [
+     "A billing account",
+     "The function AWS calls when the Lambda is triggered",
+     "An IAM user",
+     "A log group"
+    ],
+    "answer": 1,
+    "explanation": "e.g. lambda_handler(event, context) in Python."
+   },
+   {
+    "id": "aws-lambda-7",
+    "question": "Where do Lambda logs go by default?",
+    "options": [
+     "S3",
+     "CloudWatch Logs",
+     "DynamoDB",
+     "Nowhere"
+    ],
+    "answer": 1,
+    "explanation": "print() output appears in CloudWatch."
+   },
+   {
+    "id": "aws-lambda-8",
+    "question": "How does a Lambda get permission to write to DynamoDB?",
+    "options": [
+     "Hard-coded keys",
+     "Its execution role's IAM policy",
+     "A public endpoint",
+     "It can't"
+    ],
+    "answer": 1,
+    "explanation": "Grant only the actions it needs."
+   },
+   {
+    "id": "aws-lambda-9",
+    "question": "Which service is often put in front of Lambda to make an HTTP API?",
+    "options": [
+     "API Gateway",
+     "EBS",
+     "Glacier",
+     "Redshift"
+    ],
+    "answer": 0,
+    "explanation": "Lambda function URLs are another simpler option."
+   },
+   {
+    "id": "aws-lambda-10",
+    "question": "Why should Lambda functions be stateless?",
+    "options": [
+     "They can't use memory",
+     "Each invocation may run on a different instance",
+     "AWS deletes variables",
+     "It's cheaper"
+    ],
+    "answer": 1,
+    "explanation": "Store state in a database or S3."
    }
   ],
   "AWS S3": [
@@ -1363,6 +2623,66 @@
     ],
     "answer": 1,
     "explanation": "e.g. move logs to Glacier after 30 days, delete after a year."
+   },
+   {
+    "id": "aws-s3-6",
+    "question": "What is an S3 object key?",
+    "options": [
+     "An encryption key",
+     "The object's full name/path inside the bucket",
+     "An access key",
+     "A version number"
+    ],
+    "answer": 1,
+    "explanation": "e.g. resumes/2026/khushi.pdf."
+   },
+   {
+    "id": "aws-s3-7",
+    "question": "How do you block all public access to a bucket?",
+    "options": [
+     "Delete the bucket",
+     "Turn on S3 Block Public Access",
+     "Rename the bucket",
+     "Use Glacier"
+    ],
+    "answer": 1,
+    "explanation": "It's on by default for new buckets."
+   },
+   {
+    "id": "aws-s3-8",
+    "question": "Which storage class is cheapest for long-term archives rarely read?",
+    "options": [
+     "S3 Standard",
+     "S3 Glacier Deep Archive",
+     "S3 Intelligent-Tiering",
+     "S3 One Zone-IA"
+    ],
+    "answer": 1,
+    "explanation": "Retrieval takes hours, which is fine for archives."
+   },
+   {
+    "id": "aws-s3-9",
+    "question": "Can S3 host a static website?",
+    "options": [
+     "No",
+     "Yes, with static website hosting on a bucket",
+     "Only with EC2",
+     "Only for images"
+    ],
+    "answer": 1,
+    "explanation": "Often combined with CloudFront for HTTPS."
+   },
+   {
+    "id": "aws-s3-10",
+    "question": "What is a bucket policy?",
+    "options": [
+     "A naming rule",
+     "A JSON policy controlling who can access a bucket",
+     "A pricing plan",
+     "A lifecycle rule"
+    ],
+    "answer": 1,
+    "explanation": "Attached to the bucket rather than a user."
    }
   ],
   "AWS EC2": [
@@ -1425,6 +2745,66 @@
     ],
     "answer": 1,
     "explanation": "Instance store is temporary; EBS volumes persist."
+   },
+   {
+    "id": "aws-ec2-6",
+    "question": "What is an Elastic IP?",
+    "options": [
+     "An IP that changes every hour",
+     "A static public IP you can attach to an instance",
+     "A private IP",
+     "A DNS name"
+    ],
+    "answer": 1,
+    "explanation": "A normal public IP changes when the instance stops."
+   },
+   {
+    "id": "aws-ec2-7",
+    "question": "What is EBS?",
+    "options": [
+     "A load balancer",
+     "Persistent block storage volumes for EC2",
+     "A database",
+     "A CDN"
+    ],
+    "answer": 1,
+    "explanation": "Data on EBS survives stopping the instance."
+   },
+   {
+    "id": "aws-ec2-8",
+    "question": "What does an Auto Scaling group do?",
+    "options": [
+     "Resizes disks",
+     "Adds or removes instances based on demand or health",
+     "Changes instance types",
+     "Backs up instances"
+    ],
+    "answer": 1,
+    "explanation": "Often paired with a load balancer."
+   },
+   {
+    "id": "aws-ec2-9",
+    "question": "What does an instance type like t3.micro describe?",
+    "options": [
+     "The region",
+     "The CPU, memory and network capacity",
+     "The operating system",
+     "The price plan"
+    ],
+    "answer": 1,
+    "explanation": "Different families suit compute, memory or general work."
+   },
+   {
+    "id": "aws-ec2-10",
+    "question": "What is a key pair used for?",
+    "options": [
+     "Billing",
+     "Logging in to the instance over SSH securely",
+     "Encrypting S3",
+     "Naming instances"
+    ],
+    "answer": 1,
+    "explanation": "Keep the private key safe; AWS stores only the public key."
    }
   ],
   "AWS IAM": [
@@ -1487,6 +2867,66 @@
     ],
     "answer": 1,
     "explanation": "An explicit Deny always overrides an Allow."
+   },
+   {
+    "id": "aws-iam-6",
+    "question": "What is an IAM policy?",
+    "options": [
+     "A password rule only",
+     "A JSON document listing allowed or denied actions on resources",
+     "A user group",
+     "A billing alert"
+    ],
+    "answer": 1,
+    "explanation": "Attach policies to users, groups or roles."
+   },
+   {
+    "id": "aws-iam-7",
+    "question": "What is MFA?",
+    "options": [
+     "Multiple file access",
+     "Multi-factor authentication: a second check besides the password",
+     "A policy type",
+     "A region"
+    ],
+    "answer": 1,
+    "explanation": "Turn it on, especially for the root account."
+   },
+   {
+    "id": "aws-iam-8",
+    "question": "What is an IAM group for?",
+    "options": [
+     "Grouping instances",
+     "Giving the same permissions to several users at once",
+     "Billing",
+     "Networking"
+    ],
+    "answer": 1,
+    "explanation": "e.g. a Developers group with shared policies."
+   },
+   {
+    "id": "aws-iam-9",
+    "question": "Why rotate access keys?",
+    "options": [
+     "To speed up APIs",
+     "To limit damage if a key leaks",
+     "It's required daily",
+     "To lower cost"
+    ],
+    "answer": 1,
+    "explanation": "Better still, use roles with temporary credentials."
+   },
+   {
+    "id": "aws-iam-10",
+    "question": "If no policy mentions an action, is it allowed?",
+    "options": [
+     "Yes",
+     "No, it's implicitly denied",
+     "Only for admins",
+     "Only in one region"
+    ],
+    "answer": 1,
+    "explanation": "IAM denies by default."
    }
   ],
   "AWS VPC": [
@@ -1549,6 +2989,66 @@
     ],
     "answer": 1,
     "explanation": "/16 means the first 16 bits are fixed: 65,536 addresses."
+   },
+   {
+    "id": "aws-vpc-6",
+    "question": "What does an Internet Gateway do?",
+    "options": [
+     "Blocks the internet",
+     "Lets resources in a VPC reach and be reached from the internet",
+     "Encrypts traffic",
+     "Assigns DNS"
+    ],
+    "answer": 1,
+    "explanation": "Public subnets route 0.0.0.0/0 to it."
+   },
+   {
+    "id": "aws-vpc-7",
+    "question": "Where should a database usually be placed?",
+    "options": [
+     "A public subnet",
+     "A private subnet",
+     "Outside the VPC",
+     "In S3"
+    ],
+    "answer": 1,
+    "explanation": "Only the app servers should reach it."
+   },
+   {
+    "id": "aws-vpc-8",
+    "question": "What is VPC peering?",
+    "options": [
+     "Sharing passwords",
+     "Connecting two VPCs so they can talk privately",
+     "A backup",
+     "A firewall"
+    ],
+    "answer": 1,
+    "explanation": "Their CIDR ranges must not overlap."
+   },
+   {
+    "id": "aws-vpc-9",
+    "question": "What is a route table?",
+    "options": [
+     "A list of users",
+     "Rules deciding where network traffic from a subnet goes",
+     "A DNS record",
+     "A billing report"
+    ],
+    "answer": 1,
+    "explanation": "Each subnet is associated with one."
+   },
+   {
+    "id": "aws-vpc-10",
+    "question": "Are security groups stateful?",
+    "options": [
+     "No",
+     "Yes, return traffic is allowed automatically",
+     "Only for UDP",
+     "Only for HTTPS"
+    ],
+    "answer": 1,
+    "explanation": "Network ACLs are stateless."
    }
   ],
   "Cloud Computing": [
@@ -1611,6 +3111,66 @@
     ],
     "answer": 1,
     "explanation": "Some workloads stay on-site; others run in the public cloud."
+   },
+   {
+    "id": "cloud-computing-6",
+    "question": "Which is an example of PaaS?",
+    "options": [
+     "Gmail",
+     "Heroku or Render",
+     "A bare virtual machine",
+     "A USB drive"
+    ],
+    "answer": 1,
+    "explanation": "PaaS runs your code without you managing servers."
+   },
+   {
+    "id": "cloud-computing-7",
+    "question": "What does 'serverless' mean?",
+    "options": [
+     "No servers exist",
+     "The provider manages the servers; you just deploy code or functions",
+     "Code runs on your laptop",
+     "Free hosting"
+    ],
+    "answer": 1,
+    "explanation": "e.g. AWS Lambda."
+   },
+   {
+    "id": "cloud-computing-8",
+    "question": "What is scalability?",
+    "options": [
+     "Lower prices",
+     "The ability to handle more load by adding resources",
+     "Better security",
+     "Faster downloads only"
+    ],
+    "answer": 1,
+    "explanation": "Vertical = bigger machine, horizontal = more machines."
+   },
+   {
+    "id": "cloud-computing-9",
+    "question": "What is a CDN?",
+    "options": [
+     "A database",
+     "A network of servers caching content close to users",
+     "A programming language",
+     "A VPN"
+    ],
+    "answer": 1,
+    "explanation": "e.g. CloudFront or Cloudflare."
+   },
+   {
+    "id": "cloud-computing-10",
+    "question": "What is high availability?",
+    "options": [
+     "Cheap hosting",
+     "Designing systems to keep running despite failures",
+     "Fast CPUs",
+     "Large storage"
+    ],
+    "answer": 1,
+    "explanation": "Usually achieved with redundancy across zones."
    }
   ],
   "Machine Learning": [
@@ -1673,6 +3233,66 @@
     ],
     "answer": 1,
     "explanation": "It gives a more reliable estimate than a single split."
+   },
+   {
+    "id": "machine-learning-6",
+    "question": "What is the difference between supervised and unsupervised learning?",
+    "options": [
+     "No difference",
+     "Supervised learns from labelled examples; unsupervised finds patterns without labels",
+     "Unsupervised is always more accurate",
+     "Supervised needs no data"
+    ],
+    "answer": 1,
+    "explanation": "Classification is supervised; clustering is unsupervised."
+   },
+   {
+    "id": "machine-learning-7",
+    "question": "Which metric suits a regression problem?",
+    "options": [
+     "Accuracy",
+     "Mean squared error",
+     "F1 score",
+     "Precision"
+    ],
+    "answer": 1,
+    "explanation": "The others are for classification."
+   },
+   {
+    "id": "machine-learning-8",
+    "question": "What does regularisation (like L2) help prevent?",
+    "options": [
+     "Underfitting only",
+     "Overfitting",
+     "Missing values",
+     "Slow loading"
+    ],
+    "answer": 1,
+    "explanation": "It penalises large weights so the model stays simpler."
+   },
+   {
+    "id": "machine-learning-9",
+    "question": "What is recall?",
+    "options": [
+     "Correct predictions out of all predictions",
+     "Of all actual positives, the share the model found",
+     "Of predicted positives, the share that were right",
+     "Training speed"
+    ],
+    "answer": 1,
+    "explanation": "The third option describes precision."
+   },
+   {
+    "id": "machine-learning-10",
+    "question": "What is a feature in machine learning?",
+    "options": [
+     "The model's output",
+     "An input variable used to make predictions",
+     "A bug",
+     "The loss function"
+    ],
+    "answer": 1,
+    "explanation": "e.g. age, income or word counts."
    }
   ],
   "PCA": [
@@ -1735,6 +3355,66 @@
     ],
     "answer": 1,
     "explanation": "PCA ignores labels; it only looks at the features."
+   },
+   {
+    "id": "pca-6",
+    "question": "What is the first principal component?",
+    "options": [
+     "The column with the largest values",
+     "The direction along which the data varies the most",
+     "The mean of the data",
+     "The smallest eigenvalue"
+    ],
+    "answer": 1,
+    "explanation": "Each later component captures the most remaining variance."
+   },
+   {
+    "id": "pca-7",
+    "question": "Are principal components correlated with each other?",
+    "options": [
+     "Yes, strongly",
+     "No, they are orthogonal (uncorrelated)",
+     "Only the first two",
+     "It depends on k"
+    ],
+    "answer": 1,
+    "explanation": "That's why they remove redundancy between features."
+   },
+   {
+    "id": "pca-8",
+    "question": "What is a common way to choose how many components to keep?",
+    "options": [
+     "Always keep 2",
+     "Keep enough to explain e.g. 90–95% of the variance",
+     "Keep all of them",
+     "Keep one per row"
+    ],
+    "answer": 1,
+    "explanation": "A scree plot or cumulative variance helps."
+   },
+   {
+    "id": "pca-9",
+    "question": "What is a downside of PCA?",
+    "options": [
+     "It needs labels",
+     "Components are harder to interpret than original features",
+     "It only works on text",
+     "It increases dimensions"
+    ],
+    "answer": 1,
+    "explanation": "Each component mixes many original features."
+   },
+   {
+    "id": "pca-10",
+    "question": "What mathematical tool does PCA rely on?",
+    "options": [
+     "Sorting",
+     "Eigenvectors of the covariance matrix (or SVD)",
+     "Gradient boosting",
+     "Decision trees"
+    ],
+    "answer": 1,
+    "explanation": "Eigenvalues give the variance along each direction."
    }
   ],
   "K-Means Clustering": [
@@ -1797,6 +3477,66 @@
     ],
     "answer": 1,
     "explanation": "It uses distance to a centre, so it favours compact, spherical clusters."
+   },
+   {
+    "id": "k-means-clustering-6",
+    "question": "What is a centroid in K-Means?",
+    "options": [
+     "An outlier",
+     "The mean point of a cluster",
+     "The first data point",
+     "A label"
+    ],
+    "answer": 1,
+    "explanation": "Points are assigned to their nearest centroid."
+   },
+   {
+    "id": "k-means-clustering-7",
+    "question": "What does K-Means minimise?",
+    "options": [
+     "The number of clusters",
+     "The sum of squared distances from points to their cluster centroid",
+     "The accuracy",
+     "The number of features"
+    ],
+    "answer": 1,
+    "explanation": "Also called inertia or within-cluster sum of squares."
+   },
+   {
+    "id": "k-means-clustering-8",
+    "question": "Why scale features before K-Means?",
+    "options": [
+     "It isn't needed",
+     "Distance-based clustering is dominated by features with large ranges",
+     "To add labels",
+     "To remove outliers"
+    ],
+    "answer": 1,
+    "explanation": "e.g. salary in lakhs would swamp age in years."
+   },
+   {
+    "id": "k-means-clustering-9",
+    "question": "What does k-means++ improve?",
+    "options": [
+     "Speed of prediction",
+     "The choice of starting centroids",
+     "The number of features",
+     "Label quality"
+    ],
+    "answer": 1,
+    "explanation": "Better starts give more stable results."
+   },
+   {
+    "id": "k-means-clustering-10",
+    "question": "What does the silhouette score measure?",
+    "options": [
+     "Training time",
+     "How well each point fits its own cluster compared with others",
+     "Number of outliers",
+     "Model size"
+    ],
+    "answer": 1,
+    "explanation": "Closer to 1 is better."
    }
   ],
   "Prompt Engineering": [
@@ -1859,6 +3599,66 @@
     ],
     "answer": 1,
     "explanation": "Treat user-supplied or retrieved text as data, not instructions."
+   },
+   {
+    "id": "prompt-engineering-6",
+    "question": "What is a system prompt?",
+    "options": [
+     "An error message",
+     "Instructions that set the model's role and rules for the conversation",
+     "The user's first message",
+     "A hardware setting"
+    ],
+    "answer": 1,
+    "explanation": "It shapes every later answer."
+   },
+   {
+    "id": "prompt-engineering-7",
+    "question": "Why give examples of the output you want?",
+    "options": [
+     "To make prompts longer",
+     "Examples show format and style more clearly than descriptions",
+     "Models ignore instructions",
+     "It's required"
+    ],
+    "answer": 1,
+    "explanation": "This is few-shot prompting."
+   },
+   {
+    "id": "prompt-engineering-8",
+    "question": "What does lowering temperature usually do?",
+    "options": [
+     "Makes answers more random",
+     "Makes answers more focused and repeatable",
+     "Makes the model faster",
+     "Increases cost"
+    ],
+    "answer": 1,
+    "explanation": "Higher temperature gives more varied output."
+   },
+   {
+    "id": "prompt-engineering-9",
+    "question": "What is retrieval-augmented generation (RAG)?",
+    "options": [
+     "Training a new model",
+     "Adding relevant documents to the prompt so the model answers from them",
+     "Compressing prompts",
+     "Translating prompts"
+    ],
+    "answer": 1,
+    "explanation": "It reduces hallucination on specific facts."
+   },
+   {
+    "id": "prompt-engineering-10",
+    "question": "Which prompt is clearer?",
+    "options": [
+     "'Summarise this'",
+     "'Summarise this report in 3 bullet points for a manager, under 60 words'",
+     "'Make it better'",
+     "'Do the thing'"
+    ],
+    "answer": 1,
+    "explanation": "Specific audience, length and format help."
    }
   ],
   "Pandas": [
@@ -1921,6 +3721,66 @@
     ],
     "answer": 1,
     "explanation": "df.loc['row_label', 'col'] vs df.iloc[0, 1]."
+   },
+   {
+    "id": "pandas-6",
+    "question": "How do you read a CSV file into a DataFrame?",
+    "options": [
+     "pd.open_csv('f.csv')",
+     "pd.read_csv('f.csv')",
+     "pd.load('f.csv')",
+     "pd.DataFrame('f.csv')"
+    ],
+    "answer": 1,
+    "explanation": "df.to_csv writes one back."
+   },
+   {
+    "id": "pandas-7",
+    "question": "How do you select rows where age > 30?",
+    "options": [
+     "df.age > 30",
+     "df[df['age'] > 30]",
+     "df.select(age > 30)",
+     "df.where(30)"
+    ],
+    "answer": 1,
+    "explanation": "The boolean Series filters rows."
+   },
+   {
+    "id": "pandas-8",
+    "question": "What does `df.merge(other, on='id')` do?",
+    "options": [
+     "Stacks rows",
+     "Joins two DataFrames on matching id values",
+     "Deletes duplicates",
+     "Sorts by id"
+    ],
+    "answer": 1,
+    "explanation": "Like a SQL join; use how= for left/right/outer."
+   },
+   {
+    "id": "pandas-9",
+    "question": "Which method fills missing values with 0?",
+    "options": [
+     "df.dropna(0)",
+     "df.fillna(0)",
+     "df.replace(None)",
+     "df.zero()"
+    ],
+    "answer": 1,
+    "explanation": "dropna removes them instead."
+   },
+   {
+    "id": "pandas-10",
+    "question": "What does `df['city'].value_counts()` return?",
+    "options": [
+     "The number of columns",
+     "How many times each city appears",
+     "The unique cities only",
+     "The first city"
+    ],
+    "answer": 1,
+    "explanation": "Sorted from most to least common."
    }
   ],
   "NumPy": [
@@ -1983,6 +3843,66 @@
     ],
     "answer": 1,
     "explanation": "Vectorised operations avoid Python's per-element overhead."
+   },
+   {
+    "id": "numpy-6",
+    "question": "What does `np.zeros((2, 3))` create?",
+    "options": [
+     "A list of 6 zeros",
+     "A 2x3 array of zeros",
+     "A 3x2 array",
+     "The number 0"
+    ],
+    "answer": 1,
+    "explanation": "np.ones and np.full work the same way."
+   },
+   {
+    "id": "numpy-7",
+    "question": "What does `np.arange(0, 10, 2)` return?",
+    "options": [
+     "[0, 2, 4, 6, 8]",
+     "[0, 2, 4, 6, 8, 10]",
+     "[2, 4, 6, 8, 10]",
+     "[0, 10]"
+    ],
+    "answer": 0,
+    "explanation": "The stop value is excluded."
+   },
+   {
+    "id": "numpy-8",
+    "question": "What does `a.reshape(3, 4)` require?",
+    "options": [
+     "Any size array",
+     "The array must have exactly 12 elements",
+     "A 2D array",
+     "Integers only"
+    ],
+    "answer": 1,
+    "explanation": "Reshape keeps the same elements in a new shape."
+   },
+   {
+    "id": "numpy-9",
+    "question": "What does `a[a > 5]` do?",
+    "options": [
+     "Errors",
+     "Returns the elements of a greater than 5",
+     "Sets them to 5",
+     "Counts them"
+    ],
+    "answer": 1,
+    "explanation": "Boolean indexing filters an array."
+   },
+   {
+    "id": "numpy-10",
+    "question": "What does `np.dot(A, B)` compute for 2D arrays?",
+    "options": [
+     "Element-wise product",
+     "Matrix multiplication",
+     "Sum of both",
+     "Transpose"
+    ],
+    "answer": 1,
+    "explanation": "The @ operator does the same."
    }
   ],
   "Data Analysis": [
@@ -2045,6 +3965,66 @@
     ],
     "answer": 1,
     "explanation": "Segments reveal trends the total hides."
+   },
+   {
+    "id": "data-analysis-6",
+    "question": "What does standard deviation measure?",
+    "options": [
+     "The middle value",
+     "How spread out values are around the mean",
+     "The most common value",
+     "The total"
+    ],
+    "answer": 1,
+    "explanation": "A small value means data sits close to the mean."
+   },
+   {
+    "id": "data-analysis-7",
+    "question": "Does correlation prove causation?",
+    "options": [
+     "Yes",
+     "No, another factor may cause both",
+     "Only above 0.9",
+     "Only for time data"
+    ],
+    "answer": 1,
+    "explanation": "Ice cream sales and drownings both rise in summer."
+   },
+   {
+    "id": "data-analysis-8",
+    "question": "What is a KPI?",
+    "options": [
+     "A chart type",
+     "A key performance indicator: a measure tied to a goal",
+     "A database key",
+     "A file format"
+    ],
+    "answer": 1,
+    "explanation": "e.g. monthly active users or conversion rate."
+   },
+   {
+    "id": "data-analysis-9",
+    "question": "What is the mode of [2, 3, 3, 5, 7]?",
+    "options": [
+     "3",
+     "4",
+     "5",
+     "2"
+    ],
+    "answer": 0,
+    "explanation": "The most frequent value."
+   },
+   {
+    "id": "data-analysis-10",
+    "question": "What is A/B testing?",
+    "options": [
+     "Testing two databases",
+     "Comparing two versions with randomly split users to see which performs better",
+     "Grading exams",
+     "Checking spelling"
+    ],
+    "answer": 1,
+    "explanation": "Random assignment makes the comparison fair."
    }
   ],
   "Data Cleaning": [
@@ -2107,6 +4087,66 @@
     ],
     "answer": 1,
     "explanation": "e.g. pd.to_datetime(df['date'])."
+   },
+   {
+    "id": "data-cleaning-6",
+    "question": "Why check data types after loading a file?",
+    "options": [
+     "To save space only",
+     "Numbers stored as text break calculations and sorting",
+     "It's never needed",
+     "To rename columns"
+    ],
+    "answer": 1,
+    "explanation": "e.g. '1,200' read as text instead of 1200."
+   },
+   {
+    "id": "data-cleaning-7",
+    "question": "What is a sensible first check for impossible values?",
+    "options": [
+     "Delete random rows",
+     "Look at min and max for ranges like negative ages",
+     "Shuffle the data",
+     "Add more columns"
+    ],
+    "answer": 1,
+    "explanation": "df.describe() quickly shows suspicious ranges."
+   },
+   {
+    "id": "data-cleaning-8",
+    "question": "Why keep a copy of the raw data?",
+    "options": [
+     "It's faster",
+     "So cleaning steps can be repeated or undone",
+     "To double storage",
+     "It's required by pandas"
+    ],
+    "answer": 1,
+    "explanation": "Write cleaning as a script, not manual edits."
+   },
+   {
+    "id": "data-cleaning-9",
+    "question": "What is imputation?",
+    "options": [
+     "Deleting rows",
+     "Filling in missing values with estimates",
+     "Encrypting data",
+     "Joining tables"
+    ],
+    "answer": 1,
+    "explanation": "e.g. using the median or a model."
+   },
+   {
+    "id": "data-cleaning-10",
+    "question": "Which pandas method removes leading and trailing spaces in a text column?",
+    "options": [
+     "df['c'].trim()",
+     "df['c'].str.strip()",
+     "df['c'].clean()",
+     "df['c'].strip()"
+    ],
+    "answer": 1,
+    "explanation": "String methods are under .str."
    }
   ],
   "Exploratory Data Analysis": [
@@ -2169,6 +4209,66 @@
     ],
     "answer": 1,
     "explanation": "Points beyond the whiskers are potential outliers."
+   },
+   {
+    "id": "exploratory-data-analysis-6",
+    "question": "Which plot is good for comparing a numeric value across categories?",
+    "options": [
+     "Scatter plot",
+     "Bar chart or box plot by category",
+     "Line chart only",
+     "Pie chart of everything"
+    ],
+    "answer": 1,
+    "explanation": "Box plots also show spread per category."
+   },
+   {
+    "id": "exploratory-data-analysis-7",
+    "question": "What does a correlation heatmap show?",
+    "options": [
+     "Missing values only",
+     "How strongly pairs of numeric columns move together",
+     "Category counts",
+     "Time trends"
+    ],
+    "answer": 1,
+    "explanation": "Useful for spotting related features."
+   },
+   {
+    "id": "exploratory-data-analysis-8",
+    "question": "What is skewness?",
+    "options": [
+     "Missing data",
+     "How lopsided a distribution is",
+     "The number of rows",
+     "A type of chart"
+    ],
+    "answer": 1,
+    "explanation": "Income data is usually right-skewed."
+   },
+   {
+    "id": "exploratory-data-analysis-9",
+    "question": "Why look at a sample of raw rows during EDA?",
+    "options": [
+     "It's not useful",
+     "To spot formatting problems and understand what each column means",
+     "To train a model",
+     "To delete data"
+    ],
+    "answer": 1,
+    "explanation": "df.head() and df.sample() help."
+   },
+   {
+    "id": "exploratory-data-analysis-10",
+    "question": "What does `df.info()` show?",
+    "options": [
+     "Charts",
+     "Column names, types and non-null counts",
+     "Correlations",
+     "Model scores"
+    ],
+    "answer": 1,
+    "explanation": "A quick check for missing values and wrong types."
    }
   ],
   "Data Visualization": [
@@ -2231,6 +4331,66 @@
     ],
     "answer": 1,
     "explanation": "Matplotlib (often via seaborn or pandas .plot())."
+   },
+   {
+    "id": "data-visualization-6",
+    "question": "Which chart shows parts of a whole changing over time?",
+    "options": [
+     "Stacked area or stacked bar chart",
+     "Single pie chart",
+     "Scatter plot",
+     "Histogram"
+    ],
+    "answer": 0,
+    "explanation": "A pie can only show one moment."
+   },
+   {
+    "id": "data-visualization-7",
+    "question": "What is a histogram for?",
+    "options": [
+     "Comparing categories",
+     "Showing the distribution of one numeric variable in bins",
+     "Showing a map",
+     "Showing text"
+    ],
+    "answer": 1,
+    "explanation": "Bar charts compare categories; histograms bin numbers."
+   },
+   {
+    "id": "data-visualization-8",
+    "question": "Why label axes and units?",
+    "options": [
+     "For decoration",
+     "So readers know what the numbers mean",
+     "It's required by Python",
+     "To add colour"
+    ],
+    "answer": 1,
+    "explanation": "e.g. 'Revenue (₹ lakh)'."
+   },
+   {
+    "id": "data-visualization-9",
+    "question": "What is a common problem with 3D charts?",
+    "options": [
+     "They are too accurate",
+     "Perspective distorts sizes and makes values hard to read",
+     "They load faster",
+     "They need less data"
+    ],
+    "answer": 1,
+    "explanation": "Flat 2D charts are usually clearer."
+   },
+   {
+    "id": "data-visualization-10",
+    "question": "Which chart shows the relationship between two numeric variables?",
+    "options": [
+     "Pie chart",
+     "Scatter plot",
+     "Bar chart",
+     "Donut chart"
+    ],
+    "answer": 1,
+    "explanation": "Add a trend line to show direction."
    }
   ],
   "Tableau": [
@@ -2293,6 +4453,66 @@
     ],
     "answer": 1,
     "explanation": "The Marks card controls colour, size, label and detail."
+   },
+   {
+    "id": "tableau-6",
+    "question": "What is a Tableau workbook?",
+    "options": [
+     "A single chart",
+     "A file holding sheets, dashboards and stories",
+     "A data source only",
+     "A user account"
+    ],
+    "answer": 1,
+    "explanation": "Saved as .twb or .twbx."
+   },
+   {
+    "id": "tableau-7",
+    "question": "What does a filter on a Tableau sheet do?",
+    "options": [
+     "Changes colours",
+     "Limits which data is shown",
+     "Exports data",
+     "Renames fields"
+    ],
+    "answer": 1,
+    "explanation": "Filters can apply to one sheet or many."
+   },
+   {
+    "id": "tableau-8",
+    "question": "What is a Tableau story?",
+    "options": [
+     "A data source",
+     "A sequence of sheets or dashboards that walks through findings",
+     "A calculated field",
+     "A server"
+    ],
+    "answer": 1,
+    "explanation": "Useful for presentations."
+   },
+   {
+    "id": "tableau-9",
+    "question": "What does dragging a date to Columns and a measure to Rows usually create?",
+    "options": [
+     "A pie chart",
+     "A line chart over time",
+     "A map",
+     "A table only"
+    ],
+    "answer": 1,
+    "explanation": "Tableau picks a line chart for dates by default."
+   },
+   {
+    "id": "tableau-10",
+    "question": "What is Tableau Public?",
+    "options": [
+     "A paid server",
+     "A free platform to publish visualisations online",
+     "A database",
+     "An Excel add-in"
+    ],
+    "answer": 1,
+    "explanation": "Published work is visible to everyone."
    }
   ],
   "Excel": [
@@ -2355,6 +4575,66 @@
     ],
     "answer": 1,
     "explanation": "35 is not >= 40, so the second value is returned."
+   },
+   {
+    "id": "excel-6",
+    "question": "Which formula counts cells that are not empty in A1:A10?",
+    "options": [
+     "=COUNT(A1:A10)",
+     "=COUNTA(A1:A10)",
+     "=SUM(A1:A10)",
+     "=LEN(A1:A10)"
+    ],
+    "answer": 1,
+    "explanation": "COUNT only counts numbers."
+   },
+   {
+    "id": "excel-7",
+    "question": "What does `=SUMIF(A:A, \"Delhi\", B:B)` do?",
+    "options": [
+     "Counts Delhi rows",
+     "Adds B values where column A is Delhi",
+     "Finds Delhi",
+     "Sorts by Delhi"
+    ],
+    "answer": 1,
+    "explanation": "COUNTIF and AVERAGEIF work similarly."
+   },
+   {
+    "id": "excel-8",
+    "question": "What is conditional formatting?",
+    "options": [
+     "Formatting the whole sheet",
+     "Changing cell style automatically based on its value",
+     "A formula error",
+     "Printing settings"
+    ],
+    "answer": 1,
+    "explanation": "e.g. highlight marks below 40 in red."
+   },
+   {
+    "id": "excel-9",
+    "question": "Which function is a more flexible modern replacement for VLOOKUP?",
+    "options": [
+     "HLOOKUP",
+     "XLOOKUP",
+     "LOOKUPV",
+     "FINDV"
+    ],
+    "answer": 1,
+    "explanation": "It can look left and has a not-found value."
+   },
+   {
+    "id": "excel-10",
+    "question": "What does Freeze Panes do?",
+    "options": [
+     "Locks the file",
+     "Keeps header rows or columns visible while scrolling",
+     "Stops formulas",
+     "Hides cells"
+    ],
+    "answer": 1,
+    "explanation": "Found under the View tab."
    }
   ],
   "Data Structures & Algorithms": [
@@ -2417,6 +4697,66 @@
     ],
     "answer": 1,
     "explanation": "Kruskal builds a minimum spanning tree; DFS doesn't consider weights."
+   },
+   {
+    "id": "data-structures-algorithms-6",
+    "question": "What is the worst-case time complexity of quicksort?",
+    "options": [
+     "O(n log n)",
+     "O(n^2)",
+     "O(n)",
+     "O(log n)"
+    ],
+    "answer": 1,
+    "explanation": "It happens with bad pivots; the average is O(n log n)."
+   },
+   {
+    "id": "data-structures-algorithms-7",
+    "question": "Which data structure is used for breadth-first search?",
+    "options": [
+     "Stack",
+     "Queue",
+     "Heap",
+     "Hash set only"
+    ],
+    "answer": 1,
+    "explanation": "DFS uses a stack (or recursion)."
+   },
+   {
+    "id": "data-structures-algorithms-8",
+    "question": "What is a min-heap good for?",
+    "options": [
+     "Searching any value fast",
+     "Always getting the smallest item quickly",
+     "Storing sorted strings",
+     "Hashing"
+    ],
+    "answer": 1,
+    "explanation": "Priority queues are built on heaps."
+   },
+   {
+    "id": "data-structures-algorithms-9",
+    "question": "What is dynamic programming?",
+    "options": [
+     "Writing code quickly",
+     "Solving problems by reusing answers to overlapping subproblems",
+     "Random search",
+     "Using many threads"
+    ],
+    "answer": 1,
+    "explanation": "e.g. memoised Fibonacci or the knapsack problem."
+   },
+   {
+    "id": "data-structures-algorithms-10",
+    "question": "What is the time to insert at the head of a singly linked list?",
+    "options": [
+     "O(n)",
+     "O(1)",
+     "O(log n)",
+     "O(n^2)"
+    ],
+    "answer": 1,
+    "explanation": "Just point the new node at the old head."
    }
   ],
   "Object-Oriented Programming": [
@@ -2479,6 +4819,66 @@
     ],
     "answer": 1,
     "explanation": "The first option describes overloading."
+   },
+   {
+    "id": "object-oriented-programming-6",
+    "question": "What is abstraction?",
+    "options": [
+     "Writing less code",
+     "Showing only essential behaviour and hiding implementation details",
+     "Deleting classes",
+     "Copying objects"
+    ],
+    "answer": 1,
+    "explanation": "Users of a class call methods without knowing the internals."
+   },
+   {
+    "id": "object-oriented-programming-7",
+    "question": "What is method overloading?",
+    "options": [
+     "A subclass replacing a method",
+     "Several methods with the same name but different parameters",
+     "A method calling itself",
+     "A slow method"
+    ],
+    "answer": 1,
+    "explanation": "Overriding is the subclass version."
+   },
+   {
+    "id": "object-oriented-programming-8",
+    "question": "What is a constructor?",
+    "options": [
+     "A method that deletes an object",
+     "A special method that sets up a new object",
+     "A static variable",
+     "An interface"
+    ],
+    "answer": 1,
+    "explanation": "It runs when the object is created."
+   },
+   {
+    "id": "object-oriented-programming-9",
+    "question": "What does 'composition over inheritance' suggest?",
+    "options": [
+     "Never use classes",
+     "Build objects from other objects instead of deep class hierarchies",
+     "Always inherit",
+     "Use global variables"
+    ],
+    "answer": 1,
+    "explanation": "It keeps designs flexible."
+   },
+   {
+    "id": "object-oriented-programming-10",
+    "question": "What is an abstract class?",
+    "options": [
+     "A class with no methods",
+     "A class that can't be instantiated and may have methods subclasses must implement",
+     "A final class",
+     "A static class"
+    ],
+    "answer": 1,
+    "explanation": "Subclasses fill in the abstract methods."
    }
   ],
   "Computer Networks": [
@@ -2541,6 +4941,66 @@
     ],
     "answer": 1,
     "explanation": "Your laptop gets its IP from a DHCP server when it joins Wi-Fi."
+   },
+   {
+    "id": "computer-networks-6",
+    "question": "How many layers does the OSI model have?",
+    "options": [
+     "4",
+     "5",
+     "7",
+     "9"
+    ],
+    "answer": 2,
+    "explanation": "The TCP/IP model groups them into 4."
+   },
+   {
+    "id": "computer-networks-7",
+    "question": "What is the three-way handshake?",
+    "options": [
+     "Encrypting data",
+     "SYN, SYN-ACK, ACK used to open a TCP connection",
+     "Closing a connection",
+     "Routing between networks"
+    ],
+    "answer": 1,
+    "explanation": "It sets up sequence numbers on both sides."
+   },
+   {
+    "id": "computer-networks-8",
+    "question": "What does a router do?",
+    "options": [
+     "Connects devices in one LAN only",
+     "Forwards packets between different networks",
+     "Stores websites",
+     "Assigns MAC addresses"
+    ],
+    "answer": 1,
+    "explanation": "Switches forward frames within a LAN."
+   },
+   {
+    "id": "computer-networks-9",
+    "question": "What is a MAC address?",
+    "options": [
+     "An IP address",
+     "A hardware address of a network interface",
+     "A website",
+     "A port number"
+    ],
+    "answer": 1,
+    "explanation": "It works at the data link layer."
+   },
+   {
+    "id": "computer-networks-10",
+    "question": "What does HTTP status 404 mean?",
+    "options": [
+     "Server error",
+     "The requested resource was not found",
+     "Unauthorised",
+     "Success"
+    ],
+    "answer": 1,
+    "explanation": "5xx codes are server errors."
    }
   ],
   "Operating Systems": [
@@ -2603,6 +5063,66 @@
     ],
     "answer": 1,
     "explanation": "Mutual exclusion prevents race conditions."
+   },
+   {
+    "id": "operating-systems-6",
+    "question": "What is a context switch?",
+    "options": [
+     "Changing the OS",
+     "Saving one process's state and loading another's so the CPU can switch",
+     "Restarting the CPU",
+     "A system crash"
+    ],
+    "answer": 1,
+    "explanation": "Too many switches waste CPU time."
+   },
+   {
+    "id": "operating-systems-7",
+    "question": "What is paging?",
+    "options": [
+     "Printing pages",
+     "Splitting memory into fixed-size pages mapped to physical frames",
+     "Sorting files",
+     "A scheduling algorithm"
+    ],
+    "answer": 1,
+    "explanation": "It avoids external fragmentation."
+   },
+   {
+    "id": "operating-systems-8",
+    "question": "What is thrashing?",
+    "options": [
+     "Fast disk reads",
+     "The system spends more time swapping pages than doing work",
+     "A CPU overheating",
+     "Deleting files"
+    ],
+    "answer": 1,
+    "explanation": "It happens when memory is badly overcommitted."
+   },
+   {
+    "id": "operating-systems-9",
+    "question": "What is a semaphore?",
+    "options": [
+     "A file type",
+     "A counter used to control access to shared resources",
+     "A CPU register",
+     "A network protocol"
+    ],
+    "answer": 1,
+    "explanation": "A binary semaphore works like a mutex."
+   },
+   {
+    "id": "operating-systems-10",
+    "question": "What is the kernel?",
+    "options": [
+     "A user app",
+     "The core of the OS that manages hardware, memory and processes",
+     "A file system",
+     "A shell"
+    ],
+    "answer": 1,
+    "explanation": "Programs ask it for services through system calls."
    }
   ],
   "DBMS": [
@@ -2665,6 +5185,66 @@
     ],
     "answer": 1,
     "explanation": "e.g. dirty reads and lost updates."
+   },
+   {
+    "id": "dbms-6",
+    "question": "What is a view in a DBMS?",
+    "options": [
+     "A backup",
+     "A saved query that acts like a virtual table",
+     "An index",
+     "A user"
+    ],
+    "answer": 1,
+    "explanation": "It can hide complexity or restrict columns."
+   },
+   {
+    "id": "dbms-7",
+    "question": "What does COMMIT do?",
+    "options": [
+     "Undoes changes",
+     "Makes a transaction's changes permanent",
+     "Starts a backup",
+     "Locks a table forever"
+    ],
+    "answer": 1,
+    "explanation": "ROLLBACK undoes them instead."
+   },
+   {
+    "id": "dbms-8",
+    "question": "What is an index's main trade-off?",
+    "options": [
+     "Slower reads",
+     "Faster reads but slower writes and extra storage",
+     "Less security",
+     "No trade-off"
+    ],
+    "answer": 1,
+    "explanation": "Every insert or update must also update the index."
+   },
+   {
+    "id": "dbms-9",
+    "question": "What is a deadlock in a database?",
+    "options": [
+     "A crashed server",
+     "Two transactions each waiting for a lock the other holds",
+     "A full disk",
+     "A missing index"
+    ],
+    "answer": 1,
+    "explanation": "The DBMS usually aborts one of them."
+   },
+   {
+    "id": "dbms-10",
+    "question": "What is a schema in DBMS terms?",
+    "options": [
+     "The data itself",
+     "The overall structure: tables, columns, types and relationships",
+     "A query result",
+     "A backup"
+    ],
+    "answer": 1,
+    "explanation": "The data at one moment is the instance."
    }
   ],
   "Git & GitHub": [
@@ -2727,6 +5307,66 @@
     ],
     "answer": 1,
     "explanation": "Keep secrets and generated files out of the repository."
+   },
+   {
+    "id": "git-github-6",
+    "question": "What does `git status` show?",
+    "options": [
+     "Commit history",
+     "Changed, staged and untracked files",
+     "Remote URLs",
+     "Branches on GitHub"
+    ],
+    "answer": 1,
+    "explanation": "git log shows history."
+   },
+   {
+    "id": "git-github-7",
+    "question": "What does `git add file.py` do?",
+    "options": [
+     "Commits the file",
+     "Stages the file's changes for the next commit",
+     "Uploads to GitHub",
+     "Creates the file"
+    ],
+    "answer": 1,
+    "explanation": "Commit then records what's staged."
+   },
+   {
+    "id": "git-github-8",
+    "question": "What is a merge conflict?",
+    "options": [
+     "A failed push",
+     "When two branches change the same lines and Git can't combine them automatically",
+     "A deleted branch",
+     "A wrong password"
+    ],
+    "answer": 1,
+    "explanation": "Edit the file, keep the right version, then commit."
+   },
+   {
+    "id": "git-github-9",
+    "question": "What does `git clone <url>` do?",
+    "options": [
+     "Deletes a repo",
+     "Copies a remote repository to your computer",
+     "Creates a branch",
+     "Pushes changes"
+    ],
+    "answer": 1,
+    "explanation": "It includes the full history."
+   },
+   {
+    "id": "git-github-10",
+    "question": "What does `git checkout -b feature` (or `git switch -c feature`) do?",
+    "options": [
+     "Deletes feature",
+     "Creates a new branch called feature and switches to it",
+     "Merges feature",
+     "Renames main"
+    ],
+    "answer": 1,
+    "explanation": "Work on the branch, then open a pull request."
    }
   ],
   "VS Code": [
@@ -2789,6 +5429,66 @@
     ],
     "answer": 0,
     "explanation": "Workspace settings override user settings for that project."
+   },
+   {
+    "id": "vs-code-6",
+    "question": "Which shortcut quickly opens a file by name on a Mac?",
+    "options": [
+     "Cmd + P",
+     "Cmd + O",
+     "Cmd + F",
+     "Cmd + N"
+    ],
+    "answer": 0,
+    "explanation": "Cmd + Shift + P opens the Command Palette instead."
+   },
+   {
+    "id": "vs-code-7",
+    "question": "What does multi-cursor editing (Option + click on Mac) let you do?",
+    "options": [
+     "Open two windows",
+     "Type in several places at once",
+     "Split the screen",
+     "Debug two programs"
+    ],
+    "answer": 1,
+    "explanation": "Cmd + D selects the next match for the same effect."
+   },
+   {
+    "id": "vs-code-8",
+    "question": "Where can you see Git changes inside VS Code?",
+    "options": [
+     "The Extensions view",
+     "The Source Control view",
+     "The Terminal only",
+     "Settings"
+    ],
+    "answer": 1,
+    "explanation": "You can stage and commit from there too."
+   },
+   {
+    "id": "vs-code-9",
+    "question": "What is launch.json used for?",
+    "options": [
+     "Installing extensions",
+     "Configuring how the debugger starts your program",
+     "Storing secrets",
+     "Theme settings"
+    ],
+    "answer": 1,
+    "explanation": "It lives in the .vscode folder."
+   },
+   {
+    "id": "vs-code-10",
+    "question": "What does 'Format Document' do?",
+    "options": [
+     "Deletes comments",
+     "Re-indents and tidies code using the configured formatter",
+     "Translates code",
+     "Runs tests"
+    ],
+    "answer": 1,
+    "explanation": "e.g. Prettier or Black via extensions."
    }
   ],
   "Microsoft Office": [
@@ -2851,6 +5551,66 @@
     ],
     "answer": 1,
     "explanation": "Change it once to restyle the whole deck."
+   },
+   {
+    "id": "microsoft-office-6",
+    "question": "In Excel, what is a workbook?",
+    "options": [
+     "A single cell",
+     "A file containing one or more worksheets",
+     "A chart",
+     "A formula"
+    ],
+    "answer": 1,
+    "explanation": "Each tab at the bottom is a worksheet."
+   },
+   {
+    "id": "microsoft-office-7",
+    "question": "What does Mail Merge in Word do?",
+    "options": [
+     "Sends spam",
+     "Creates personalised letters or labels from a list of names",
+     "Merges two documents",
+     "Checks grammar"
+    ],
+    "answer": 1,
+    "explanation": "The list often comes from Excel."
+   },
+   {
+    "id": "microsoft-office-8",
+    "question": "Which file format keeps a document's layout the same on every device?",
+    "options": [
+     ".docx",
+     ".pdf",
+     ".txt",
+     ".rtf"
+    ],
+    "answer": 1,
+    "explanation": "Save As PDF before sharing a final version."
+   },
+   {
+    "id": "microsoft-office-9",
+    "question": "What is OneDrive used for with Office?",
+    "options": [
+     "Printing",
+     "Storing files in the cloud and co-editing them",
+     "Sending email",
+     "Video calls"
+    ],
+    "answer": 1,
+    "explanation": "Several people can edit the same file at once."
+   },
+   {
+    "id": "microsoft-office-10",
+    "question": "In PowerPoint, what is Presenter View?",
+    "options": [
+     "A slide layout",
+     "A screen showing notes and the next slide to the presenter only",
+     "An animation",
+     "A theme"
+    ],
+    "answer": 1,
+    "explanation": "The audience only sees the current slide."
    }
   ]
  }

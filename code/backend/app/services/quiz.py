@@ -1,7 +1,7 @@
 """
 Quiz engine shared by student practice and recruiter skill tests.
 
-Questions live in app/question_bank.json (5 multiple-choice questions per
+Questions live in app/question_bank.json (10 multiple-choice questions per
 catalog skill, each with an explanation). An attempt stores which
 questions were asked and the order their options were shown in, so the
 browser never needs the correct answers before the attempt is submitted.
@@ -40,14 +40,24 @@ def known_skills(skills: list[str]) -> list[str]:
     return out
 
 
-def pick_questions(skills: list[str], count: int, rng: random.Random | None = None) -> list[dict]:
+def pick_questions(
+    skills: list[str], count: int, rng: random.Random | None = None, avoid: set[str] | None = None
+) -> list[dict]:
     """
     Up to `count` questions spread evenly over `skills` (round robin), each
     with a shuffled option order. Returns [{"id", "order"}] where order[i]
     is the bank index of the option shown in position i.
+
+    Question ids in `avoid` (e.g. ones the student already saw in practice)
+    are only used once the unseen questions for that skill run out.
     """
     rng = rng or random.Random()
-    pools = {s: rng.sample(BANK[s], len(BANK[s])) for s in known_skills(skills)}
+    avoid = avoid or set()
+    pools = {}
+    for s in known_skills(skills):
+        shuffled = rng.sample(BANK[s], len(BANK[s]))
+        # pop() takes from the end, so unseen questions go last.
+        pools[s] = [q for q in shuffled if q["id"] in avoid] + [q for q in shuffled if q["id"] not in avoid]
     picked: list[str] = []
     while len(picked) < count and any(pools.values()):
         for s in list(pools):
