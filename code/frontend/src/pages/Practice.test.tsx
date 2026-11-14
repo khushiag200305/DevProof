@@ -63,7 +63,7 @@ describe("Practice page", () => {
     expect(await screen.findByText("Question 1 of 2")).toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: /A running image/ }));
     await user.click(screen.getByRole("button", { name: "Next" }));
-    await user.click(screen.getByRole("radio", { name: /A VM/ }));
+    await user.click(screen.getByRole("radio", { name: /Makefile/ }));
     await user.click(screen.getByRole("button", { name: "Submit answers" }));
 
     expect(post).toHaveBeenCalledWith("/api/quiz/attempts/3/submit", { answers: { "docker-1": 1, "docker-2": 2 } });
