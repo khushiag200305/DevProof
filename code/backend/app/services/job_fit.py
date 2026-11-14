@@ -86,13 +86,14 @@ def _tips(best: dict) -> list[str]:
     ]
 
 
-def fit_resumes(job_description: str, resumes: list[dict]) -> dict:
+def fit_resumes(job_description: str, resumes: list[dict], wanted: list[str] | None = None) -> dict:
     """
     Every resume scored against the job, best first. `resumes` items:
     {candidate_id, name, created_at, analyzed, visible_to_recruiters,
-     skills: [{skill_name, status}]}.
+     skills: [{skill_name, status}]}. `wanted` overrides the skills read
+    from the job description (used for ready-made roles).
     """
-    wanted = extract_skill_names(job_description or "")
+    wanted = wanted if wanted is not None else extract_skill_names(job_description or "")
     if not wanted:
         return {"skills": [], "resumes": [], "best_candidate_id": None, "reason": None, "tips": []}
 

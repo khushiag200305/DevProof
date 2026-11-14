@@ -78,3 +78,32 @@ def test_recruiters_cannot_use_it_and_an_empty_job_is_rejected(client):
     recruiter = _user("hr@acme.com", "recruiter")
     assert client.post("/api/job-fit", json=JOB, headers=_h(recruiter)).status_code == 403
     assert client.post("/api/job-fit", json={"job_description": ""}, headers=_h(student)).status_code == 422
+
+
+def test_roadmap_for_a_ready_made_role(client):
+    import json
+
+    student = _user("road@thapar.edu", "student")
+    cid = _upload(student, 1, {"Python": "Strong Evidence", "Docker": "Needs Verification", "DBMS": "Not Checkable"})
+    with SessionLocal() as db:
+        repo = db.query(models.Repository).filter_by(candidate_id=cid).first()
+        db.add(models.RepositoryDetail(repo_id=repo.repo_id, technologies=json.dumps(["FastAPI", "Python"])))
+        db.commit()
+
+    roles = client.get("/api/job-fit/roles", headers=_h(student)).json()
+    assert "Backend Developer" in [r["name"] for r in roles]
+
+    body = client.post("/api/job-fit", json={"role": "Backend Developer"}, headers=_h(student)).json()
+    assert body["role"] == "Backend Developer" and "SQL" in body["skills"]
+    road = body["roadmap"]
+    assert road["candidate_id"] == cid
+    assert road["proven"] == [{"skill": "Python", "repo": "r"}]
+    docker = next(g for g in road["claimed"] if g["skill"] == "Docker")
+    assert docker["repo"] == "r" and "Dockerfile" in docker["step"]
+    dbms = next(g for g in road["claimed"] if g["skill"] == "DBMS")
+    assert dbms["checkable"] is False
+    assert {g["skill"] for g in road["missing"]} >= {"FastAPI", "SQL"}
+    assert set(road["practice"]) == {g["skill"] for g in road["claimed"] + road["missing"]}
+
+    assert client.post("/api/job-fit", json={"role": "Astronaut"}, headers=_h(student)).status_code == 422
+    assert client.post("/api/job-fit", json={}, headers=_h(student)).status_code == 422

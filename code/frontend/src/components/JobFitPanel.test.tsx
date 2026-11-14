@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { JobFitPanel, type JobFitResult } from "./JobFitPanel";
 import * as api from "../lib/api";
 
@@ -23,8 +23,52 @@ const result: JobFitResult = {
 };
 
 describe("JobFitPanel", () => {
+  beforeEach(() => {
+    vi.spyOn(api, "apiGet").mockResolvedValue([
+      { name: "Backend Developer", skills: ["Python", "FastAPI", "Docker", "SQL", "PostgreSQL"] },
+      { name: "Data Analyst", skills: ["Python", "SQL", "Pandas"] },
+    ]);
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("builds a roadmap for a ready-made role with practice links", async () => {
+    const post = vi.spyOn(api, "apiPost").mockResolvedValue({
+      ...result,
+      skills: ["Docker", "FastAPI", "PostgreSQL", "Python"],
+      role: "Backend Developer",
+      roadmap: {
+        candidate_id: 1, fit: 60,
+        proven: [{ skill: "Python", repo: "shop-api" }],
+        claimed: [{ skill: "Docker", checkable: true, repo: "shop-api", step: "Add a Dockerfile or docker-compose.yml. Then re-run the analysis." }],
+        missing: [{ skill: "FastAPI", checkable: true, repo: null, idea: "Build a FastAPI backend with a few endpoints.", proof: "List fastapi in requirements.txt." }],
+        practice: ["Docker", "FastAPI"],
+      },
+    });
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <JobFitPanel onMakeVisible={vi.fn()} />
+      </MemoryRouter>
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Pick a role" }));
+    await user.click(screen.getByRole("button", { name: /Backend Developer/ }));
+    expect(post).toHaveBeenCalledWith("/api/job-fit", { role: "Backend Developer" });
+
+    const roadmap = await screen.findByRole("region", { name: "Skill gap roadmap" });
+    expect(within(roadmap).getByText("Your roadmap for Backend Developer")).toBeInTheDocument();
+    const docker = within(roadmap).getByRole("listitem", { name: "Docker: not proven" });
+    expect(within(docker).getByText("shop-api")).toBeInTheDocument();
+    expect(within(docker).getByRole("link", { name: "Practise" })).toHaveAttribute("href", "/practice?skills=Docker");
+    const fastapi = within(roadmap).getByRole("listitem", { name: "FastAPI: missing" });
+    expect(within(fastapi).getByText(/Build a FastAPI backend/)).toBeInTheDocument();
+    expect(within(roadmap).getByRole("link", { name: /Practise all my gaps/ })).toHaveAttribute(
+      "href",
+      `/practice?skills=${encodeURIComponent("Docker,FastAPI")}`
+    );
   });
 
   it("ranks the resumes for a job and makes the best one visible", async () => {

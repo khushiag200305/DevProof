@@ -112,4 +112,15 @@ describe("Practice page", () => {
     expect(post).toHaveBeenCalledWith("/api/quiz/attempts/3/submit", { answers: { "docker-1": 1 } });
     expect(await screen.findByText(/They can see this score/)).toBeInTheDocument();
   });
+
+  it("starts a quiz on the skills sent from the job roadmap", async () => {
+    const post = vi.spyOn(api, "apiPost").mockResolvedValue(attempt);
+    const user = userEvent.setup();
+    render(<MemoryRouter initialEntries={["/practice?skills=Docker,Python"]}><Practice /></MemoryRouter>);
+
+    expect(screen.getByText("Practise your roadmap gaps")).toBeInTheDocument();
+    expect(screen.queryByText(/From the resume visible to recruiters/)).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /start this quiz/i }));
+    expect(post).toHaveBeenCalledWith("/api/quiz/practice", { skills: ["Docker", "Python"], count: 10, timed: false });
+  });
 });
