@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Hero, HeroStat } from "../components/Hero";
 import { SparkIcon } from "../components/Icons";
 import { Navbar } from "../components/Navbar";
@@ -17,7 +18,12 @@ interface SkillsResponse {
 /** Student mock interview practice: pick skills, take a quiz, review the answers. */
 export function Practice() {
   const [catalog, setCatalog] = useState<SkillsResponse | null>(null);
-  const [selected, setSelected] = useState<string[]>([]);
+  const [params] = useSearchParams();
+  // Skills sent from the job roadmap, e.g. /practice?skills=Docker,SQL
+  const [fromRoadmap] = useState<string[]>(() =>
+    (params.get("skills") ?? "").split(",").map((s) => s.trim()).filter(Boolean)
+  );
+  const [selected, setSelected] = useState<string[]>(fromRoadmap);
   const [count, setCount] = useState(10);
   const [timed, setTimed] = useState(false);
   const [attempt, setAttempt] = useState<QuizInProgress | null>(null);
@@ -203,7 +209,18 @@ export function Practice() {
               <section aria-label="Start a practice quiz" className="panel">
                 <h2 className="text-xl font-bold">Start a practice quiz</h2>
 
-                {catalog && catalog.suggested.length > 0 && (
+                {fromRoadmap.length > 0 && (
+                  <div className="mt-4 rounded-lg border border-brand-600/30 bg-brand-600/5 p-4">
+                    <p className="text-sm font-semibold">Practise your roadmap gaps</p>
+                    <p className="muted mt-1 text-sm">{fromRoadmap.join(", ")}</p>
+                    <button onClick={() => start(fromRoadmap)} disabled={starting} className="btn-primary mt-3">
+                      <SparkIcon className="h-4 w-4" />
+                      Start this quiz
+                    </button>
+                  </div>
+                )}
+
+                {catalog && catalog.suggested.length > 0 && fromRoadmap.length === 0 && (
                   <div className="mt-4 rounded-lg border border-brand-600/30 bg-brand-600/5 p-4">
                     <p className="text-sm font-semibold">Practise my unproven skills</p>
                     <p className="muted mt-1 text-sm">
