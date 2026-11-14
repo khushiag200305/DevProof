@@ -81,4 +81,35 @@ describe("Practice page", () => {
     await user.click(screen.getByRole("button", { name: "Python" }));
     expect(startButton).toBeEnabled();
   });
+
+  it("takes a recruiter's skill test from the Practice page", async () => {
+    const test = {
+      test_id: 4, skills: ["Docker"], question_count: 10, time_limit_minutes: 15, message: "Before Friday please",
+      created_at: "2026-11-14T09:00:00Z", expires_at: "2026-11-21T09:00:00Z", status: "waiting",
+      score: null, total: 10, submitted_at: null, attempt_id: null, from_domain: "acme.com",
+    };
+    const get = vi.mocked(api.apiGet);
+    const base = get.getMockImplementation()!;
+    get.mockImplementation(async (path: string) => (path === "/api/skill-tests/mine" ? [test] : base(path)));
+    const post = vi.spyOn(api, "apiPost").mockImplementation(async (path: string) => {
+      if (path === "/api/skill-tests/4/start") return { ...attempt, kind: "test", deadline: new Date(Date.now() + 900_000).toISOString(), time_limit_seconds: 900 };
+      if (path === "/api/quiz/attempts/3/submit") return { ...result, kind: "test" };
+      throw new Error(path);
+    });
+    const user = userEvent.setup();
+    render(<MemoryRouter><Practice /></MemoryRouter>);
+
+    const card = await screen.findByRole("listitem", { name: "Skill test on Docker" });
+    expect(within(card).getByText(/from a recruiter at acme.com/)).toBeInTheDocument();
+    expect(within(card).getByText(/Before Friday please/)).toBeInTheDocument();
+    await user.click(within(card).getByRole("button", { name: "Start test" }));
+    expect(post).toHaveBeenCalledWith("/api/skill-tests/4/start");
+
+    expect(await screen.findByText("Question 1 of 2")).toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: /A running image/ }));
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.click(screen.getByRole("button", { name: "Submit answers" }));
+    expect(post).toHaveBeenCalledWith("/api/quiz/attempts/3/submit", { answers: { "docker-1": 1 } });
+    expect(await screen.findByText(/They can see this score/)).toBeInTheDocument();
+  });
 });

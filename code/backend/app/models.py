@@ -282,3 +282,25 @@ class QuizAttempt(Base):
     score = Column(Integer, nullable=True)
     total = Column(Integer, nullable=False, default=0)
     over_time = Column(Boolean, default=False, nullable=False)
+
+
+class SkillTest(Base):
+    """
+    A skill test a recruiter sends to a student: which skills, how many
+    questions, the time limit, and (once the student starts) the quiz
+    attempt holding their answers and score.
+    """
+
+    __tablename__ = "skill_tests"
+
+    test_id = Column(Integer, primary_key=True, index=True)
+    recruiter_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False, index=True)
+    candidate_id = Column(Integer, nullable=True)  # the resume the recruiter was looking at
+    skills = Column(Text, nullable=False)  # JSON list
+    question_count = Column(Integer, nullable=False)
+    time_limit_minutes = Column(Integer, nullable=False)
+    message = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=_utcnow, nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    attempt_id = Column(Integer, ForeignKey("quiz_attempts.attempt_id", ondelete="SET NULL"), nullable=True)

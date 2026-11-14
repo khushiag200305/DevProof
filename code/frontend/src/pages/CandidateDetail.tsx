@@ -5,6 +5,7 @@ import { Hero } from "../components/Hero";
 import { ArrowLeftIcon, ChatIcon, ChevronIcon, ExternalIcon, EyeIcon, GitHubIcon, SparkIcon } from "../components/Icons";
 import { Navbar } from "../components/Navbar";
 import { PortfolioPanel } from "../components/PortfolioPanel";
+import { SkillTestsPanel } from "../components/SkillTestsPanel";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, apiGet, apiPost, apiPut } from "../lib/api";
 
@@ -47,6 +48,8 @@ interface CandidateDetailData {
   /** Is this the resume the student made visible to recruiters? */
   visible_to_recruiters?: boolean;
   visible_candidate_id?: number | null;
+  /** Does a student account own this resume (so it can receive skill tests)? */
+  has_account?: boolean;
 }
 
 /** Badge and score-bar colours for an evidence status. */
@@ -247,7 +250,7 @@ function ProjectCard({ project: p, analyzed, index }: { project: ProjectEntry; a
   );
 }
 
-type Tab = "skills" | "projects" | "share";
+type Tab = "skills" | "projects" | "share" | "tests";
 
 export function CandidateDetail() {
   const { candidateId } = useParams<{ candidateId: string }>();
@@ -343,6 +346,7 @@ export function CandidateDetail() {
           ? [{ id: "projects" as Tab, label: "Projects", count: candidate.projects.length }]
           : []),
         ...(user?.role === "student" ? [{ id: "share" as Tab, label: "Portfolio & resume lines" }] : []),
+        ...(user?.role === "recruiter" && candidate.has_account ? [{ id: "tests" as Tab, label: "Skill tests" }] : []),
       ]
     : [];
 
@@ -603,6 +607,16 @@ export function CandidateDetail() {
                     <ProjectCard key={`${p.project_name}-${i}`} project={p} analyzed={candidate.analyzed} index={i} />
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {user?.role === "recruiter" && candidate.has_account && tab === "tests" && (
+              <div role="tabpanel" className="mt-6">
+                <SkillTestsPanel
+                  candidateId={candidate.candidate_id}
+                  resumeSkills={skills.map((s) => s.skill_name)}
+                  suggested={skills.filter((s) => !isBacked(s)).map((s) => s.skill_name)}
+                />
               </div>
             )}
 

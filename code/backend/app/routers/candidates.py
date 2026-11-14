@@ -127,6 +127,7 @@ def _detail_for(db: Session, candidate: models.Candidate) -> dict:
         **_candidate_detail(candidate),
         "visible_to_recruiters": visible == candidate.candidate_id,
         "visible_candidate_id": visible,
+        "has_account": candidate.user_id is not None,
     }
 
 
