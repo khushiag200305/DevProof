@@ -5,9 +5,10 @@ recomputing on every request - see services/scoring.py's module
 docstring).
 """
 import httpx
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
+from ..dependencies import require_role
 from ..services.fingerprinting import fingerprint_repo
 from ..services.github_client import fetch_github_repos
 from ..services.scoring import score_skill
@@ -21,7 +22,7 @@ class ScoreRequest(BaseModel):
     max_repos: int = 10
 
 
-@router.post("/score")
+@router.post("/score", dependencies=[Depends(require_role("recruiter"))])
 async def score_candidate(request: ScoreRequest):
     """
     Computes an explainable evidence score for each claimed skill by

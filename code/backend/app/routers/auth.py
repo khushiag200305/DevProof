@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from .. import models
 from ..database import get_db
 from ..dependencies import get_current_user
+from ..services.approval import effective_status, initial_status, is_admin_email
 from ..services.auth import (
     GoogleTokenError,
     create_access_token,
@@ -37,6 +38,16 @@ class UserOut(BaseModel):
     name: str | None
     picture_url: str | None
     role: str
+    # Recruiters only: "pending", "approved" or "rejected".
+    recruiter_status: str | None = None
+    is_admin: bool = False
+
+
+def user_out(user: models.User) -> UserOut:
+    out = UserOut.model_validate(user)
+    out.recruiter_status = effective_status(user)
+    out.is_admin = is_admin_email(user.email)
+    return out
 
 
 class SignInResponse(BaseModel):
@@ -62,6 +73,7 @@ def sign_in_with_google(body: GoogleSignInRequest, db: Session = Depends(get_db)
             name=claims.get("name"),
             picture_url=claims.get("picture"),
             role=derive_role(email),
+            recruiter_status=initial_status(email, derive_role(email)),
         )
         db.add(user)
     else:
@@ -74,9 +86,9 @@ def sign_in_with_google(body: GoogleSignInRequest, db: Session = Depends(get_db)
     db.refresh(user)
 
     token = create_access_token(user.user_id, user.role)
-    return SignInResponse(access_token=token, user=UserOut.model_validate(user))
+    return SignInResponse(access_token=token, user=user_out(user))
 
 
 @router.get("/me", response_model=UserOut)
 def get_me(current_user: models.User = Depends(get_current_user)):
-    return UserOut.model_validate(current_user)
+    return user_out(current_user)

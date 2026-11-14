@@ -34,7 +34,7 @@ def get_db():
 # existing one, so these are added here (until the project moves to Alembic).
 ADDED_COLUMNS = {
     "projects": {"tech_stack": "TEXT", "period": "VARCHAR"},
-    "users": {"visible_candidate_id": "INTEGER"},
+    "users": {"visible_candidate_id": "INTEGER", "recruiter_status": "VARCHAR"},
 }
 
 

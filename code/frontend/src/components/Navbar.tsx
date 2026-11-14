@@ -13,13 +13,17 @@ export function Navbar() {
   };
 
   const homePath = user?.role === "recruiter" ? "/dashboard" : "/upload";
+  const waiting = user?.role === "recruiter" && !!user.recruiter_status && user.recruiter_status !== "approved";
   const links =
-    user?.role === "recruiter"
+    waiting
+      ? []
+      : user?.role === "recruiter"
       ? [
           { to: "/dashboard", label: "Candidates" },
           { to: "/talent", label: "Talent search" },
         ]
       : [{ to: "/upload", label: "My resumes" }];
+  if (user?.is_admin) links.push({ to: "/admin", label: "Recruiter requests" });
 
   return (
     <header className="sticky top-0 z-20 border-b border-brand-100/70 bg-paper/80 backdrop-blur-xl dark:border-night-600/70 dark:bg-night/80">
