@@ -8,6 +8,7 @@ area gets its own router under app/routers/.
 Run with:
     uvicorn app.main:app --reload
 """
+import os
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
@@ -55,9 +56,15 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="DevProof API", version="0.2.0", lifespan=lifespan)
 
+def allowed_origins() -> list[str]:
+    """Websites allowed to call this API: FRONTEND_ORIGINS (comma-separated) plus local dev."""
+    extra = [o.strip().rstrip("/") for o in os.getenv("FRONTEND_ORIGINS", "").split(",") if o.strip()]
+    return ["http://localhost:5173", "http://127.0.0.1:5173", *extra]
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=allowed_origins(),
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -174,6 +174,60 @@ need verification. Click **Re-run analysis** later to refresh the results.
 One analysis makes up to ~50 GitHub API calls. Without a token GitHub allows 60 per hour, so set
 `GITHUB_TOKEN` in `code/backend/.env` (a classic token with no scopes is enough) before a demo.
 
+## Deploy
+
+The backend and its database run on **Render** (free plan), the frontend on **Vercel** (free plan).
+Resume PDFs are stored in the database, so nothing is lost when Render restarts the server.
+
+### 1. Backend and database on Render
+
+1. Sign in to [render.com](https://render.com) with GitHub.
+2. **New > Blueprint**, pick this repository. Render reads `render.yaml` and creates the
+   `devproof-api` web service and the `devproof-db` database.
+3. Fill in the values it asks for:
+
+   | Setting | Value |
+   |---|---|
+   | `GOOGLE_CLIENT_ID` | the same Client ID as in `code/backend/.env` |
+   | `GITHUB_TOKEN` | the same token as in `code/backend/.env` |
+   | `ADMIN_EMAILS` | admin emails, comma-separated |
+   | `FRONTEND_ORIGINS` | leave empty for now (filled in step 3) |
+   | `RECRUITER_AUTO_APPROVE_DOMAINS` | optional, can be empty |
+
+   `DATABASE_URL` and `JWT_SECRET` are filled in automatically.
+4. Wait for the first deploy (about 5 minutes) and open `https://<service>.onrender.com/health`;
+   it should show `{"status":"ok", ...}`. Copy that address (without `/health`).
+
+### 2. Frontend on Vercel
+
+1. Sign in to [vercel.com](https://vercel.com) with GitHub. **Add New > Project**, import this
+   repository.
+2. Set **Root Directory** to `code/frontend` (framework preset: Vite).
+3. Environment variables:
+   - `VITE_API_BASE` = the Render address from step 1, e.g. `https://devproof-api.onrender.com`
+   - `VITE_GOOGLE_CLIENT_ID` = the same Client ID
+4. Deploy and copy the site address, e.g. `https://devproof.vercel.app`.
+   `vercel.json` sends every path to the React app, so links like `/p/<slug>` open directly.
+
+### 3. Connect them
+
+1. In Render, set `FRONTEND_ORIGINS` to the Vercel address (no trailing slash) and save; the
+   service redeploys.
+2. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), open the OAuth
+   client and add the Vercel address under **Authorized JavaScript origins**. It can take a few
+   minutes to apply.
+3. Open the Vercel address and sign in.
+
+### Good to know
+
+- Render's free web service sleeps after 15 minutes without visits; the first request then
+  takes about a minute. Open the site a few minutes before a demo.
+- Render's free PostgreSQL database is time-limited (check Render's current free-plan limits);
+  export anything you need before it expires.
+- Every push to `main` redeploys both sites automatically.
+- Optional demo students: copy the database's **External Database URL** from Render, then on your
+  own computer run `DATABASE_URL="<that url>" python -m app.demo_data add` from `code/backend`.
+
 ## Development workflow
 
 - Feature branch → Pull Request → GitHub Actions (lint + test + build) → Code review → Merge → Deploy to staging

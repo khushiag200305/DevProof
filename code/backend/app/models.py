@@ -11,8 +11,8 @@ have a stable schema to build against instead of migrating mid-project.
 """
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
-from sqlalchemy.orm import relationship
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, LargeBinary, String, Text, UniqueConstraint
+from sqlalchemy.orm import deferred, relationship
 
 from .database import Base
 
@@ -54,6 +54,10 @@ class Candidate(Base):
     name = Column(String, nullable=True)
     email = Column(String, nullable=True)
     resume_path = Column(String, nullable=True)
+    # The uploaded PDF itself. Kept in the database because hosting
+    # platforms wipe local files on every restart; deferred so lists of
+    # candidates don't load it.
+    resume_pdf = deferred(Column(LargeBinary, nullable=True))
     github_username = Column(String, nullable=True, index=True)
     created_at = Column(DateTime(timezone=True), default=_utcnow, nullable=False)
 

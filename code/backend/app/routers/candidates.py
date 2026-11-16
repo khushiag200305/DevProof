@@ -15,7 +15,7 @@ from ..database import get_db
 from ..dependencies import get_approved_user, require_role
 from ..services.analysis import SUPPORTING_REPO, GitHubUnavailableError, analyze_candidate
 from ..services.project_links import match_repo
-from ..services.resume_parser import extract_project_details, read_resume_text
+from ..services.resume_parser import extract_project_details, extract_text_from_pdf
 from ..services import notifications
 from ..services.scoring import default_interview_question
 from ..services.visibility import visible_candidate_id, visible_for_candidate, visible_ids
@@ -267,17 +267,40 @@ def resolve_resume_path(stored: str | None, upload_dir: str | None = None) -> st
     return moved if os.path.exists(moved) else None
 
 
+def resume_pdf_bytes(candidate: models.Candidate) -> bytes | None:
+    """
+    The candidate's resume PDF: from the database, or for older uploads
+    from the uploads folder (copied into the database on first read, so
+    it survives the folder being wiped). None if it can't be found.
+    """
+    if candidate.resume_pdf:
+        return candidate.resume_pdf
+    path = resolve_resume_path(candidate.resume_path)
+    if not path:
+        return None
+    try:
+        with open(path, "rb") as pdf_file:
+            data = pdf_file.read()
+    except OSError:
+        return None
+    candidate.resume_pdf = data
+    return data
+
+
 def refresh_projects_from_resume(db: Session, candidate: models.Candidate) -> bool:
     """
     Re-read the projects from the candidate's stored resume PDF with the
     current parser, so records uploaded before a parser improvement get
-    fixed by re-running the analysis. Does nothing if the file is missing
+    fixed by re-running the analysis. Does nothing if the PDF is missing
     or no projects are found. Returns True if the projects were replaced.
     """
-    path = resolve_resume_path(candidate.resume_path)
-    if not path:
+    data = resume_pdf_bytes(candidate)
+    if not data:
         return False
-    text = read_resume_text(path)
+    try:
+        text = extract_text_from_pdf(data)
+    except Exception:  # pragma: no cover - depends on the stored file
+        text = None
     projects = extract_project_details(text) if text else []
     if not projects:
         return False
