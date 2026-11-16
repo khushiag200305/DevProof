@@ -1,94 +1,112 @@
 # DevProof
 
-Evidence-based developer skill assessment and interview support platform. DevProof extracts claimed skills from a candidate's resume and analyzes their public GitHub activity to produce transparent, explainable skill-support assessments — reducing the manual effort recruiters spend verifying resume claims.
+Evidence-based developer skill assessment and interview support platform. DevProof extracts the skills a candidate claims on their resume, checks them against their public GitHub repositories, and gives every skill an explainable verdict, so recruiters spend less time verifying resume claims and students learn what to prove next.
+
+**Live app: https://dev-proof-mu.vercel.app** (sign in with Google; `@thapar.edu` accounts are students) · [Project website](https://khushiag200305.github.io/DevProof/)
 
 ## Project overview
 
-Resumes list skills (Python, React, Docker, etc.) that are hard to verify at scale. DevProof automates the first pass:
+Resumes list skills (Python, React, Docker, ...) that are hard to verify at scale. DevProof automates the first pass:
 
 ```
-Resume upload → skill/GitHub extraction → repository analysis → technology fingerprinting
+Resume upload → skill, project and GitHub extraction → repository analysis → technology fingerprinting
 → rule-based evidence scoring → Strong / Good / Needs Verification → targeted interview question
 ```
 
-The prototype favors an explainable, rule-based approach over opaque ML: every score comes with the specific evidence items that produced it, and the system never claims to prove or disprove that a candidate "knows" a skill — only whether public evidence supports the claim.
+Every score comes with the specific evidence that produced it (a file, a dependency, a repository). DevProof never claims to prove or disprove that someone "knows" a skill, only whether public evidence supports the claim. Skills that can't be seen in code are marked **Not checkable on GitHub** instead of getting an unfair 0, and short timed skill tests and interview questions cover what GitHub can't.
 
-## Features (planned for MVP)
+## Features
 
-- Google sign-in only (no passwords stored): an `@thapar.edu` address signs in as a **student**,
-  any other address signs in as a **recruiter** — students upload their own resume and see their
-  own report; recruiters browse every candidate who has uploaded one
-- Resume PDF upload and parsing (pdfplumber) with skill/name/GitHub-link extraction
-- Skill catalog (`code/backend/app/skills_catalog.json`): ~45 skills in 8 resume-style categories
-  (languages, web, databases, cloud, AI/ML, data & analytics, core concepts, tools), each with its
-  aliases (e.g. "ReactJS" → "React", "kmeans" → "K-Means Clustering"), how it is checked,
-  and an interview question. Adding a skill means adding one JSON entry; the catalog is validated at
-  startup. Short words like "C", "Excel" or "Word" only count as items in a list.
-- GitHub REST API integration: language composition, dependency manifests, fork status, commit activity
-- Technology fingerprinting for every catalog skill marked as checkable on GitHub: languages (Python, Java, C, C++, JavaScript), web frameworks, databases and SQL, Docker and AWS (SDKs, Serverless/SAM/CDK config), machine learning and LLM libraries, data libraries (pandas, NumPy, plotting), Jupyter notebooks and Tableau workbooks.
-  Every folder of a repository is scanned (not just the root), using three kinds of evidence:
-  marker files (`Dockerfile`, `pom.xml`, `CMakeLists.txt`, ...), source-file counts (3+ `.py`, `.java`,
-  `.cpp`, ... files), and package names in dependency files (`package.json`, `requirements.txt`,
-  `pyproject.toml`, `pom.xml`, `build.gradle`) or database images in `docker-compose.yml`.
-  The rules for each skill live in the catalog; `code/backend/app/services/tech_rules.py` applies them.
-- Transparent 0–100 rule-based evidence scoring with configurable weights
-- Classification: Strong Evidence / Good Evidence / Needs Verification, each with a stated reason.
-  Skills that can't be seen in code (concepts like OOP or DBMS, offline tools like Excel, AWS console
-  settings like IAM) are shown as **Not checkable on GitHub** with no score, the reason, and an
-  interview question - rather than an unfair 0/100.
-- Report grouped by category, with a per-category summary (e.g. "2 of 3 backed by GitHub")
-- Auto-generated, template-based interview questions for low-evidence skills
-- Candidate dashboard (React + Tailwind) with skill detail views
+### Everyone
+- **Google sign-in** (no passwords stored). An `@thapar.edu` address signs in as a **student**; any other address signs in as a **recruiter**, who waits for an admin to approve the account.
+- **Notifications** bell: analysis finished, new matches for a saved search, shortlisted, portfolio viewed, skill test sent or finished, recruiter requests.
+- Light and dark mode, and a layout that works on phones.
+
+### Students
+- **Resume upload** (PDF, up to 5 MB): name, claimed skills, projects (title, tech stack, dates, bullet points) and GitHub username are extracted with pdfplumber and spaCy.
+- **GitHub evidence analysis** of the 10 most recently updated repositories: each claimed skill gets a 0–100 score, a verdict (Strong Evidence / Good Evidence / Needs Verification / Not checkable on GitHub), the evidence behind it, and an interview question when evidence is weak. Resume projects are linked to their repositories.
+- **Several resumes per account**: upload history, delete, and choose which one is **visible to recruiters**.
+- **Public portfolio page** (`/p/<link>`) with a headline, proven skills and projects, shareable without signing in.
+- **Resume lines**: suggested resume bullet points built from the analysed projects, optionally tailored to a job description.
+- **Match a job**: paste a job description or pick a ready-made role (Backend, Frontend, Full Stack, Data Analyst, ML Engineer, Cloud / DevOps). Every resume gets a fit score, and the best one gets a **skill gap roadmap**: what DevProof needs to see for each unproven skill and which of the student's own repositories it fits into, a project idea for each missing skill, and Practise links.
+- **Practice quizzes**: 460 multiple-choice questions (10 per skill, with explanations), 5/10/15 at a time, optionally timed; "Practise my unproven skills"; history of attempts.
+- **Skill tests from recruiters**: taken once, timed on the server, with questions the student hasn't seen in practice.
+
+### Recruiters
+- **Candidates** dashboard and candidate reports (skills with evidence, interview questions, projects).
+- **Talent search**: filter by skills and evidence strength, all/any match, recent GitHub activity, number of original repositories and text; results ranked by evidence. **Saved searches** (with "new since last run"), **shortlist** with private notes, and **compare** 2–4 candidates side by side.
+- **Skill tests**: send a short timed quiz on chosen skills from a candidate's report, see the score per skill and the full answers, and see the latest score as a "Test 4/5" badge next to each skill's GitHub verdict. A **Tests sent** tab lists them all.
+
+### Admins
+- **Recruiter requests** page to approve or reject recruiter accounts (`ADMIN_EMAILS`; company domains in `RECRUITER_AUTO_APPROVE_DOMAINS` are approved automatically).
+
+## How the evidence is found
+
+- **Skill catalog** (`code/backend/app/skills_catalog.json`): 46 skills in 8 resume-style categories (languages, web, databases, cloud, AI/ML, data & analytics, core concepts, tools), each with aliases (e.g. "ReactJS" → "React"), how it is checked, detection rules and an interview question. Adding a skill means adding one JSON entry; the catalog is validated at startup.
+- **Technology fingerprinting**: every folder of a repository is scanned (ignoring `node_modules`, `venv`, `dist`, `build`) for marker files (`Dockerfile`, `pom.xml`, `CMakeLists.txt`, ...), source-file counts (e.g. 3+ `.py` files), package names in dependency files (`requirements.txt`, `package.json`, `pyproject.toml`, `pom.xml`, `build.gradle`) and database images in `docker-compose.yml`.
+- **Scoring** (per repository, best repository counts): fingerprint match 40 + language match 20 + not a fork 20 + updated in the last 12 months 20. Strong ≥ 70, Good 40–69, Needs Verification < 40. See [docs/scoring.md](docs/scoring.md).
+- GitHub results are cached (repository list for 10 minutes, each repository until it is pushed again), and a GitHub rate limit stops the analysis with a clear "try again in N minutes" message.
 
 ## Architecture
 
 ```
-React + Tailwind CSS (frontend)
+React + TypeScript + Tailwind CSS (Vercel)
         ↓ REST API (Bearer session JWT)
-FastAPI backend
- ├── Google sign-in (verify ID token → role by email domain → issue session JWT)
- ├── Resume parsing & NLP (pdfplumber, spaCy)
- ├── GitHub evidence engine (GitHub REST API)
- ├── Technology fingerprinting
- └── Evidence scoring & explainability
+FastAPI backend (Render)
+ ├── Google sign-in (verify ID token → role by email domain → recruiter approval → session JWT)
+ ├── Resume parsing (pdfplumber, spaCy)
+ ├── GitHub evidence engine (GitHub REST API, cache) + technology fingerprinting
+ ├── Evidence scoring, interview questions, portfolio, resume lines
+ ├── Talent search, job fit + roadmap, quizzes and skill tests, notifications
         ↓
-PostgreSQL (User, Candidate, Skill, CandidateSkill, Repository, Evidence, Project, InterviewQuestion)
+PostgreSQL (Render): users, candidates (with the resume PDF), skills, projects, repositories,
+evidence, interview questions, portfolios, saved searches, shortlist, notifications,
+quiz attempts, skill tests
 ```
+
+Diagrams of the system, data model, request flow and CI/CD are in [docs/](docs/README.md).
 
 ## Technology stack
 
 | Area | Technology |
 |---|---|
-| Frontend | React, Tailwind CSS, React Router |
-| Backend | Python, FastAPI |
+| Frontend | React 18, TypeScript, Tailwind CSS, React Router, Vite |
+| Backend | Python 3.11, FastAPI, SQLAlchemy |
 | Auth | Google Identity Services (sign-in), PyJWT (DevProof session tokens) |
-| NLP / parsing | pdfplumber, spaCy, (optional) sentence-transformers |
+| Parsing | pdfplumber, spaCy (`en_core_web_sm`) |
 | Database | PostgreSQL |
 | External API | GitHub REST API |
-| Testing | pytest + Ruff (backend), Vitest + React Testing Library + ESLint (frontend) |
-| Automation | GitHub Actions CI/CD |
+| Testing | pytest + Ruff (backend, 220 tests), Vitest + React Testing Library + ESLint (frontend, 54 tests) |
+| Automation | GitHub Actions CI on every pull request |
+| Hosting | Vercel (frontend), Render (backend + PostgreSQL) |
 
 ## Repository layout
 
 ```
 code/
-├── backend/                       FastAPI app, scoring engine, tests
-└── frontend/                      React/Tailwind app and frontend tests
-docs/                              Architecture diagrams, scoring tables, CI/CD diagram
-journals/                          Weekly progress journals (one per iteration)
+├── backend/                       FastAPI app, evidence engine, tests
+│   ├── app/routers/               one router per feature area
+│   ├── app/services/              pure logic (scoring, talent search, job fit, roadmap, quiz, ...)
+│   ├── app/skills_catalog.json    skill catalog and detection rules
+│   └── app/question_bank.json     quiz questions
+└── frontend/                      React app (src/pages, src/components, src/lib) and tests
+docs/                              Architecture, data model, scoring, API and CI/CD documentation
+journals/                          Progress journals, one per iteration
 project-proposal/                  Original project proposal (PDF)
-project-report-prototype-stage/    Mid-project prototype report + demo guide
-project-report-final/              Final project report
-site/                              GitHub Pages project documentation site (optional)
+project-report-prototype-stage/    Prototype demo guide
+project-report-final/              Final report outline and status
+site/                              Project website (GitHub Pages, .github/workflows/pages.yml)
+render.yaml                        Render deployment (backend + database)
 ```
 
 ## Run locally
 
 ### Requirements
 
-- Python 3.11+
+- Python 3.11+ (a `venv` or a conda environment both work)
 - Node.js 20+
-- PostgreSQL 16 (required — sign-in and candidate data are persisted; see setup below)
+- PostgreSQL 15+ (required: sign-in and candidate data are persisted; see setup below). On macOS,
+  [Postgres.app](https://postgresapp.com) or Homebrew both work.
 
 ### 1. Set up PostgreSQL
 
@@ -137,8 +155,9 @@ pip install "https://github.com/explosion/spacy-models/releases/download/en_core
 cp .env.example .env
 ```
 
-Edit `.env` and set `GOOGLE_CLIENT_ID` to the Client ID from step 2, and `JWT_SECRET` to a
-random string (`python -c "import secrets; print(secrets.token_urlsafe(32))"`). Then:
+Edit `.env` and set `GOOGLE_CLIENT_ID` to the Client ID from step 2, `JWT_SECRET` to a
+random string (`python -c "import secrets; print(secrets.token_urlsafe(32))"`), `GITHUB_TOKEN`
+(see step 5) and `ADMIN_EMAILS` to your own email so you can approve recruiters. Then:
 
 ```
 uvicorn app.main:app --reload
@@ -161,7 +180,8 @@ npm run dev
 ```
 
 Open `http://localhost:5173` in a browser. Sign in with an `@thapar.edu` address to land on the
-student upload flow, or any other address to land on the recruiter dashboard.
+student upload flow, or any other address to sign in as a recruiter (approve it at `/admin` with an
+admin account).
 
 ### 5. Run the GitHub evidence analysis
 
@@ -173,6 +193,19 @@ need verification. Click **Re-run analysis** later to refresh the results.
 
 One analysis makes up to ~50 GitHub API calls. Without a token GitHub allows 60 per hour, so set
 `GITHUB_TOKEN` in `code/backend/.env` (a classic token with no scopes is enough) before a demo.
+
+### 6. Optional: demo data
+
+`python -m app.demo_data add` (from `code/backend`) adds 20 clearly marked fictional students
+("... (Demo)", `@demo.devproof` emails, no GitHub account) so recruiter features have data to show.
+`python -m app.demo_data remove` deletes only them.
+
+### Tests
+
+```
+cd code/backend && pytest          # needs the PostgreSQL database from step 1
+cd code/frontend && npm test && npm run lint && npm run build
+```
 
 ## Deploy
 
@@ -230,26 +263,33 @@ Resume PDFs are stored in the database, so nothing is lost when Render restarts 
 
 ## Development workflow
 
-- Feature branch → Pull Request → GitHub Actions (lint + test + build) → Code review → Merge → Deploy to staging
-- Weekly iterations per the timeline below; each iteration should be independently demonstrable
+- Feature branch → Pull Request → GitHub Actions (backend: Ruff + pytest against PostgreSQL;
+  frontend: ESLint + Vitest + production build) → review → merge into `main` → Render and Vercel
+  redeploy automatically.
+- Each iteration was demonstrable on its own; progress is recorded in [journals/](journals/).
 
-## Timeline (13-week semester plan)
+## Timeline
 
-| Week(s) | Iteration | Deliverable |
+Planned in the proposal (13-week semester) and what was delivered:
+
+| Iteration | Planned | Delivered |
 |---|---|---|
-| 1–2 | Resume Intelligence | Project setup, PDF upload, text/skill extraction, GitHub URL extraction, basic CI |
-| 3–4 | GitHub Evidence Engine | GitHub API integration, repo retrieval, language/fork detection, activity analysis |
-| 5–6 | Technology Fingerprint Engine | Dependency/config detection rules for initial tech set |
-| 7–8 | Evidence Scoring | Transparent scoring engine, classification with explanations |
-| 9–10 | Dashboard + Interview Support | Candidate dashboard, skill detail views, interview question generation |
-| 11–12 | Testing, Evaluation & Refinement | Pilot testing, metrics, scalability improvements, staging deployment |
-| 13 | Buffer | Contingency, documentation, final review |
+| 1. Resume Intelligence | Project setup, PDF upload, text/skill extraction, GitHub URL extraction, basic CI | Done (15–16 Sep): scaffold, CI, PDF parsing, skill and GitHub link extraction |
+| 2. GitHub Evidence Engine | GitHub API integration, repo retrieval, language/fork detection, activity analysis | Done (16–17 Sep), plus Google sign-in with student/recruiter roles |
+| 3. Technology Fingerprint Engine | Dependency/config detection rules for an initial tech set | Done (16 Sep – 11 Oct): whole-repo scan, 46-skill catalog, "Not checkable on GitHub" |
+| 4. Evidence Scoring | Transparent scoring engine, classification with explanations | Done (17 Sep – 11 Oct): 40/20/20/20 scoring, reasons, supporting repositories |
+| 5. Dashboard + Interview Support | Candidate dashboard, skill detail views, interview questions | Done (Oct – 9 Nov): reports with tabs, portfolio, resume lines, project parsing, talent search, Match a job |
+| 6. Testing, Evaluation & Refinement | Pilot testing, metrics, scalability, staging deployment | 14–16 Nov: recruiter approval, notifications, practice quizzes, skill tests, roadmap, GitHub caching, deployment to Vercel + Render. Pilot evaluation still to do |
+| 7. Buffer | Contingency, documentation, final review | Documentation updated 16 Nov |
 
 ## Documentation
 
 - [Project proposal](project-proposal/DevProof-Project-Proposal.pdf)
-- Prototype demo guide — added in `project-report-prototype-stage/` once available
-- Architecture diagrams — added in `docs/` once available
+- [Architecture, data model, scoring, API and CI/CD](docs/README.md)
+- [Progress journals](journals/README.md)
+- [Prototype demo guide](project-report-prototype-stage/PROTOTYPE_DEMO.md)
+- [Final report outline and status](project-report-final/README.md)
+- [Project website](https://khushiag200305.github.io/DevProof/) (source in [site/](site/README.md))
 
 ## Authors
 

@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DevProof</title>
+<meta name="description" content="DevProof checks the skills on a resume against the candidate's public GitHub and explains every verdict. UCS503 Software Engineering project, Thapar Institute of Engineering and Technology.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%231a7f37'/%3E%3Ccircle cx='20' cy='20' r='8.5' fill='none' stroke='%23fff' stroke-width='3'/%3E%3Cpath d='M16.3 20.2l2.6 2.6 4.9-5' fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f6f6f4; --surface: #ffffff; --ink: #16181d; --soft: #454a54; --mute: #6b7280;
+    --line: #e3e4e1; --brand: #1a7f37; --brand-tint: #d5f5dd; --brand-text: #166b2e;
+    --amber-tint: #f6e7b7; --amber-text: #8a6400; --rust-tint: #f6dcd5; --rust-text: #a8371f;
+    --sky-tint: #dbeafe; --sky-text: #1d4f91; --band: #16181d; --band-text: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #0e1013; --surface: #16191e; --ink: #eef0f3; --soft: #c3c8d0; --mute: #8b93a0;
+      --line: #2c313a; --brand-tint: #123a1f; --brand-text: #7bd696;
+      --amber-tint: #3a2f0f; --amber-text: #e7c35c; --rust-tint: #3b1d16; --rust-text: #e2735a;
+      --sky-tint: #13263f; --sky-text: #93c5fd; --band: #1e2228;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 17px/1.6 "Geist", system-ui, sans-serif; }
+  a { color: inherit; }
+  a:focus-visible, .btn:focus-visible { outline: 3px solid var(--brand); outline-offset: 3px; border-radius: 8px; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+  header.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 0; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 19px; text-decoration: none; letter-spacing: -0.01em; }
+  .logo svg { width: 32px; height: 32px; flex: none; }
+  .top nav { display: flex; gap: 6px; flex-wrap: wrap; }
+  .top nav a { text-decoration: none; font-size: 15px; font-weight: 500; color: var(--soft); padding: 6px 10px; border-radius: 8px; }
+  .top nav a:hover { background: var(--line); color: var(--ink); }
+
+  .band { background: var(--band); color: var(--band-text); border-radius: 14px; padding: 56px 48px; display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; }
+  .band h1 { margin: 0; font-size: clamp(36px, 5vw, 54px); line-height: 1.05; letter-spacing: -0.03em; font-weight: 700; max-width: 14ch; }
+  .band p.lead { margin: 18px 0 0; font-size: 19px; color: rgba(255,255,255,.78); max-width: 40ch; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 600; font-size: 16px; padding: 11px 18px; border-radius: 9px; }
+  .btn.primary { background: #fff; color: #16181d; }
+  .btn.primary:hover { background: #d5f5dd; }
+  .btn.ghost { color: #fff; border: 1px solid rgba(255,255,255,.28); }
+  .btn.ghost:hover { border-color: #fff; }
+  .note { margin-top: 14px; font-size: 14px; color: rgba(255,255,255,.6); }
+
+  /* The one showpiece: a real-looking verdict card */
+  .report { background: #fff; color: #16181d; border-radius: 12px; padding: 20px 22px; box-shadow: 0 24px 48px -24px rgba(0,0,0,.6); }
+  .report-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid #e3e4e1; }
+  .report-head b { font-size: 16px; }
+  .report-head span { font: 500 13px "Geist Mono", ui-monospace, monospace; color: #6b7280; }
+  .row { padding: 12px 0; border-bottom: 1px solid #eeefec; }
+  .row:last-child { border-bottom: 0; padding-bottom: 2px; }
+  .row-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .skill { font-weight: 600; }
+  .chip { display: inline-block; font-size: 12.5px; font-weight: 600; padding: 3px 9px; border-radius: 6px; white-space: nowrap; }
+  .strong { background: #d5f5dd; color: #166b2e; }
+  .good { background: #f6e7b7; color: #8a6400; }
+  .needs { background: #f6dcd5; color: #a8371f; }
+  .manual { background: #dbeafe; color: #1d4f91; }
+  .why { margin: 4px 0 0; font-size: 14px; color: #454a54; line-height: 1.45; }
+  .why code { font: 500 13px "Geist Mono", ui-monospace, monospace; background: #f1f2ef; padding: 1px 5px; border-radius: 4px; }
+  .q { margin: 6px 0 0; font-size: 14px; color: #a8371f; }
+  .q::before { content: "Ask: "; font-weight: 600; }
+
+  section { padding: 72px 0 0; }
+  h2 { font-size: clamp(26px, 3.2vw, 34px); line-height: 1.15; letter-spacing: -0.02em; margin: 0; font-weight: 700; }
+  .intro { color: var(--soft); max-width: 62ch; margin: 12px 0 0; }
+
+  ol.steps { list-style: none; counter-reset: s; padding: 0; margin: 32px 0 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border-top: 2px solid var(--ink); }
+  ol.steps li { counter-increment: s; padding: 18px 20px 0 0; }
+  ol.steps li::before { content: counter(s); display: block; font: 600 15px "Geist Mono", ui-monospace, monospace; color: var(--brand-text); margin-bottom: 6px; }
+  ol.steps b { display: block; font-size: 18px; margin-bottom: 4px; }
+  ol.steps span { color: var(--soft); font-size: 15.5px; }
+
+  .feature { display: grid; grid-template-columns: 1fr 1.35fr; gap: 48px; align-items: start; margin-top: 36px; }
+  .feature.flip { grid-template-columns: 1.35fr 1fr; }
+  .feature.flip .text { order: 2; }
+  .feature h3 { font-size: 24px; margin: 0 0 6px; letter-spacing: -0.015em; }
+  .feature ul { margin: 14px 0 0; padding-left: 20px; color: var(--soft); }
+  .feature li { margin: 6px 0; }
+  .feature li b { color: var(--ink); font-weight: 600; }
+  figure { margin: 0; }
+  figure img { width: 100%; height: auto; display: block; border-radius: 12px; border: 1px solid var(--line); }
+  figcaption { font-size: 13.5px; color: var(--mute); margin-top: 8px; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 24px; font-size: 16px; }
+  th, td { text-align: left; padding: 12px 14px 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 14px; color: var(--mute); font-weight: 600; }
+  td.n { font: 500 16px "Geist Mono", ui-monospace, monospace; white-space: nowrap; }
+  .verdicts { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 20px; font-size: 15px; color: var(--soft); }
+  .verdicts .chip { margin-right: 6px; }
+
+  .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 28px; }
+  .facts h3 { font-size: 15px; color: var(--mute); font-weight: 600; margin: 0 0 8px; }
+  .facts p, .facts ul { margin: 0; color: var(--soft); font-size: 16px; }
+  .facts ul { list-style: none; padding: 0; }
+  .facts li { padding: 2px 0; }
+  footer { margin: 80px 0 0; padding: 28px 0 40px; border-top: 1px solid var(--line); color: var(--mute); font-size: 14.5px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  @media (max-width: 900px) {
+    .band { grid-template-columns: 1fr; padding: 40px 28px; gap: 36px; }
+    ol.steps { grid-template-columns: 1fr 1fr; row-gap: 24px; }
+    .feature, .feature.flip { grid-template-columns: 1fr; gap: 24px; }
+    .feature.flip .text { order: 0; }
+    .facts { grid-template-columns: 1fr; gap: 24px; }
+  }
+  @media (max-width: 560px) {
+    .wrap { padding: 0 16px; }
+    .band { padding: 32px 20px; border-radius: 12px; }
+    ol.steps { grid-template-columns: 1fr; }
+    .top nav a.hide-sm { display: none; }
+    th:nth-child(3), td:nth-child(3) { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="logo" href="#">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="9" fill="#1a7f37"/><path d="M4 20h7M29 20h7" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.7"/><circle cx="20" cy="20" r="8.5" fill="none" stroke="#fff" stroke-width="3"/><path d="M16.3 20.2l2.6 2.6 4.9-5" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      DevProof
+    </a>
+    <nav aria-label="Sections">
+      <a class="hide-sm" href="#how">How it works</a>
+      <a class="hide-sm" href="#scoring">Scoring</a>
+      <a href="https://github.com/khushiag200305/DevProof">GitHub</a>
+    </nav>
+  </header>
+
+  <div class="band">
+    <div>
+      <h1>Prove every skill on your resume with real code.</h1>
+      <p class="lead">DevProof reads a resume, checks each claimed skill against the candidate's public GitHub, and says what the evidence shows, and why.</p>
+      <div class="actions">
+        <a class="btn primary" href="https://dev-proof-mu.vercel.app">Open DevProof</a>
+        <a class="btn ghost" href="https://github.com/khushiag200305/DevProof">Source code</a>
+      </div>
+      <p class="note">Sign in with Google. Thapar accounts are students. The first visit after a quiet spell can take up to a minute while the server wakes up.</p>
+    </div>
+
+    <div class="report" role="img" aria-label="Example DevProof skill report with four skills and their verdicts">
+      <div class="report-head"><b>Example report</b><span>4 claimed skills</span></div>
+      <div class="row">
+        <div class="row-top"><span class="skill">Python</span><span class="chip strong">Strong · 100</span></div>
+        <p class="why">shop-api: <code>requirements.txt</code>, 14 <code>.py</code> files, primary language Python, original, updated this month</p>
+      </div>
+      <div class="row">
+        <div class="row-top"><span class="skill">FastAPI</span><span class="chip strong">Strong · 80</span></div>
+        <p class="why">shop-api: <code>fastapi</code> in <code>requirements.txt</code>, original, updated this month</p>
+      </div>
+      <div class="row">
+        <div class="row-top"><span class="skill">Docker</span><span class="chip needs">Needs verification · 0</span></div>
+        <p class="why">No Dockerfile or docker-compose file in the 10 analysed repositories.</p>
+        <p class="q">How did you use Docker to containerize this application?</p>
+      </div>
+      <div class="row">
+        <div class="row-top"><span class="skill">DBMS</span><span class="chip manual">Not checkable on GitHub</span></div>
+        <p class="why">A concept, not something code shows. Covered in the interview instead.</p>
+      </div>
+    </div>
+  </div>
+
+  <section id="how" aria-labelledby="how-h">
+    <h2 id="how-h">How it works</h2>
+    <p class="intro">Every verdict comes from rules you can read, not a black-box model. DevProof never says someone does or doesn't know a skill, only whether public evidence supports the claim.</p>
+    <ol class="steps">
+      <li><b>Upload a resume</b><span>DevProof reads the name, skills, projects and GitHub link from the PDF.</span></li>
+      <li><b>Scan GitHub</b><span>The 10 most recently updated repositories are scanned folder by folder: source files, dependencies, Dockerfiles, notebooks.</span></li>
+      <li><b>Score each skill</b><span>A 0–100 score per claimed skill from its best repository, with the evidence behind it.</span></li>
+      <li><b>Close the gaps</b><span>Interview questions, practice quizzes and recruiter skill tests cover what GitHub can't show.</span></li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="students-h">
+    <div class="feature">
+      <div class="text">
+        <h3 id="students-h">For students</h3>
+        <p class="intro">See your resume the way a recruiter checking your GitHub would, and know what to build next.</p>
+        <ul>
+          <li><b>Skill report</b> with the reason for every verdict and the repository that proves it.</li>
+          <li><b>Match a job:</b> paste a job description or pick a role, see which resume fits best, and get a roadmap that names the repository each missing skill fits into.</li>
+          <li><b>Practice quizzes:</b> 460 questions across 46 skills, with explanations.</li>
+          <li><b>Public portfolio</b> link and suggested resume lines built from your real projects.</li>
+        </ul>
+      </div>
+      <figure>
+        <img src="img/site-roadmap.jpg" width="1280" height="1380" alt="Match a job page: the Backend Developer role is selected and a roadmap lists Docker and DBMS as on the resume but not proven, FastAPI, Django and SQL as missing with project ideas, and Python, PostgreSQL and Git as already proven." loading="lazy">
+        <figcaption>Match a job with the skill gap roadmap. Example data.</figcaption>
+      </figure>
+    </div>
+
+    <div class="feature flip">
+      <div class="text">
+        <h3>For recruiters</h3>
+        <p class="intro">Search by what students have built, not by keywords on a page.</p>
+        <ul>
+          <li><b>Talent search</b> by skill and evidence strength, recent GitHub activity and original repositories.</li>
+          <li><b>Saved searches</b> that tell you when a new student matches, a <b>shortlist</b> with private notes, and <b>side-by-side comparison</b>.</li>
+          <li><b>Skill tests:</b> send a short timed quiz and see the score next to the GitHub evidence.</li>
+          <li>Recruiter accounts are approved by an admin before they can see any student.</li>
+        </ul>
+      </div>
+      <figure>
+        <img src="img/site-talent.jpg" width="1280" height="1080" alt="Talent search page: filters for Python, React and PostgreSQL on the left, and five candidates ranked by match score with each skill's verdict and score." loading="lazy">
+        <figcaption>Talent search, ranked by evidence. Example data.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="scoring" aria-labelledby="scoring-h">
+    <h2 id="scoring-h">The scoring rule</h2>
+    <p class="intro">Each repository is scored for each claimed skill; the best repository counts. The last two points only apply to a repository that shows the skill, so an active but unrelated repository adds nothing.</p>
+    <table>
+      <thead><tr><th>Signal</th><th>Points</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td>Technology fingerprint found</td><td class="n">40</td><td>a Dockerfile, <code>react</code> in package.json, three .java files</td></tr>
+        <tr><td>Primary language matches</td><td class="n">20</td><td>GitHub reports the repository as Python</td></tr>
+        <tr><td>Original repository, not a fork</td><td class="n">20</td><td>the student's own work</td></tr>
+        <tr><td>Updated in the last 12 months</td><td class="n">20</td><td>pushed to this year</td></tr>
+      </tbody>
+    </table>
+    <div class="verdicts">
+      <span><span class="chip strong">Strong</span>70 and above</span>
+      <span><span class="chip good">Good</span>40 to 69</span>
+      <span><span class="chip needs">Needs verification</span>below 40, with an interview question</span>
+      <span><span class="chip manual">Not checkable</span>concepts and offline tools</span>
+    </div>
+  </section>
+
+  <section aria-labelledby="about-h">
+    <h2 id="about-h">About the project</h2>
+    <div class="facts">
+      <div>
+        <h3>Course</h3>
+        <p>Software Engineering (UCS503), Thapar Institute of Engineering and Technology. Advisor: Ms. Sandeep Kaur.</p>
+      </div>
+      <div>
+        <h3>Team</h3>
+        <ul>
+          <li>Khushi Agarwal · 1024170221</li>
+          <li>Swathi Gurada · 1024170106</li>
+          <li>Rohit Singhal · 1024170213</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Built with</h3>
+        <p>React, TypeScript and Tailwind on Vercel; FastAPI, PostgreSQL, pdfplumber and spaCy on Render; the GitHub REST API; GitHub Actions for tests on every pull request.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>DevProof · 2026</span>
+    <span><a href="https://dev-proof-mu.vercel.app">App</a> · <a href="https://github.com/khushiag200305/DevProof">Repository</a> · <a href="https://github.com/khushiag200305/DevProof/tree/main/docs">Documentation</a></span>
+  </footer>
+</div>
+</body>
+</html>
