@@ -3,7 +3,7 @@
  * session token (if any) as a Bearer header, and throws ApiError on a
  * non-2xx response so callers can catch one error type.
  */
-export const API_BASE = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000";
+export const API_BASE = (import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000").replace(/\/+$/, "");
 
 export class ApiError extends Error {
   status: number;

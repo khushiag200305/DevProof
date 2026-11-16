@@ -15,6 +15,16 @@ DATABASE_URL = os.getenv(
     "DATABASE_URL", "postgresql+psycopg2://devproof:devproof@localhost:5432/devproof"
 )
 
+
+def normalize_database_url(url: str) -> str:
+    """Hosting platforms hand out postgres:// URLs; SQLAlchemy needs postgresql+psycopg2://."""
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg2://" + url[len(prefix):]
+    return url
+
+
+DATABASE_URL = normalize_database_url(DATABASE_URL)
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
@@ -35,6 +45,7 @@ def get_db():
 ADDED_COLUMNS = {
     "projects": {"tech_stack": "TEXT", "period": "VARCHAR"},
     "users": {"visible_candidate_id": "INTEGER", "recruiter_status": "VARCHAR"},
+    "candidates": {"resume_pdf": "BYTEA"},
 }
 
 

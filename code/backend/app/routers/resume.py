@@ -9,7 +9,6 @@ persists a Candidate row (with its Skills/Projects) so later iterations
 have something to attach GitHub evidence and scores to.
 """
 import os
-import uuid
 
 from fastapi import APIRouter, Depends, File, Form, UploadFile
 from sqlalchemy.orm import Session
@@ -43,8 +42,9 @@ def project_row(candidate_id: int, project: dict) -> models.Project:
 
 # app/routers/resume.py -> app/routers -> app -> backend -> backend/uploads
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+# Older uploads were saved here; new ones are stored in the database.
 UPLOAD_DIR = os.path.join(BACKEND_DIR, "uploads")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+MAX_PDF_BYTES = 5 * 1024 * 1024
 
 
 def _get_or_create_skill(db: Session, skill_name: str) -> models.Skill:
@@ -72,6 +72,12 @@ async def upload_resume(
     any) is found in the resume text itself.
     """
     contents = await file.read()
+    if len(contents) > MAX_PDF_BYTES:
+        return {
+            "filename": file.filename,
+            "status": "error",
+            "error": f"That PDF is larger than {MAX_PDF_BYTES // (1024 * 1024)} MB. Please upload a smaller resume.",
+        }
 
     try:
         text = extract_text_from_pdf(contents)
@@ -89,11 +95,6 @@ async def upload_resume(
     github_url = (github_url_override or "").strip() or extract_github_url(text)
     github_username = extract_github_username(github_url) if github_url else None
 
-    safe_filename = f"{uuid.uuid4().hex}_{file.filename}"
-    resume_path = os.path.join(UPLOAD_DIR, safe_filename)
-    with open(resume_path, "wb") as out_file:
-        out_file.write(contents)
-
     student = db.get(models.User, current_user.user_id)
     previous_visible = visible_candidate_id(db, student)
 
@@ -101,7 +102,8 @@ async def upload_resume(
         user_id=current_user.user_id,
         name=name,
         email=current_user.email,
-        resume_path=resume_path,
+        resume_path=None,  # the PDF is kept in the database (resume_pdf), not on disk
+        resume_pdf=contents,
         github_username=github_username,
     )
     db.add(candidate)
