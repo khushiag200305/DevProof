@@ -165,10 +165,14 @@ function SkillRow({
         aria-expanded={open}
         className="group flex w-full items-center gap-3 py-3 text-left"
       >
-        <span className="min-w-0 flex-1 truncate font-semibold group-hover:text-brand-700 dark:group-hover:text-brand-300">
+        <span
+          className="min-w-[5.5rem] flex-1 truncate font-semibold group-hover:text-brand-700 dark:group-hover:text-brand-300"
+          title={s.skill_name}
+        >
           {s.skill_name}
         </span>
-        {s.score !== null && (
+        {/* The bar repeats the score in the badge; drop it when a test badge needs the room. */}
+        {s.score !== null && !test && (
           <span className="hidden h-1.5 w-20 overflow-hidden rounded-full bg-slate-100 dark:bg-night-600 sm:block" aria-hidden="true">
             <span className={`bar-fill block h-full rounded-full ${tone.bar}`} style={{ width: `${Math.max(4, s.score)}%` }} />
           </span>
